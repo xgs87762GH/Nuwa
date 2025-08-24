@@ -1,2 +1,0 @@
-# MCP Message Handler Module
-

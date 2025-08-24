@@ -1,2 +1,0 @@
-# Plugin Lifecycle Management Module
-

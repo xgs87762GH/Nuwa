@@ -1,2 +1,0 @@
-# Rate Limiting Middleware Module
-

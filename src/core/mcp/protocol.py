@@ -1,2 +1,0 @@
-# MCP Protocol Handler Module
-

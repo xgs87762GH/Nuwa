@@ -1,2 +1,0 @@
-# Camera Service Tests Package
-

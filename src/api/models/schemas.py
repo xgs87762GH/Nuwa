@@ -1,2 +1,0 @@
-# API Schema Definitions Module
-

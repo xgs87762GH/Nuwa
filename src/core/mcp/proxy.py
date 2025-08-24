@@ -1,2 +1,0 @@
-# MCP Plugin Proxy Module
-

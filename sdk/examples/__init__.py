@@ -1,2 +1,0 @@
-# SDK Examples Package
-
