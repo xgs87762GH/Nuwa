@@ -1,0 +1,2 @@
+# Plugin Registry Module
+
