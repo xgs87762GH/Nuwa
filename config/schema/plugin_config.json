@@ -1,0 +1,53 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Plugin Configuration Schema",
+  "type": "object",
+  "properties": {
+    "enabled": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether the plugin is enabled"
+    },
+    "priority": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 10,
+      "default": 5,
+      "description": "Plugin execution priority"
+    },
+    "timeout": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 3600,
+      "default": 30,
+      "description": "Plugin timeout in seconds"
+    },
+    "environment": {
+      "type": "object",
+      "patternProperties": {
+        "^[A-Z_][A-Z0-9_]*$": {"type": "string"}
+      },
+      "description": "Environment variables for the plugin"
+    },
+    "resources": {
+      "type": "object",
+      "properties": {
+        "memory_limit": {"type": "string"},
+        "cpu_limit": {"type": "string"},
+        "disk_limit": {"type": "string"}
+      }
+    },
+    "security": {
+      "type": "object",
+      "properties": {
+        "sandbox": {"type": "boolean", "default": true},
+        "network_access": {"type": "boolean", "default": false},
+        "file_access": {
+          "type": "array",
+          "items": {"type": "string"}
+        }
+      }
+    }
+  }
+}
+
