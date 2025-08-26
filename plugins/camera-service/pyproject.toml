@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "camera-plugin"
+version = "1.0.0"
+description = "Plugin for camera operations and configurations"
+authors = [
+    { name = "Gordon", email = "Gordon@gmail.com" }
+]
+license = { text = "GPL 3.0" }
+requires-python = ">=3.8"
+dependencies = [
+    "opencv-python>=4.8.0",
+    "pillow>=10.0.0",
+    "numpy>=1.21.0",
+]
+keywords = ["camera", "recording", "photo", "video", "plugin", "mcp"]
+
+[project.urls]
+Repository = "https://github.com/ISAISAI/Nuwa"
+
+dependencies = [
+    "opencv-python>=4.8.0",
+    "numpy>=1.21.0"
+]
+
+
