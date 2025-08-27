@@ -2,16 +2,16 @@
 插件加载器
 负责动态加载和实例化插件模块
 """
+import datetime
+import tomllib
 import uuid
 from dataclasses import field, dataclass
-from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional, Any, Dict, List
 
-from kombu.transport.sqlalchemy import metadata
-
-from .discovery import PluginDiscovery, PluginDiscoveryResult
-from .validator import PluginValidator
+from discovery import PluginDiscovery
+from src.core.plugin.model.plugins import PluginDiscoveryResult
+from validator import PluginValidator
 
 
 @dataclass
@@ -38,22 +38,27 @@ class PluginLoader:
         self.discovery = PluginDiscovery()
         self.validator = PluginValidator()
         self.discovery.scan_plugins()
-        self.metadata_extractor = MetadataExtractor()
 
-    def load_plugin(self, plugin_path: Path) -> Optional[Any]:
+    def load_plugin(self) -> Optional[Any]:
         plugins: List[PluginDiscoveryResult] = self.discovery.plugins
 
         for plugin in plugins:
-            name = plugin.name
+            print(f"正在加载插件 {plugin.path}...")
+            self.metadata_extractor = MetadataExtractor(plugin.path)
+
             path = plugin.path
             entry_file: Path = plugin.entry_file
-            plugin_class: List[Any] = plugin.plugin_class
+            plugin_classes: List[Any] = plugin.plugin_classes
             metadata: Dict[str, Any] = self.metadata_extractor.metadata
-            config: Dict[str, Any] = self._load_configs(plugin_class)
+            name = metadata.get("project.name")
+            config: Dict[str, Any] = self._load_configs(plugin_classes)
 
-    def _load_configs(self, class_obj: List[Any]) -> Dict[str, Any]:
+            print(
+                f"Loading plugin: {name} from {path} , entry: {entry_file}, class: {plugin_classes}, metadata: {metadata}, config: {config}")
+
+    def _load_configs(self, class_objs: List[Any]) -> Dict[str, Any]:
         configs: List[Dict[str, Any]] = []
-        for cls in class_obj:
+        for cls in class_objs:
             if hasattr(cls, "PLUGIN_CONFIG"):
                 conf = getattr(cls, "PLUGIN_CONFIG")
                 if self.validator.validate_config(conf):
@@ -65,40 +70,55 @@ class PluginLoader:
 class MetadataExtractor:
     """
     元数据提取器
+    从指定插件目录读取 pyproject.toml 并缓存结果
     """
 
-    def __init__(self, metadata_file: Path = None):
-        if metadata_file is None:
-            raise ValueError("Metadata file path cannot be None")
-        self.metadata_file = metadata_file
-        self.metadata: Dict[str, Any] = self._load_metadata(plugin)
+    __slots__ = ("_metadata",)
 
-    def _load_metadata(self, plugin: PluginDiscoveryResult, toml_lib=None) -> Dict[str, Any]:
-        """从 pyproject.toml 加载插件元数据"""
-        if toml_lib is None:
-            import toml
-            toml_lib = toml
+    def __init__(self, plugin_path: str | Path) -> None:
+        self._metadata: Dict[str, Any] = self._load(plugin_path)
 
-        pyproject_path = Path(plugin.path) / "pyproject.toml"
+    # ------------- 公开接口 -------------
+    @property
+    def metadata(self) -> Dict[str, Any]:
+        """只读访问"""
+        return self._metadata
 
-        if not pyproject_path.exists():
+    @property
+    def project(self) -> Dict[str, Any]:
+        return self._metadata.get("project", {})
+
+    @property
+    def dependencies(self) -> List[str]:
+        return self.project.get("dependencies", [])
+
+    @property
+    def urls(self) -> Dict[str, str]:
+        return self.project.get("urls", {})
+
+    # ------------- 内部实现 -------------
+    @staticmethod
+    def _load(plugin_path: str | Path) -> Dict[str, Any]:
+        path = Path(plugin_path, "pyproject.toml")
+        if not path.exists():
             return {}
 
         try:
-            pyproject_data = toml_lib.load(pyproject_path)
+            with path.open("rb") as fp:
+                data = tomllib.load(fp)
 
-            # 提取各个部分的信息
-            metadata = {
-                "build_system": self._extract_build_system(pyproject_data),
-                "project": self._extract_project_info(pyproject_data),
-                "urls": self._extract_project_urls(pyproject_data),
-                "nuwa_plugin": self._extract_nuwa_plugin_config(pyproject_data),
-                "loaded_at": datetime.now(tz=timezone.utc).strftime("%Y-%m-%d %H:%M:%S"),
-                "loaded_by": "ISAISAI"  # 当前用户
+            return {
+                "build_system": data.get("build-system", {}),
+                "project": data.get("project", {}),
+                "loaded_at": datetime.datetime.now(tz=datetime.timezone.utc)
+                .replace(microsecond=0)
+                .isoformat(),
+                "loaded_by": data.get("loaded_by", "unknown"),
             }
+        except Exception as exc:
+            return {"error": str(exc)}
 
-            return metadata
 
-        except Exception as e:
-            print(f"Error loading pyproject.toml for {plugin.name}: {e}")
-            return {"error": str(e)}
+if __name__ == '__main__':
+    loader = PluginLoader()
+    loader.load_plugin()

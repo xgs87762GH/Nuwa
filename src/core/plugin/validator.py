@@ -1,5 +1,5 @@
 # Schema Validator Module
-from src.core.plugin.discovery import PluginDiscoveryResult
+from src.core.plugin.model.plugins import PluginDiscoveryResult
 
 
 class PluginValidator:

@@ -1,39 +1,12 @@
 # Plugin Discovery Module
 import importlib.util
-import os
 import sys
 import uuid
-from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Dict, Set, Optional, Any, List
+from typing import List
 
+from src.core.plugin.model.plugins import PluginDiscoveryResult
 from src.core.utils.global_tools import project_root
-
-
-# @dataclass
-# class PluginDiscoveryResult:
-#     name: str  # 插件名称
-#     path: str  # 插件目录绝对路径
-#     entry_file: str  # 插件主入口文件（如 __init__.py 或 main.py）
-#     plugin_class: Any  # 插件注册类（如 CameraPlugin）
-#     id: str = field(default_factory=lambda: str(uuid.uuid4()))  # 插件唯一标识符（UUID
-#     metadata: Dict[str, Any] = field(default_factory=dict)  # 插件元信息（如 METADATA）
-#     config: Dict[str, Any] = field(default_factory=dict)  # 插件配置（如 PLUGIN_CONFIG）
-#     tools: Optional[str] = None  # 插件工具列表
-#     requirements: Optional[List[str]] = None  # Python依赖包
-#     tags: Optional[List[str]] = None  # 插件标签
-#     category: Optional[str] = None  # 插件分类
-#     permissions: Optional[List[str]] = None  # 插件权限声明
-#     load_status: Optional[str] = "pending"  # 加载状态（pending/loaded/failed）
-#     error: Optional[str] = None  # 加载失败原因
-#     discovered_at: Optional[str] = None  # 发现时间戳
-
-@dataclass
-class PluginDiscoveryResult:
-    name: str
-    path: str
-    entry_file: Path
-    plugin_class: List[Any]
 
 
 class PluginDiscovery:
@@ -43,7 +16,7 @@ class PluginDiscovery:
         # self.discovered_plugins: Dict[str, PluginDiscoveryResult] = {}
         # self.failed_plugins: Set[str] = set()
 
-        self.plugins = List[PluginDiscoveryResult]
+        self.plugins: List[PluginDiscoveryResult] = []
 
     def scan_plugins(self):
         if not self.plugins_root.exists():
@@ -58,6 +31,7 @@ class PluginDiscovery:
                 init_path = plugin_dir / "__init__.py"
                 main_path = plugin_dir / "main.py"
                 entry_path = init_path if init_path.exists() else (main_path if main_path.exists() else None)
+
                 if entry_path:
                     module_name = f"plugin_{plugin_dir.name.replace('-', '_')}_{uuid.uuid4().hex}"
                     spec = importlib.util.spec_from_file_location(module_name, entry_path)
@@ -66,16 +40,18 @@ class PluginDiscovery:
                         spec.loader.exec_module(plugin_module)
                         sys.modules[module_name] = plugin_module
 
+                        plugin_classes = []
                         for cls_name in getattr(plugin_module, "__all__", []):
                             plugin_class = getattr(plugin_module, cls_name)
-                            self.plugins.append(
-                                PluginDiscoveryResult(
-                                    name=cls_name,
-                                    path=plugin_path,
-                                    entry_file=entry_path,
-                                    plugin_class=plugin_class,
-                                )
+                            plugin_classes.append(plugin_class)
+                        self.plugins.append(
+                            PluginDiscoveryResult(
+                                # name=cls_name,
+                                path=plugin_path,
+                                entry_file=entry_path,
+                                plugin_classes=plugin_classes,
                             )
+                        )
                     except Exception as e:
                         print(f"Failed to load plugin {plugin_dir.name}: {e}")
 
