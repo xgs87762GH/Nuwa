@@ -36,13 +36,13 @@ class CameraPlugin:
     #     }
 
     @classmethod
-    def FUNCTIONS(self):
+    def FUNCTIONS(cls):
         print(os.path.join(os.path.dirname(__file__), "function_schema.json"))
         with open(os.path.join(os.path.dirname(__file__), "tools/function_schema.json"), 'r', encoding="utf-8") as f:
             return f.read()
 
     @classmethod
-    def GET_PLUGIN(self):
+    def GET_PLUGIN(cls):
         return {
             "plugin_id": "camera_plugin",
             "instance": CameraService
