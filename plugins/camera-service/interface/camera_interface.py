@@ -2,7 +2,7 @@
 from abc import ABC, abstractmethod
 from typing import Dict, Any, Optional, Callable
 
-from model.camera import PhotoParameters, VideoParameters
+from model import PhotoParameters, VideoParameters
 
 
 class ICameraService(ABC):

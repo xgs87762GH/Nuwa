@@ -1,11 +1,12 @@
 # Plugin Discovery Module
 import importlib.util
+import os
 import sys
 import uuid
 from pathlib import Path
 from typing import List
 
-from src.core.plugin.model.plugins import PluginDiscoveryResult
+from model.plugins import PluginDiscoveryResult
 from src.core.utils.global_tools import project_root
 
 
@@ -34,7 +35,8 @@ class PluginDiscovery:
 
                 if entry_path:
                     module_name = f"plugin_{plugin_dir.name.replace('-', '_')}_{uuid.uuid4().hex}"
-                    spec = importlib.util.spec_from_file_location(module_name, entry_path)
+                    spec = importlib.util.spec_from_file_location(module_name, entry_path,
+                                                                  submodule_search_locations=[plugin_path])
                     plugin_module = importlib.util.module_from_spec(spec)
                     try:
                         spec.loader.exec_module(plugin_module)
@@ -53,6 +55,7 @@ class PluginDiscovery:
                             )
                         )
                     except Exception as e:
+                        e.with_traceback()
                         print(f"Failed to load plugin {plugin_dir.name}: {e}")
 
     # def scan_all_plugins(self) -> Dict[str, PluginDiscoveryResult]:
@@ -117,7 +120,7 @@ class PluginDiscovery:
 
 if __name__ == '__main__':
     discovery = PluginDiscovery()
-    plugins = discovery.scan_all_plugins()
+    plugins = discovery.scan_plugins()
     for plugin_id, result in plugins.items():
         print(f"Plugin ID: {plugin_id}, Status: {result.name}, Error: {result.error}")
         print(result)

@@ -1,5 +1,5 @@
 from core.exceptions import ValidationError
-from model.camera import CameraParameterBase
+from model import CameraParameterBase
 
 
 def example_usage():
