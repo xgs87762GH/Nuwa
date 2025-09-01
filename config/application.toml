@@ -17,3 +17,23 @@ authors = [
 license = { text = "MIT" }
 requires_python = ">=3.9"
 keywords = ["AI", "plugin", "automation", "task-scheduler"]
+
+
+
+[plugins]
+# 插件系统配置
+auto_load = true
+auto_start = false
+load_timeout = 30.0
+start_timeout = 30.0
+stop_timeout = 30.0
+validate_on_load = true
+enable_hot_reload = false
+max_retry_attempts = 3
+retry_delay = 1.0
+
+
+
+
+
+

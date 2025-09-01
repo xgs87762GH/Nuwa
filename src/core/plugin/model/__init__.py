@@ -4,7 +4,7 @@ Plugin model definitions for the Nuwa MCP service plugin system.
 This module contains the core data structures used for plugin discovery,
 loading, and metadata management.
 """
-from .plugins import PluginServiceDefinition, PluginMetadata, PluginDiscoveryResult
+from .plugins import PluginServiceDefinition, PluginRegistration, PluginDiscoveryResult
 
 __all__ = [
     # Plugin discovery
@@ -12,7 +12,7 @@ __all__ = [
 
     # Plugin metadata and services
     "PluginServiceDefinition",
-    "PluginMetadata",
+    "PluginRegistration",
 ]
 
 __version__ = "1.0.0"

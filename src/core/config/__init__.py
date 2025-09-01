@@ -7,12 +7,11 @@ including database, logging, and application configurations.
 Author: Gordon
 Created: 2025-08-19
 Updated: 2025-08-19 11:59:09
-User: ISAISAI
+User: Gordon
 """
 
 import logging
 from typing import Optional, Dict, Any
-import asyncio
 
 from .config import ConfigManager
 from .database import DataBaseManager
@@ -21,6 +20,7 @@ from .models.models import (
     AppConfig,
     DatabaseConfig,
     LoggingConfig,
+    PluginConfig
 )
 
 # Global cache variables for singleton behavior
@@ -29,6 +29,7 @@ _logger_manager_instance: Optional[LoggerManager] = None
 _app_config_instance: Optional[AppConfig] = None
 _database_config_instance: Optional[DatabaseConfig] = None
 _logging_config_instance: Optional[LoggingConfig] = None
+_plugin_config_instance: Optional[PluginConfig] = None
 
 
 def create_config_manager() -> ConfigManager:
@@ -112,6 +113,20 @@ def get_database_config() -> DatabaseConfig:
     return _database_config_instance
 
 
+def get_plugin_config() -> PluginConfig:
+    """
+    Get plugin configuration (cached singleton).
+
+    Returns:
+        PluginConfig: Plugin configuration instance.
+    """
+    global _plugin_config_instance
+    if _plugin_config_instance is None:
+        cfg = create_config_manager()
+        _plugin_config_instance = cfg.load_config_model(PluginConfig, "plugin")
+    return _plugin_config_instance
+
+
 def get_logging_config() -> LoggingConfig:
     """
     Get logging configuration (cached singleton).
@@ -142,7 +157,7 @@ def reload_all_configs():
     _database_config_instance = None
     _logging_config_instance = None
 
-    print(f"✅ All configurations reloaded at 2025-08-19 11:59:09 by user ISAISAI")
+    print(f"✅ All configurations reloaded at 2025-08-19 11:59:09 by user Gordon")
 
 
 def get_config_status() -> Dict[str, Any]:
@@ -159,7 +174,7 @@ def get_config_status() -> Dict[str, Any]:
         "database_config_loaded": _database_config_instance is not None,
         "logging_config_loaded": _logging_config_instance is not None,
         "timestamp": "2025-08-19 11:59:09",
-        "user": "ISAISAI",
+        "user": "Gordon",
         "author": "Gordon"
     }
 
@@ -191,6 +206,7 @@ __all__ = [
     'AppConfig',
     'DatabaseConfig',
     'LoggingConfig',
+    'PluginConfig',
 
     # 工厂函数
     'create_config_manager',
@@ -202,6 +218,7 @@ __all__ = [
     'get_app_config',
     'get_database_config',
     'get_logging_config',
+    'get_plugin_config',
 
     # 工具函数
     'reload_all_configs',

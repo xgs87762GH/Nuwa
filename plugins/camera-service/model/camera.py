@@ -1,6 +1,7 @@
 """Camera model with simplified validation - auto-detection provides defaults."""
 
 import logging
+import traceback
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Dict, Any, Optional, Union, Tuple
@@ -352,7 +353,6 @@ class CameraParameterBase:
                                 if needs_mapping else value)
 
                 success = camera_capture.set(cv2_prop, camera_value)
-
                 results[prop_name] = {
                     'success': success,
                     'requested': value,
@@ -367,9 +367,11 @@ class CameraParameterBase:
                     logger.warning(f"Failed to apply {prop_name} = {camera_value}")
 
             except Exception as e:
+                logger.error(f"Stack trace for {prop_name}: {traceback.format_exc()}")
                 prop_name = OpenCVPropertyMapper.get_param_name(cv2_prop)
                 results[prop_name] = {'success': False, 'error': str(e)}
                 logger.error(f"Error applying {prop_name}: {e}")
+                continue
 
         return results
 

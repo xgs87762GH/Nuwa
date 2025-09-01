@@ -20,7 +20,7 @@ class PluginServiceDefinition:
 
 
 @dataclass
-class PluginMetadata:
+class PluginRegistration:
     name: str  # 插件名称
     path: str  # 插件目录绝对路径
     entry_file: str  # 插件主入口文件（如 __init__.py 或 main.py）
@@ -31,4 +31,5 @@ class PluginMetadata:
     tags: Optional[List[str]] = None  # 插件标签
     load_status: Optional[str] = "pending"  # 加载状态（pending/loaded/failed）
     error: Optional[str] = None  # 加载失败原因
-    discovered_at: Optional[str] = None  # 发现时间戳
+    registered_at: Optional[str] = None  # 发现时间戳
+    is_enabled: bool = True

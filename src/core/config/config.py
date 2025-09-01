@@ -63,7 +63,10 @@ class ConfigManager:
     def load_config(self, config_name: str) -> Dict[str, Any]:
         """Load specified configuration"""
         pyproject_data = self._load_pyproject_toml()
-        config_data = pyproject_data.get("tool", {}).get(config_name, {})
+        if "tool" not in pyproject_data:
+            config_data = pyproject_data.get(config_name, {})
+        else:
+            config_data = pyproject_data.get("tool", {}).get(config_name, {})
 
         # Apply environment variable overrides
         return self._apply_env_overrides(config_data, config_name)
@@ -126,13 +129,15 @@ class ConfigManager:
 
 
 if __name__ == '__main__':
-    from src.core.config import AppConfig, DatabaseConfig, LoggingConfig
+    from src.core.config import AppConfig, DatabaseConfig, LoggingConfig, PluginConfig
 
     config_manager = ConfigManager()
     app_config = config_manager.load_config_model(AppConfig, 'app')
     db_config = config_manager.load_config_model(DatabaseConfig, 'database')
     logging_config = config_manager.load_config_model(LoggingConfig, 'logging')
+    plugin_config = config_manager.load_config_model(PluginConfig, 'plugin')
 
     print("App Config:", app_config)
     print("Database Config:", db_config)
     print("Logging Config:", logging_config)
+    print("Plugin Config:", plugin_config)

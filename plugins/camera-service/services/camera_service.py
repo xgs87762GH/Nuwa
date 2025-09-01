@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 class CameraService(ICameraService, ABC):
     """Camera service with dynamic configuration support - Optimized implementation."""
 
-    def __init__(self, camera_model: CameraParameterBase):
+    def __init__(self, camera_model: CameraParameterBase = CameraParameterBase()):
         self.camera_model = camera_model
         self.path_service = PathService(camera_model.output_dir)
         self.image_writer = ImageWriter()

@@ -116,3 +116,6 @@ class AppConfig(BaseModel):
         if not re.match(pattern, v):
             raise ValueError('Python version must be in format ">=X.Y" or ">=X.Y.Z"')
         return v
+
+class PluginConfig(BaseModel):
+    auto_discovery: bool = Field(True, description="是否自动发现插件")
