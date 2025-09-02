@@ -12,4 +12,3 @@ class PluginServiceDefinition:
     instance: Any = None  # Plugin instance
     config: Dict[str, Any] = field(default_factory=dict)  # Plugin configuration (e.g., PLUGIN_CONFIG)
     functions: Optional[Dict[str, Any]] = None  # Plugin function list, JSON object
-    function_schema: Optional[Dict[str, Any]] = None  # Plugin function schema

@@ -79,7 +79,8 @@ class PluginManager:
                 "status": plugin.load_status,
                 "description": plugin.description,
                 "registered_at": plugin.registered_at,
-                "is_enabled": plugin.is_enabled
+                "is_enabled": plugin.is_enabled,
+                "tags": plugin.tags
             }
         return None
 
@@ -100,14 +101,7 @@ async def main():
     plugins = await manager.list_plugins()
     if plugins:
         for plugin in plugins:
-            logger.info(f"Plugin: {plugin['name']}")
-
-    plugin_ids: List[str] = await manager.registry.list_plugins()
-    for plugin_id in plugin_ids:
-        plugin: PluginRegistration = manager.registry.get_plugin(plugin_id)
-        logger.info(f"Loaded plugin: {plugin.name} at {plugin.path}")
-        logger.info(f"Plugin {plugin.__dict__}")
-
+            logger.info(f"Plugin: {plugin}")
 
 if __name__ == '__main__':
     asyncio.run(main())

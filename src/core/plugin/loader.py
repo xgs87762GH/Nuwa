@@ -56,7 +56,7 @@ class PluginLoader:
             services: List[PluginServiceDefinition] = []
             for service_class in plugin.plugin_classes:
                 config: Dict[str, Any] = self._load_config(service_class)
-                functions = self._load_functinos(service_class)
+                functions = self._load_functions(service_class)
                 instance = self._load_instance(service_class)
 
                 if functions and instance:
@@ -163,7 +163,7 @@ class PluginLoader:
                 logger.warning(f"Failed to read requirements.txt from {plugin_path}: {str(e)}")
         return list(set(dependencies))
 
-    def _load_functinos(self, class_obj: Any) -> Any | None:
+    def _load_functions(self, class_obj: Any) -> Any | None:
         try:
             if hasattr(class_obj, "FUNCTIONS"):
                 funcs = getattr(class_obj, "FUNCTIONS")
