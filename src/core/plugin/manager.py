@@ -12,6 +12,7 @@ from src.core.plugin.model import PluginRegistration
 
 logger = get_logger("PluginManager")
 
+
 class PluginManager:
     """Main plugin manager class"""
 
@@ -105,6 +106,7 @@ async def main():
     for plugin_id in plugin_ids:
         plugin: PluginRegistration = manager.registry.get_plugin(plugin_id)
         logger.info(f"Loaded plugin: {plugin.name} at {plugin.path}")
+        logger.info(f"Plugin {plugin.__dict__}")
 
 
 if __name__ == '__main__':
