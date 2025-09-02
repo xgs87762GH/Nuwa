@@ -1,19 +1,27 @@
 """
-Plugin model definitions for the Nuwa MCP service plugin system.
-
-This module contains the core data structures used for plugin discovery,
-loading, and metadata management.
+Plugin Models Package
+Provides unified access to all plugin-related models
 """
-from .plugins import PluginServiceDefinition, PluginRegistration, PluginDiscoveryResult
 
+# Import discovery models
+from .discovery import PluginDiscoveryResult
+
+# Import service models
+from .service import PluginServiceDefinition
+
+# Import registration models
+from .registration import PluginMetadata, PluginRegistration, Author, License, ProjectUrls, BuildSystem, Project
+
+# Export all models for easy importing
 __all__ = [
-    # Plugin discovery
-    "PluginDiscoveryResult",
+    'PluginDiscoveryResult',
+    'PluginServiceDefinition',
+    'PluginMetadata',
+    'PluginRegistration',
 
-    # Plugin metadata and services
-    "PluginServiceDefinition",
-    "PluginRegistration",
+    'Author',
+    'License',
+    'ProjectUrls',
+    'BuildSystem',
+    'Project'
 ]
-
-__version__ = "1.0.0"
-__author__ = "Gordon"

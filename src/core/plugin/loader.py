@@ -3,19 +3,19 @@ Plugin Loader
 Responsible for dynamically loading and instantiating plugin modules
 """
 import datetime
-import logging
-import tomllib
 from pathlib import Path
 from typing import Optional, Any, Dict, List
 
 from pydantic import BaseModel, Field, field_validator
 
 from model.plugins import PluginDiscoveryResult, PluginRegistration, PluginServiceDefinition
-from src.core.config.logger import setup_logging
+from src.core.config import get_logger
+from src.core.plugin.model import PluginMetadata, BuildSystem, Project, Author, License, ProjectUrls
+from src.core.utils.plugin_loader import ProjectMetadataReader
 from validator import PluginValidator
 
 # Configure logger
-logger = logging.getLogger(__name__)
+logger = get_logger("PluginLoader")
 
 
 class PluginLoadConfig(BaseModel):
@@ -49,17 +49,9 @@ class PluginLoader:
 
     def _load_plugin(self, plugin: Any) -> PluginRegistration | None:
         try:
-            self.metadata_extractor = ProjectMetadataReader(plugin.path)
             path = plugin.path
             entry_file: Path = plugin.entry_file
-            metadata: Dict[str, Any] = self.metadata_extractor.metadata
-
-            # Extract project information
-            name = metadata.get("project", {}).get("name")
-            tags = metadata.get("project", {}).get("keywords", [])
-
-            # Load dependencies
-            dependencies = self._load_dependencies(plugin.path, metadata)
+            metadata = self._load_plugin_metadata(plugin.path)
 
             services: List[PluginServiceDefinition] = []
             for service_class in plugin.plugin_classes:
@@ -75,13 +67,10 @@ class PluginLoader:
                     services.append(plugin_service)
 
             plugin_info = PluginRegistration(
-                name=name,
                 plugin_services=services,
                 metadata=metadata,
                 path=path,
                 entry_file=entry_file.name,
-                requirements=dependencies,
-                tags=tags,
                 load_status="loaded",
                 registered_at=datetime.datetime.now(tz=datetime.timezone.utc).replace(microsecond=0).isoformat()
             )
@@ -89,6 +78,64 @@ class PluginLoader:
         except Exception as e:
             logger.error(f"Error loading plugin from {plugin.path}: {str(e)}")
             return None
+
+    def _load_plugin_metadata(self, plugin_path: str) -> PluginMetadata:
+        try:
+            metadata_extractor = ProjectMetadataReader(plugin_path)
+            # Parse build system
+            build_system_data = metadata_extractor.build_system
+            build_system = BuildSystem(
+                requires=build_system_data.get("requires", []),
+                build_backend=build_system_data.get("build-backend")
+            )
+
+            # Parse project
+            project_data = metadata_extractor.project
+
+            # Parse authors
+            authors = []
+            for author_data in project_data.get("authors", []):
+                authors.append(Author(
+                    name=author_data.get("name", ""),
+                    email=author_data.get("email")
+                ))
+
+            # Parse license
+            license_obj = None
+            license_data = project_data.get("license")
+            if license_data:
+                license_obj = License(text=license_data.get("text", ""))
+
+            # Parse URLs
+            urls_obj = None
+            urls_data = project_data.get("urls")
+            if urls_data:
+                urls_obj = ProjectUrls(repository=urls_data.get("Repository"))
+
+            # Create project
+            project = Project(
+                name=project_data.get("name", ""),
+                version=project_data.get("version", ""),
+                description=project_data.get("description"),
+                authors=authors,
+                license=license_obj,
+                requires_python=project_data.get("requires-python"),
+                keywords=project_data.get("keywords", []),
+                dependencies=project_data.get("dependencies", []),
+                urls=urls_obj
+            )
+
+            return PluginMetadata(
+                build_system=build_system,
+                project=project
+            )
+
+        except Exception as exc:
+            return PluginMetadata(error=str(exc))
+
+        except Exception as e:
+            logger.warning(f"Failed to load metadata from {plugin_path}: {str(e)}")
+            return {}
 
     def _load_instance(self, class_obj: Any) -> Any | None:
         try:
@@ -143,64 +190,9 @@ class PluginLoader:
         return {}
 
 
-class ProjectMetadataReader:
-    """
-    Metadata Extractor
-    Reads pyproject.toml from specified plugin directory and caches the result
-    """
-
-    __slots__ = ("_metadata",)
-
-    def __init__(self, plugin_path: str | Path) -> None:
-        self._metadata: Dict[str, Any] = self._load(plugin_path)
-
-    # ------------- Public Interface -------------
-    @property
-    def metadata(self) -> Dict[str, Any]:
-        """Read-only access to metadata"""
-        return self._metadata
-
-    @property
-    def project(self) -> Dict[str, Any]:
-        return self._metadata.get("project", {})
-
-    @property
-    def dependencies(self) -> List[str]:
-        return self.project.get("dependencies", [])
-
-    @property
-    def urls(self) -> Dict[str, str]:
-        return self.project.get("urls", {})
-
-    # ------------- Internal Implementation -------------
-    @staticmethod
-    def _load(plugin_path: str | Path) -> Dict[str, Any]:
-        path = Path(plugin_path, "pyproject.toml")
-        if not path.exists():
-            logger.warning(f"pyproject.toml not found at path: {path}")
-            return {}
-
-        try:
-            with path.open("rb") as fp:
-                data = tomllib.load(fp)
-
-            logger.debug(f"Successfully loaded metadata from: {path}")
-            return {
-                "build_system": data.get("build-system", {}),
-                "project": data.get("project", {}),
-                "loaded_at": datetime.datetime.now(tz=datetime.timezone.utc)
-                .replace(microsecond=0)
-                .isoformat(),
-                "loaded_by": data.get("loaded_by", "unknown"),
-            }
-        except Exception as exc:
-            logger.error(f"Error loading pyproject.toml from {path}: {str(exc)}")
-            return {"error": str(exc)}
-
-
 if __name__ == '__main__':
     # Configure logging for standalone execution
-    logger = setup_logging("structured_test")
+    logger = get_logger("structured_test")
 
     config = PluginLoadConfig(max_retry_attempts=3, validate_dependencies=True)
     loader = PluginLoader(config)

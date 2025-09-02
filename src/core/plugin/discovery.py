@@ -134,12 +134,14 @@ from pathlib import Path
 from typing import List
 
 from model.plugins import PluginDiscoveryResult
+from src.core.config import get_logger
 from src.core.utils.global_tools import project_root
 from src.core.utils.plugin_loader import PluginEnvironment, PluginModuleRewriter
 
+logger = get_logger("PluginDiscovery")
 
 class PluginDiscovery:
-    """改进的插件发现系统，支持完全隔离的插件环境"""
+    """Improved plugin discovery system with fully isolated plugin environments"""
 
     def __init__(self, plugins_root: str = f"{project_root()}/plugins"):
         self.plugins_root = Path(plugins_root)
@@ -151,7 +153,7 @@ class PluginDiscovery:
 
     async def start(self):
         if not self.plugins_root.exists():
-            print(f"插件目录 {self.plugins_root} 不存在。")
+            logger.warning(f"Plugin directory {self.plugins_root} does not exist")
             return
 
         if not self.stopped:
@@ -168,39 +170,39 @@ class PluginDiscovery:
         return entry_path
 
     def _load_plugin_with_isolation(self, plugin_dir: Path):
-        """在隔离环境中加载插件"""
+        """Load plugin in an isolated environment"""
         plugin_name = plugin_dir.name
-        print(f"开始加载插件: {plugin_name}")
+        logger.info(f"Starting to load plugin: {plugin_name}")
 
-        # 检查是否有__init__.py
+        # Check for __init__.py
         init_path = self._load_plugin_initializer(plugin_dir)
         if not init_path.exists():
-            # print(f"跳过插件 {plugin_name}: 没有__init__.py文件")
-            print(f"❌ 跳过插件 {plugin_name}: 没有__init__.py或main.py文件")
+            # logger.debug(f"Skipping plugin {plugin_name}: no __init__.py file")
+            logger.warning(f"❌ Skipping plugin {plugin_name}: missing __init__.py or main.py file")
             return
 
-        # 创建插件环境
+        # Create plugin environment
         with PluginEnvironment(plugin_dir) as env:
             try:
-                # 预加载插件的所有模块到独立命名空间
+                # Preload all plugin modules into a separate namespace
                 self._preload_plugin_modules(plugin_dir, env.module_prefix)
 
-                # 加载主模块
+                # Load main module
                 module_name = f"{env.module_prefix}_main"
                 spec = importlib.util.spec_from_file_location(module_name, init_path)
                 plugin_module = importlib.util.module_from_spec(spec)
 
-                # 执行主模块
+                # Execute main module
                 spec.loader.exec_module(plugin_module)
                 sys.modules[module_name] = plugin_module
 
-                # 获取插件类
+                # Get plugin classes
                 plugin_classes = []
                 if hasattr(plugin_module, "__all__"):
                     for cls_name in plugin_module.__all__:
                         if hasattr(plugin_module, cls_name):
                             plugin_class = getattr(plugin_module, cls_name)
-                            print(f"   加载插件类: {cls_name}")
+                            logger.debug(f"   Loading plugin class: {cls_name}")
                             plugin_classes.append(plugin_class)
 
                 self.plugins.append(
@@ -210,39 +212,39 @@ class PluginDiscovery:
                         plugin_classes=plugin_classes,
                     )
                 )
-                print(f"✅ 成功加载插件: {plugin_name}")
+                logger.info(f"✅ Successfully loaded plugin: {plugin_name}")
 
             except Exception as e:
-                print(f"❌ 加载插件 {plugin_name} 失败: {e}")
+                logger.error(f"❌ Failed to load plugin {plugin_name}: {e}")
                 import traceback
-                traceback.print_exc()
+                logger.error(traceback.format_exc())
 
     def _preload_plugin_modules(self, plugin_dir: Path, module_prefix: str):
-        """预加载插件的所有模块到独立命名空间"""
+        """Preload all plugin modules into a separate namespace"""
         rewriter = PluginModuleRewriter(plugin_dir, module_prefix)
 
-        # 扫描所有Python文件
+        # Scan all Python files
         for root, dirs, files in os.walk(plugin_dir):
             for file in files:
                 if file.endswith('.py') and (file != '__init__.py' or file != 'main.py'):
                     file_path = Path(root) / file
                     rel_path = file_path.relative_to(plugin_dir)
 
-                    # 构建模块名
+                    # Build module name
                     module_parts = list(rel_path.parts[:-1]) + [rel_path.stem]
                     module_name = f"{module_prefix}.{'.'.join(module_parts)}"
 
                     try:
-                        # 使用重写器加载模块
+                        # Load module using rewriter
                         module = rewriter.rewrite_imports_and_load(file_path, module_name)
                         sys.modules[module_name] = module
                     except Exception as e:
-                        print(f"预加载模块 {module_name} 失败: {e}")
+                        logger.warning(f"Preloading module {module_name} failed: {e}")
 
-                # 处理包的__init__.py
+                # Handle package __init__.py
                 elif file == '__init__.py' or file == 'main.py':
                     dir_path = Path(root)
-                    if dir_path != plugin_dir:  # 不处理根目录的__init__.py
+                    if dir_path != plugin_dir:  # Skip root __init__.py
                         rel_path = dir_path.relative_to(plugin_dir)
                         module_name = f"{module_prefix}.{'.'.join(rel_path.parts)}"
 
@@ -252,11 +254,11 @@ class PluginDiscovery:
                             )
                             sys.modules[module_name] = module
                         except Exception as e:
-                            print(f"预加载包 {module_name} 失败: {e}")
+                            logger.warning(f"Preloading package {module_name} failed: {e}")
 
 
 def safe_call_method(instance, method_name, *args, **kwargs):
-    """安全地调用实例方法"""
+    """Safely call instance method"""
     if not hasattr(instance, method_name):
         return {'success': False, 'error': f'Method {method_name} not found'}
 

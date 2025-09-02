@@ -15,7 +15,7 @@ from typing import Optional, Dict, Any
 
 from .config import ConfigManager
 from .database import DataBaseManager
-from .logger import LoggerManager
+# from .logger import LoggerManager
 from .models.models import (
     AppConfig,
     DatabaseConfig,
@@ -25,7 +25,7 @@ from .models.models import (
 
 # Global cache variables for singleton behavior
 _config_manager_instance: Optional[ConfigManager] = None
-_logger_manager_instance: Optional[LoggerManager] = None
+# _logger_manager_instance: Optional[LoggerManager] = None
 _app_config_instance: Optional[AppConfig] = None
 _database_config_instance: Optional[DatabaseConfig] = None
 _logging_config_instance: Optional[LoggingConfig] = None
@@ -58,31 +58,22 @@ def create_database_manager(db_url: Optional[str] = None) -> DataBaseManager:
     return DataBaseManager(db_url)
 
 
-def create_logger_manager() -> LoggerManager:
-    """
-    Factory function to create a LoggerManager instance (singleton).
-
-    Returns:
-        LoggerManager: An instance of LoggerManager.
-    """
-    global _logger_manager_instance
-    if _logger_manager_instance is None:
-        _logger_manager_instance = LoggerManager()
-    return _logger_manager_instance
+# def create_logger_manager() -> LoggerManager:
+#     """
+#     Factory function to create a LoggerManager instance (singleton).
+#
+#     Returns:
+#         LoggerManager: An instance of LoggerManager.
+#     """
+#     global _logger_manager_instance
+#     if _logger_manager_instance is None:
+#         _logger_manager_instance = LoggerManager()
+#     return _logger_manager_instance
 
 
 def get_logger(name: Optional[str] = None) -> logging.Logger:
-    """
-    Retrieves the logger instance from the LoggerManager.
-
-    Args:
-        name: Optional logger name. If not provided, uses the default logger.
-
-    Returns:
-        logging.Logger: The logger instance.
-    """
-    logger_manager = create_logger_manager()
-    return logger_manager.getLogger(name) if name else logger_manager.getLogger()
+    from .logger import get_logger
+    return get_logger(name)
 
 
 def get_app_config() -> AppConfig:
@@ -186,7 +177,7 @@ def debug_config_info():
     status = get_config_status()
     print("🔍 Configuration Status Debug Info:")
     print(f"├── ConfigManager loaded: {status['config_manager_loaded']}")
-    print(f"├── LoggerManager loaded: {status['logger_manager_loaded']}")
+    # print(f"├── LoggerManager loaded: {status['logger_manager_loaded']}")
     print(f"├── AppConfig loaded: {status['app_config_loaded']}")
     print(f"├── DatabaseConfig loaded: {status['database_config_loaded']}")
     print(f"├── LoggingConfig loaded: {status['logging_config_loaded']}")
@@ -200,7 +191,7 @@ __all__ = [
     # 核心类
     'ConfigManager',
     'DataBaseManager',
-    'LoggerManager',
+    # 'LoggerManager',
 
     # 配置模型
     'AppConfig',
