@@ -4,15 +4,16 @@ Simple Logger Manager
 
 import logging
 import logging.handlers
-from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 
 from src.core.config.config import ConfigManager
-from src.core.config.models.models import AppConfig, LoggingConfig
+from src.core.config.logger_handler import ColoredFormatter
+from src.core.config.models.models import LoggingConfig
 
 # 全局配置
 _logging_configured = False
+
 
 def setup_logging():
     """Setup logging configuration once"""
@@ -23,7 +24,6 @@ def setup_logging():
 
     try:
         cfg = ConfigManager()
-        app_config: AppConfig = cfg.load_config_model(AppConfig, "app")
         logging_config: LoggingConfig = cfg.load_config_model(LoggingConfig, "logging")
 
         # Ensure log directory exists
@@ -59,23 +59,27 @@ def setup_logging():
         file_handler.setLevel(logging_config.level)
         handlers.append(file_handler)
 
-        # Console handler
+        # File handler uses normal formatter (no colors)
+        file_formatter = logging.Formatter(
+            fmt="%(asctime)s - Nuwa - %(name)s - %(levelname)s - %(message)s (%(filename)s:%(lineno)d)",
+            datefmt="%Y-%m-%d %H:%M:%S"
+        )
+        file_handler.setFormatter(file_formatter)
+
+        # Console handler with colored formatter
         if logging_config.console:
             console_handler = logging.StreamHandler()
             console_handler.setLevel(logging_config.level)
+
+            # Console uses colored formatter
+            color_formatter = ColoredFormatter(
+                fmt="%(asctime)s - Nuwa - %(name)s - %(levelname)s - %(message)s (%(filename)s:%(lineno)d)",
+                datefmt="%Y-%m-%d %H:%M:%S"
+            )
+            console_handler.setFormatter(color_formatter)
             handlers.append(console_handler)
 
-        # Create formatter
-        formatter = logging.Formatter(
-            fmt=f"%(asctime)s - Nuwa - %(name)s - %(levelname)s - %(message)s (%(filename)s:%(lineno)d)",
-            datefmt="%Y-%m-%d %H:%M:%S"
-        )
-
-        # Apply formatter to all handlers
-        for handler in handlers:
-            handler.setFormatter(formatter)
-
-        # Configure root logger
+        # Configure root logger_handler
         root_logger = logging.getLogger()
         root_logger.setLevel(logging_config.level)
 
@@ -118,7 +122,7 @@ def _parse_size(size_str: str) -> int:
 
 def get_logger(name: Optional[str] = None) -> logging.Logger:
     """
-    Get logger instance
+    Get logger_handler instance
 
     Args:
         name: Logger name, defaults to caller's module name

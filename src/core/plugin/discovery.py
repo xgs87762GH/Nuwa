@@ -177,7 +177,7 @@ class PluginDiscovery:
         # Check for __init__.py
         init_path = self._load_plugin_initializer(plugin_dir)
         if not init_path.exists():
-            # logger.debug(f"Skipping plugin {plugin_name}: no __init__.py file")
+            # logger_handler.debug(f"Skipping plugin {plugin_name}: no __init__.py file")
             logger.warning(f"❌ Skipping plugin {plugin_name}: missing __init__.py or main.py file")
             return
 

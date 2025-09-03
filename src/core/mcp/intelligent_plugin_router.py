@@ -1,6 +1,7 @@
 import asyncio
 import json
 import logging
+import os
 from typing import Any, Dict, List, Optional
 from pathlib import Path
 from openai import AsyncOpenAI
@@ -13,8 +14,8 @@ from src.core.plugin.model import PluginRegistration
 from src.core.utils.template import EnhancedPromptTemplates
 
 # 配置信息
-OPENAI_MODEL = "gpt-4o-mini"
-OPENAI_KEY = "sk-xxxxxx"
+OPENAI_MODEL = "gpt-3.5-turbo"
+OPENAI_KEY = os.getenv("OPENAI_KEY")
 
 client = AsyncOpenAI(api_key=OPENAI_KEY)
 LOGGER = logging.getLogger(__name__)

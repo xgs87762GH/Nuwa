@@ -438,7 +438,7 @@ class CameraService(ICameraService, ABC):
     #             return result
     #
     #     except Exception as e:
-    #         logger.error(f"Preview capture failed: {e}")
+    #         logger_handler.error(f"Preview capture failed: {e}")
     #         return {"status": "error", "message": str(e)}
 
     def batch_photos(self, count: int, interval: float = 1.0, photo_params: Optional[PhotoParameters] = None,

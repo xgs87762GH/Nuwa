@@ -15,7 +15,7 @@ from typing import Optional, Dict, Any
 
 from .config import ConfigManager
 from .database import DataBaseManager
-# from .logger import LoggerManager
+# from .logger_handler import LoggerManager
 from .models.models import (
     AppConfig,
     DatabaseConfig,
@@ -58,21 +58,8 @@ def create_database_manager(db_url: Optional[str] = None) -> DataBaseManager:
     return DataBaseManager(db_url)
 
 
-# def create_logger_manager() -> LoggerManager:
-#     """
-#     Factory function to create a LoggerManager instance (singleton).
-#
-#     Returns:
-#         LoggerManager: An instance of LoggerManager.
-#     """
-#     global _logger_manager_instance
-#     if _logger_manager_instance is None:
-#         _logger_manager_instance = LoggerManager()
-#     return _logger_manager_instance
-
-
 def get_logger(name: Optional[str] = None) -> logging.Logger:
-    from .logger import get_logger
+    from src.core.config.logger import get_logger
     return get_logger(name)
 
 
@@ -202,7 +189,6 @@ __all__ = [
     # 工厂函数
     'create_config_manager',
     'create_database_manager',
-    'create_logger_manager',
     'get_logger',
 
     # 配置获取函数

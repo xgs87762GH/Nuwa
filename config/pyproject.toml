@@ -40,7 +40,7 @@ Repository = "https://github.com/Gordon/nuwa.git"
 [project.scripts]
 app = "src.main:main"
 
-[tool.setuptools.packages.find]
+[setuptools.packages.find]
 where = ["."]
 include = ["src*"]
 

@@ -15,7 +15,7 @@
 # )
 # from services.camera_service import CameraService
 #
-# logger = logging.getLogger(__name__)
+# logger_handler = logging.getLogger(__name__)
 #
 #
 # class CameraMCPNode(MCPNode):
@@ -409,7 +409,7 @@
 #         self.node_version = "1.0"
 #         self.author = "Gordon"
 #
-#         logger.info(f"CameraMCPNode initialized - Camera ID: {self.camera_model.camera_id}, "
+#         logger_handler.info(f"CameraMCPNode initialized - Camera ID: {self.camera_model.camera_id}, "
 #                     f"Output: {self.camera_model.output_dir}, Author: {self.author}")
 #
 #     def _create_camera_model(self) -> CameraParameterBase:
@@ -490,7 +490,7 @@
 #                 )
 #
 #         except Exception as e:
-#             logger.error(f"执行函数 {function_name} 失败: {e}")
+#             logger_handler.error(f"执行函数 {function_name} 失败: {e}")
 #             return self._create_unified_response(
 #                 function_name=function_name,
 #                 status="error",
@@ -533,7 +533,7 @@
 #                     "capture_type": "single_photo"
 #                 }
 #
-#                 logger.info(f"Photo taken: {data.get('filename', 'unknown')}")
+#                 logger_handler.info(f"Photo taken: {data.get('filename', 'unknown')}")
 #
 #                 return self._create_unified_response(
 #                     function_name="take_photo",
@@ -555,7 +555,7 @@
 #                 )
 #
 #         except Exception as e:
-#             logger.error(f"拍照失败: {e}")
+#             logger_handler.error(f"拍照失败: {e}")
 #             return self._create_unified_response(
 #                 function_name="take_photo",
 #                 status="error",
@@ -587,7 +587,7 @@
 #                         "info": info
 #                     }
 #                     progress_log.append(log_entry)
-#                     logger.debug(f"录像进度: {progress:.1%}")
+#                     logger_handler.debug(f"录像进度: {progress:.1%}")
 #
 #                 progress_callback = progress_cb
 #
@@ -624,7 +624,7 @@
 #                     "capture_type": "video_recording"
 #                 }
 #
-#                 logger.info(f"Video recorded: {data.get('filename', 'unknown')} - Duration: {data.get('duration', 0)}s")
+#                 logger_handler.info(f"Video recorded: {data.get('filename', 'unknown')} - Duration: {data.get('duration', 0)}s")
 #
 #                 return self._create_unified_response(
 #                     function_name="record_video",
@@ -646,7 +646,7 @@
 #                 )
 #
 #         except Exception as e:
-#             logger.error(f"录像失败: {e}")
+#             logger_handler.error(f"录像失败: {e}")
 #             return self._create_unified_response(
 #                 function_name="record_video",
 #                 status="error",
@@ -710,7 +710,7 @@
 #                 "operation_type": "parameter_update"
 #             }
 #
-#             logger.info(f"参数更新完成: {len(changes)} 个参数变更")
+#             logger_handler.info(f"参数更新完成: {len(changes)} 个参数变更")
 #
 #             return self._create_unified_response(
 #                 function_name="update_camera_parameters",
@@ -721,7 +721,7 @@
 #             )
 #
 #         except Exception as e:
-#             logger.error(f"参数更新失败: {e}")
+#             logger_handler.error(f"参数更新失败: {e}")
 #             return self._create_unified_response(
 #                 function_name="update_camera_parameters",
 #                 status="error",
@@ -756,7 +756,7 @@
 #                     "operation_type": "camera_info_query"
 #                 }
 #
-#                 logger.debug(f"获取相机信息: Camera {data.get('camera_id', 'unknown')}")
+#                 logger_handler.debug(f"获取相机信息: Camera {data.get('camera_id', 'unknown')}")
 #
 #                 return self._create_unified_response(
 #                     function_name="get_camera_info",
@@ -778,7 +778,7 @@
 #                 )
 #
 #         except Exception as e:
-#             logger.error(f"获取相机信息失败: {e}")
+#             logger_handler.error(f"获取相机信息失败: {e}")
 #             return self._create_unified_response(
 #                 function_name="get_camera_info",
 #                 status="error",
@@ -815,7 +815,7 @@
 #                     "operation_type": "camera_test"
 #                 }
 #
-#                 logger.info(f"相机测试完成: Available={data['available']}, Can Capture={data['can_capture']}")
+#                 logger_handler.info(f"相机测试完成: Available={data['available']}, Can Capture={data['can_capture']}")
 #
 #                 return self._create_unified_response(
 #                     function_name="test_camera",
@@ -841,7 +841,7 @@
 #                 )
 #
 #         except Exception as e:
-#             logger.error(f"相机测试失败: {e}")
+#             logger_handler.error(f"相机测试失败: {e}")
 #             return self._create_unified_response(
 #                 function_name="test_camera",
 #                 status="error",
@@ -878,7 +878,7 @@
 #                         "total": total
 #                     }
 #                     progress_log.append(log_entry)
-#                     logger.debug(f"批量拍照进度: {current}/{total}")
+#                     logger_handler.debug(f"批量拍照进度: {current}/{total}")
 #
 #                 progress_callback = progress_cb
 #
@@ -922,7 +922,7 @@
 #                     "operation_type": "batch_photos"
 #                 }
 #
-#                 logger.info(f"批量拍照完成: {data['successful_captures']}/{count} 成功")
+#                 logger_handler.info(f"批量拍照完成: {data['successful_captures']}/{count} 成功")
 #
 #                 return self._create_unified_response(
 #                     function_name="batch_photos",
@@ -944,7 +944,7 @@
 #                 )
 #
 #         except Exception as e:
-#             logger.error(f"批量拍照失败: {e}")
+#             logger_handler.error(f"批量拍照失败: {e}")
 #             return self._create_unified_response(
 #                 function_name="batch_photos",
 #                 status="error",
@@ -979,7 +979,7 @@
 #                     "operation_type": "parameter_reset"
 #                 }
 #
-#                 logger.info(f"相机参数重置完成: {len(data['changes'])} 个参数被重置")
+#                 logger_handler.info(f"相机参数重置完成: {len(data['changes'])} 个参数被重置")
 #
 #                 return self._create_unified_response(
 #                     function_name="reset_to_camera_defaults",
@@ -1001,7 +1001,7 @@
 #                 )
 #
 #         except Exception as e:
-#             logger.error(f"重置相机默认值失败: {e}")
+#             logger_handler.error(f"重置相机默认值失败: {e}")
 #             return self._create_unified_response(
 #                 function_name="reset_to_camera_defaults",
 #                 status="error",
@@ -1032,7 +1032,7 @@
 #             try:
 #                 return param_class.from_dict(merged_params)
 #             except Exception as e:
-#                 logger.warning(f"创建临时参数对象失败: {e}")
+#                 logger_handler.warning(f"创建临时参数对象失败: {e}")
 #                 return None
 #
 #         return None

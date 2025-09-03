@@ -1,3 +1,4 @@
+import re
 from pathlib import Path
 from typing import Dict, Any, Optional, Type, TypeVar
 import os
@@ -23,6 +24,27 @@ class ConfigManager:
         self.project_root = Path(project_root_path) if project_root_path else Path(project_root())
         self.config_dir = self.project_root / "config"
         self._pyproject_data: Optional[Dict[str, Any]] = None
+
+    def _resolve_env_variables(self, value: Any) -> Any:
+        """递归解析环境变量"""
+        if isinstance(value, str):
+            # Matches the ${VAR_NAME} format
+            pattern = r'\$\{([^}]+)\}'
+
+            def replace_env(match):
+                env_var = match.group(1)
+                # If the environment variable does not exist, leave the original value
+                return os.getenv(env_var, match.group(0))
+
+            return re.sub(pattern, replace_env, value)
+
+        elif isinstance(value, dict):
+            return {k: self._resolve_env_variables(v) for k, v in value.items()}
+
+        elif isinstance(value, list):
+            return [self._resolve_env_variables(item) for item in value]
+
+        return value
 
     def _load_pyproject_toml(self) -> Dict[str, Any]:
         """Load all .toml files from config directory"""
@@ -63,10 +85,10 @@ class ConfigManager:
     def load_config(self, config_name: str) -> Dict[str, Any]:
         """Load specified configuration"""
         pyproject_data = self._load_pyproject_toml()
-        if "tool" not in pyproject_data:
-            config_data = pyproject_data.get(config_name, {})
-        else:
-            config_data = pyproject_data.get("tool", {}).get(config_name, {})
+        # if "tool" not in pyproject_data:
+        config_data = pyproject_data.get(config_name, {})
+        # else:
+        # config_data = pyproject_data.get("tool", {}).get(config_name, {})
 
         # Apply environment variable overrides
         return self._apply_env_overrides(config_data, config_name)
@@ -79,6 +101,7 @@ class ConfigManager:
             'logging': 'LOG_',
         }
 
+        config_data = self._resolve_env_variables(config_data)
         prefix = env_prefixes.get(config_name, f"{config_name.upper()}_")
         result = config_data.copy()
 
@@ -111,6 +134,17 @@ class ConfigManager:
         except Exception as e:
             print(f"❌ Configuration validation failed for {config_name}: {e}")
             return model_class()
+
+    def load_multi_configs(self, model_class: Type[T], config_name: str) -> Dict[str, T]:
+        config_data = self.load_config(config_name)
+        configs = {}
+        for key, value in config_data.items():
+            try:
+                configs[key] = model_class(**value)
+            except Exception as e:
+                print(f"❌ Failed to parse {key}: {e}")
+                configs[key] = model_class(api_key="dummy")
+        return configs
 
     def get_nested_config(self, *keys: str) -> Optional[Any]:
         """Backward compatibility method"""

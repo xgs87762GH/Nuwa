@@ -3,7 +3,7 @@
 from src.core.config import get_logger
 from src.core.plugin.model.plugins import PluginDiscoveryResult
 
-# Configure logger
+# Configure logger_handler
 logger = get_logger("PluginValidator")
 
 

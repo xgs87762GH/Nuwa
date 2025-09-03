@@ -14,7 +14,7 @@ from src.core.plugin.model import PluginMetadata, BuildSystem, Project, Author, 
 from src.core.utils.plugin_loader import ProjectMetadataReader
 from src.core.plugin import PluginValidator
 
-# Configure logger
+# Configure logger_handler
 logger = get_logger("PluginLoader")
 
 
