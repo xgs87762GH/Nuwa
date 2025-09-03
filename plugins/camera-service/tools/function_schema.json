@@ -1,7 +1,7 @@
 [
   {
     "name": "take_photo",
-    "description": "拍摄单张照片。支持自定义文件名、图像质量和临时相机参数覆盖。",
+    "description": "拍摄单张照片, 支持自定义文件名、图像质量和临时相机参数覆盖。",
     "input_schema": {
       "type": "object",
       "properties": {
@@ -20,7 +20,7 @@
         "photo_params": {
           "type": "object",
           "default": null,
-          "description": "照片拍摄参数配置",
+          "description": "照片拍摄参数配置，如果未指定参数分两种情况：1）非必填参数，则不传入该参数；2）必填参数，则使用默认参数。",
           "properties": {
             "camera_id": {
               "type": "integer",

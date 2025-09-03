@@ -37,9 +37,10 @@ class CameraPlugin:
 
     @classmethod
     def FUNCTIONS(cls):
-        print(os.path.join(os.path.dirname(__file__), "function_schema.json"))
-        with open(os.path.join(os.path.dirname(__file__), "tools/function_schema.json"), 'r', encoding="utf-8") as f:
-            return f.read()
+        json_path = os.path.join(os.path.dirname(__file__), "tools/function_schema.json")
+        with open(json_path, 'r', encoding="utf-8") as f:
+            import json
+            return json.load(f)
 
     @classmethod
     def GET_PLUGIN(cls):

@@ -8,11 +8,11 @@ from typing import Optional, Any, Dict, List
 
 from pydantic import BaseModel, Field, field_validator
 
-from model.plugins import PluginDiscoveryResult, PluginRegistration, PluginServiceDefinition
 from src.core.config import get_logger
-from src.core.plugin.model import PluginMetadata, BuildSystem, Project, Author, License, ProjectUrls
+from src.core.plugin.model import PluginMetadata, BuildSystem, Project, Author, License, ProjectUrls, \
+    PluginDiscoveryResult, PluginRegistration, PluginServiceDefinition
 from src.core.utils.plugin_loader import ProjectMetadataReader
-from validator import PluginValidator
+from src.core.plugin import PluginValidator
 
 # Configure logger
 logger = get_logger("PluginLoader")

@@ -133,7 +133,7 @@ import sys
 from pathlib import Path
 from typing import List
 
-from model.plugins import PluginDiscoveryResult
+from src.core.plugin.model.plugins import PluginDiscoveryResult
 from src.core.config import get_logger
 from src.core.utils.global_tools import project_root
 from src.core.utils.plugin_loader import PluginEnvironment, PluginModuleRewriter

@@ -1,0 +1,42 @@
+你是一个智能函数匹配系统。根据用户需求和已筛选的插件，从插件的具体功能中选择最合适的函数。
+
+当前时间: $current_date_time_utc
+当前用户: $current_user_login
+
+用户需求: $user_input
+
+已筛选插件及其功能:
+$plugins_with_functions
+
+请从已筛选的插件中选择最合适的具体功能函数（第二步：功能函数匹配）。
+
+返回格式 (JSON):
+{
+    "analysis": "功能匹配分析",
+    "selected_functions": [
+        {
+            "plugin_name": "插件名称",
+            "plugin_id": "插件ID",
+            "function_name": "功能名称",
+            "full_method_name": "完整方法名",
+            "description": "功能描述",
+            "reason": "选择原因",
+            "confidence": 0.9,
+            "required_params": ["param1", "param2"],
+            "suggested_params": {
+                "param1": "建议值1",
+                "param2": "建议值2"
+            }
+        }
+    ],
+    "execution_order": [1, 2, 3],
+    "overall_confidence": 0.8
+}
+
+匹配原则:
+1. 优先选择功能描述与用户需求最精确匹配的函数
+2. 考虑函数的参数要求和用户提供的信息
+3. 如果需要多个步骤，按逻辑顺序排列函数
+4. 置信度范围 0.0-1.0，越高表示越匹配
+5. 为每个函数提供合理的参数建议值
+6. 确保所选函数能够完成用户的完整需求

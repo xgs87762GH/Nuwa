@@ -84,6 +84,10 @@ class PluginManager:
             }
         return None
 
+    async def get_register_plugin(self, plugin_id: str) -> Optional[PluginRegistration]:
+        """Get the full plugin registration object"""
+        return self.registry.get_plugin(plugin_id)
+
     async def list_plugins(self) -> List[Dict]:
         """List all registered plugins with their status"""
         keys: List[str] = await self.registry.list_plugins()
