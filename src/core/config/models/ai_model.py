@@ -1,8 +1,6 @@
-import statistics
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import Enum
-from typing import Optional, Dict, Any, List
-from pathlib import Path
+from typing import Optional
 
 
 class AIProvider(Enum):
@@ -30,6 +28,28 @@ class AIConfig:
     user: str = None
     max_tokens: int = 1024
     request_timeout: int = 60
+    anthropic_version: str = None
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "AIConfig":
+        """Create AIConfig from dictionary, ignoring unknown fields"""
+        # Map field names
+        field_mapping = {
+            'anthropic-version': 'anthropic_version'
+        }
+
+        # Convert field names
+        processed_data = {}
+        for key, value in data.items():
+            mapped_key = field_mapping.get(key, key)
+            processed_data[mapped_key] = value
+
+        # Filter only known fields
+        known_fields = {field.name for field in cls.__dataclass_fields__.values()}
+        filtered_data = {k: v for k, v in processed_data.items() if k in known_fields}
+
+        return cls(**filtered_data)
+
 
 @dataclass
 class AIModel:

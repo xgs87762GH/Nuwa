@@ -1,8 +1,9 @@
+import logging
+import os
 import re
+from functools import lru_cache
 from pathlib import Path
 from typing import Dict, Any, Optional, Type, TypeVar
-import os
-from functools import lru_cache
 
 try:
     import tomllib
@@ -11,7 +12,11 @@ except ImportError:
 
 from src.core.utils.global_tools import project_root
 
+# from src.core.config import get_logger
+
 T = TypeVar('T')
+
+LOGGER = logging.getLogger(__name__)
 
 
 class ConfigManager:
@@ -70,7 +75,9 @@ class ConfigManager:
             return self._pyproject_data
 
         except Exception as e:
-            print(f"❌ Failed to load configuration files: {e}")
+            # print(f"❌ Failed to load configuration files: {e}")
+            LOGGER.error(f"❌ Failed to load configuration files: {e}")
+            LOGGER.exception(e)
             return {}
 
     def _merge_dict(self, target: Dict[str, Any], source: Dict[str, Any]) -> None:
@@ -132,7 +139,9 @@ class ConfigManager:
         try:
             return model_class(**config_data)
         except Exception as e:
-            print(f"❌ Configuration validation failed for {config_name}: {e}")
+            # print(f"❌ Configuration validation failed for {config_name}: {e}")
+            LOGGER.error(f"❌ Configuration validation failed for {config_name}: {e}")
+            LOGGER.exception(e)
             return model_class()
 
     def load_multi_configs(self, model_class: Type[T], config_name: str) -> Dict[str, T]:
@@ -140,9 +149,14 @@ class ConfigManager:
         configs = {}
         for key, value in config_data.items():
             try:
-                configs[key] = model_class(**value)
+                if hasattr(model_class, "from_dict"):
+                    configs[key] = model_class.from_dict(value)
+                else:
+                    configs[key] = model_class(**value)
             except Exception as e:
-                print(f"❌ Failed to parse {key}: {e}")
+                # print(f"❌ Failed to parse {key}: {e}")
+                LOGGER.error(f"❌ Failed to parse {key}: {e}")
+                LOGGER.exception(e)
                 configs[key] = model_class(api_key="dummy")
         return configs
 
@@ -163,7 +177,7 @@ class ConfigManager:
 
 
 if __name__ == '__main__':
-    from src.core.config import AppConfig, DatabaseConfig, LoggingConfig, PluginConfig
+    from src.core.config import AppConfig, DatabaseConfig, LoggingConfig, PluginConfig, get_logger
 
     config_manager = ConfigManager()
     app_config = config_manager.load_config_model(AppConfig, 'app')
