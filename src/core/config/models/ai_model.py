@@ -3,7 +3,7 @@ from enum import Enum
 from typing import Optional
 
 
-class AIProvider(Enum):
+class AIProviderEnum(Enum):
     """AI提供者枚举"""
     OPENAI = "openai"
     DEEPSEEK = "deepseek"
@@ -11,7 +11,7 @@ class AIProvider(Enum):
     LOCAL = "local"
 
     @classmethod
-    def get_by_name(cls, name: str) -> Optional["AIProvider"]:
+    def get_by_name(cls, name: str) -> Optional["AIProviderEnum"]:
         """根据名称获取AI提供者枚举"""
         for provider in cls:
             if provider.value == name:
@@ -53,5 +53,5 @@ class AIConfig:
 
 @dataclass
 class AIModel:
-    provider: Optional[AIProvider] = None
+    provider: Optional[AIProviderEnum] = None
     config: Optional[AIConfig] = None

@@ -1,19 +1,16 @@
-# OpenAI Provider Module
 from abc import ABC
 from typing import Dict, Any
 
-from src.core.ai.providers.interface import BaseAIProvider
+import requests
+
+from src.core.ai.providers import BaseAIProvider
 from src.core.config.ai import AiConfigLoader
-from src.core.config.logger import get_logger
-from src.core.config.models import AIConfig
 from src.core.config.models import AIProviderEnum
 
-LOGGER = get_logger(__name__)
 
+class DeepSeekProvider(BaseAIProvider, ABC):
 
-class OpenAIProvider(BaseAIProvider, ABC):
-
-    def __init__(self, config: AIConfig):
+    def __init__(self, config):
         super().__init__(config)
 
     def _build_headers(self) -> Dict[str, str]:
@@ -24,7 +21,7 @@ class OpenAIProvider(BaseAIProvider, ABC):
 
     def _build_payload(self, model: str = None) -> Dict[str, Any]:
         return {
-            "model": model,
+            "model": model or self.get_default_model(),
             "messages": [
                 {"role": "system", "content": self.system_prompt},
                 {"role": "user", "content": self.user_prompt}
@@ -34,13 +31,23 @@ class OpenAIProvider(BaseAIProvider, ABC):
         }
 
     def _get_api_endpoint(self) -> str:
-        return "/chat/completions"
+        return f"/chat/completions"
 
     def _extract_response_content(self, response_data: Dict[str, Any]) -> str:
         return response_data["choices"][0]["message"]["content"]
 
     def get_default_model(self) -> str:
-        return self.config.model
+        return getattr(self.config, "model")
+
+    def chat(self, system_prompt: str, user_prompt: str) -> str:
+        self.system_prompt = system_prompt
+        self.user_prompt = user_prompt
+        headers = self._build_headers()
+        payload = self._build_payload()
+        url = self._get_api_endpoint()
+        response = requests.post(url, headers=headers, json=payload)
+        response.raise_for_status()
+        return self._extract_response_content(response.json())
 
 
 async def simple_test():
@@ -57,8 +64,8 @@ async def simple_test():
     confs = config.ai_configs
 
     for conf in confs:
-        if conf.provider == AIProviderEnum.OPENAI:
-            provider = OpenAIProvider(conf.config)
+        if conf.provider == AIProviderEnum.DEEPSEEK:
+            provider = DeepSeekProvider(conf.config)
             provider.set_prompts(system_prompt, user_prompt)
 
             try:

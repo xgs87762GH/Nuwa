@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Optional
+from typing import Optional, Any
 
 from src.core.ai.providers.response import PluginsSelection
 
@@ -23,14 +23,14 @@ class PluginsSelectionResponse:
     error_code: str = ""
     error_message: str = ""
     details: Optional[str] = None
-    data: Optional[PluginsSelection] = None
+    data: Optional[Any] = None
 
     def __post_init__(self):
         if not self.timestamp:
             self.timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
 
     @classmethod
-    def success_response(cls, data: PluginsSelection) -> "PluginsSelectionResponse":
+    def success_response(cls, data: Any) -> "PluginsSelectionResponse":
         """成功响应"""
         return cls(success=True, data=data)
 

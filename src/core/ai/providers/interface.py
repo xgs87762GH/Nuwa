@@ -1,11 +1,14 @@
 from abc import ABC, abstractmethod
-from typing import Optional, Dict, List, Any, Coroutine
+from typing import Optional, Dict, List, Any
 
 import httpx
 
 from src.core.ai.providers.response import PluginsSelectionResponse, PluginsSelection
 from src.core.config import get_logger
 from src.core.config.models import AIConfig
+from src.core.utils import JsonValidator
+from src.core.utils.global_tools import project_root
+from src.core.utils.template import EnhancedPromptTemplates, PromptResponse
 
 LOGGER = get_logger(__name__)
 
@@ -108,6 +111,46 @@ class BaseAIProvider(ABC):
             read=getattr(self.config, 'read_timeout', self.config.request_timeout)
         )
 
+    async def _make_ai_request(self, model: Optional[str] = None) -> str:
+        """
+        Make a single AI request
+
+        Args:
+            model: Model name
+
+        Returns:
+            Raw response content
+
+        Raises:
+            Exception: If API request fails
+        """
+        if model is None:
+            model = self.get_default_model()
+
+        headers = self._build_headers()
+        payload = self._build_payload(model)
+        timeout = self.get_timeout_config()
+        endpoint = f"{self.base_url}{self._get_api_endpoint()}"
+
+        async with httpx.AsyncClient(timeout=timeout) as client:
+            LOGGER.debug(f"Requesting: {endpoint}")
+            LOGGER.debug(f"Model: {model}")
+
+            response = await client.post(endpoint, headers=headers, json=payload)
+
+            if response.status_code == 200:
+                response_data = response.json()
+                content = self._extract_response_content(response_data)
+
+                # Add to conversation history
+                self.add_to_conversation("user", self.user_prompt)
+                self.add_to_conversation("assistant", content)
+                LOGGER.debug(f"Response: {content}")
+                return content
+            else:
+                error_msg = self._extract_error_message(response)
+                raise Exception(f"{self.__class__.__name__} API Error {response.status_code}: {error_msg}")
+
     async def get_completion(self, model: Optional[str] = None) -> PluginsSelectionResponse:
         """Get completion from AI model
 
@@ -124,47 +167,33 @@ class BaseAIProvider(ABC):
         if not self.system_prompt or not self.user_prompt:
             raise ValueError("Prompts not set. Call set_prompts() first.")
 
-        if model is None:
-            model = self.get_default_model()
+        try:
 
-        import httpx
+            content = await self._make_ai_request(model)
+            content = await self._fix_response_content(content, model)
 
-        headers = self._build_headers()
-        payload = self._build_payload(model)
-        timeout = self.get_timeout_config()
-        endpoint = f"{self.base_url}{self._get_api_endpoint()}"
+            return PluginsSelectionResponse.success_response(PluginsSelection.from_content(content))
 
-        async with httpx.AsyncClient(timeout=timeout) as client:
-            LOGGER.debug(f"Requesting: {endpoint}")
-            LOGGER.debug(f"Model: {model}")
+        except httpx.ConnectTimeout:
+            raise Exception(f"Connection timeout to {self.base_url}")
+        except httpx.ReadTimeout:
+            raise Exception(f"Read timeout from {self.base_url}")
+        except httpx.RequestError as e:
+            raise Exception(f"Request error: {str(e)}")
+        except Exception as e:
+            if "API Error" in str(e):
+                raise
+            raise Exception(f"Unexpected error: {str(e)}")
 
-            try:
-                response = await client.post(endpoint, headers=headers, json=payload)
+    async def _fix_response_content(self, content: str, model: str) -> str:
+        if JsonValidator.is_valid_json(content):
+            return content
+        else:
 
-                if response.status_code == 200:
-                    response_data = response.json()
-                    content = self._extract_response_content(response_data)
-
-                    # Add to conversation history
-                    self.add_to_conversation("user", self.user_prompt)
-                    self.add_to_conversation("assistant", content)
-
-                    # return content
-                    return PluginsSelectionResponse.success_response(PluginsSelection.from_content(content))
-                else:
-                    error_msg = self._extract_error_message(response)
-                    raise Exception(f"{self.__class__.__name__} API Error {response.status_code}: {error_msg}")
-
-            except httpx.ConnectTimeout:
-                raise Exception(f"Connection timeout to {self.base_url}")
-            except httpx.ReadTimeout:
-                raise Exception(f"Read timeout from {self.base_url}")
-            except httpx.RequestError as e:
-                raise Exception(f"Request error: {str(e)}")
-            except Exception as e:
-                if "API Error" in str(e):
-                    raise
-                raise Exception(f"Unexpected error: {str(e)}")
+            enhancedPromptTemplates = EnhancedPromptTemplates(template_dir=f"{project_root()}/templates/prompts")
+            prompt: PromptResponse = enhancedPromptTemplates.get_json_fix_prompt(invalid_json=content)
+            self.set_prompts(prompt.system_prompt, prompt.user_prompt)
+            return await self._make_ai_request(model=model)
 
     def _extract_error_message(self, response: 'httpx.Response') -> str:
         """Extract error message from response"""

@@ -2,7 +2,7 @@ import logging
 from typing import TypeVar, Optional, Dict, List
 
 from src.core.config import ConfigManager
-from src.core.config.models import AIConfig, AIModel, AIProvider
+from src.core.config.models import AIConfig, AIModel, AIProviderEnum
 
 T = TypeVar('T')
 
@@ -21,7 +21,7 @@ class AiConfigLoader:
         configs: Dict[str, AIConfig] = self.cfg.load_multi_configs(AIConfig, "ai")
         ai_models = []
         for provider_name, config in configs.items():
-            provider_enum = AIProvider.get_by_name(provider_name)
+            provider_enum = AIProviderEnum.get_by_name(provider_name)
             if provider_enum is None:
                 logger.warning(f"Invalid AI provider name: {provider_name}")
                 continue

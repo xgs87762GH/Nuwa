@@ -17,8 +17,9 @@ anthropic-version = "2023-06-01"
 
 
 [ai.deepseek]
-api_key = "sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+api_key = "${DEEPSEEK_KEY}"
 model = "gpt-3.5-turbo"
 user = "Nuwa"
 max_tokens = 2048
-base_url = "https://api.deepseek.ai/v1"
+#base_url = "https://api.deepseek.com"
+base_url = "https://api.chatanywhere.org"

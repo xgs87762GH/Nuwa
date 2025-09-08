@@ -1,10 +1,11 @@
 """
 模板变量处理工具类 - 只负责变量替换，不涉及文件读取和业务逻辑
 """
-
+from dataclasses import dataclass
+from datetime import datetime, timezone
 from string import Template
 from typing import Dict, Any
-from datetime import datetime, timezone
+
 from .template_manager import TemplateManager
 
 
@@ -43,10 +44,17 @@ class TemplateVariableProcessor:
             return template_content
 
 
+@dataclass
+class PromptResponse:
+    user_prompt: str
+    system_prompt: str
+
+
 class EnhancedPromptTemplates:
     """
     业务模板渲染器：通过 TemplateManager 读取模板文件，通过 TemplateVariableProcessor 替换变量
     """
+
     def __init__(self, template_dir: str, user_name: str = "Gordon"):
         self.template_manager = TemplateManager(template_dir)
         self.variable_processor = TemplateVariableProcessor(user_name)
@@ -57,11 +65,23 @@ class EnhancedPromptTemplates:
             return ""
         return self.variable_processor.render_string_template(template_content, variables)
 
-    def get_plugin_selection_prompt(self, plugins_basic_info: list) -> str:
-        return self.render_prompt("plugin_selection", {"plugins_description": plugins_basic_info})
+    def get_plugin_selection_prompt(self, plugins_basic_info: list, user_input: str) -> PromptResponse:
+        return PromptResponse(
+            system_prompt=self.render_prompt("plugin_selection", {"plugins_description": plugins_basic_info}),
+            user_prompt=f"用户需求: {user_input}\n请分析用户意图，筛选出最适合的插件。"
+        )
 
-    def get_function_matching_prompt(self, plugin_functions: list, user_input: str) -> str:
-        return self.render_prompt("function_matching", {
-            "plugins_with_functions": plugin_functions,
-            "user_input": user_input
-        })
+    def get_function_matching_prompt(self, plugin_functions: list, user_input: str) -> PromptResponse:
+        return PromptResponse(
+            system_prompt=self.render_prompt("function_matching", {
+                "plugins_with_functions": plugin_functions,
+                "user_input": user_input
+            }),
+            user_prompt=f"基于用户需求: {user_input}\n请从可用函数中选择合适的函数并生成执行计划JSON。"
+        )
+
+    def get_json_fix_prompt(self, invalid_json: str) -> PromptResponse:
+        return PromptResponse(
+            system_prompt=self.render_prompt("json_fix", {"invalid_json": invalid_json}),
+            user_prompt="""The previous response was not valid JSON. Please correct it to ensure it is properly formatted JSON."""
+        )
