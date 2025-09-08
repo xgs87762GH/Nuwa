@@ -5,7 +5,7 @@ from typing import List, Dict, Optional
 
 from src.core.ai.model import AIProviderMap
 from src.core.ai.providers.interface import BaseAIProvider
-from src.core.ai.providers.response import PluginsSelectionResponse
+from src.core.ai.providers.response import SelectionResponse
 from src.core.config import get_logger
 from src.core.config.ai import AiConfigLoader
 from src.core.config.models import AIModel, AIProviderEnum
@@ -88,7 +88,7 @@ class AIManager:
         return status
 
     async def call_provider(self, provider_name: str, system_prompt: str, user_prompt: str,
-                            **kwargs) -> PluginsSelectionResponse:
+                            **kwargs) -> SelectionResponse:
         """Call specific provider with prompts"""
         provider = self.get_provider(provider_name)
         if not provider:
@@ -109,7 +109,7 @@ class AIManager:
             LOGGER.error(f"❌ Provider {provider_name} failed: {e}")
             raise
 
-    async def call_best_available(self, system_prompt: str, user_prompt: str, **kwargs) -> PluginsSelectionResponse:
+    async def call_best_available(self, system_prompt: str, user_prompt: str, **kwargs) -> SelectionResponse:
         """Call the first available provider"""
         if not self.providers:
             raise RuntimeError("No providers available")
@@ -123,7 +123,7 @@ class AIManager:
                                  fallback_providers: List[str],
                                  system_prompt: str,
                                  user_prompt: str,
-                                 **kwargs) -> PluginsSelectionResponse:
+                                 **kwargs) -> SelectionResponse:
         """Call provider with fallback mechanism"""
         providers_to_try = [primary_provider] + fallback_providers
         LOGGER.debug(f"   providers to try: {providers_to_try}")

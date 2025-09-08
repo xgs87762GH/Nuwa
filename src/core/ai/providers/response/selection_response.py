@@ -16,7 +16,7 @@ class ErrorCode(Enum):
 
 
 @dataclass
-class PluginsSelectionResponse:
+class SelectionResponse:
     """响应基类"""
     success: bool
     timestamp: str = ""
@@ -30,12 +30,12 @@ class PluginsSelectionResponse:
             self.timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
 
     @classmethod
-    def success_response(cls, data: Any) -> "PluginsSelectionResponse":
+    def success_response(cls, data: Any) -> "SelectionResponse":
         """成功响应"""
         return cls(success=True, data=data)
 
     @classmethod
     def error_response(cls, error_code: str, error_message: str,
-                       details: Optional[str] = None) -> "PluginsSelectionResponse":
+                       details: Optional[str] = None) -> "SelectionResponse":
         """错误响应"""
         return cls(success=False, error_code=error_code, error_message=error_message, details=details)

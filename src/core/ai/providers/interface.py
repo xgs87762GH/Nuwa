@@ -3,7 +3,7 @@ from typing import Optional, Dict, List, Any
 
 import httpx
 
-from src.core.ai.providers.response import PluginsSelectionResponse, PluginsSelection
+from src.core.ai.providers.response import SelectionResponse
 from src.core.config import get_logger
 from src.core.config.models import AIConfig
 from src.core.utils import JsonValidator
@@ -151,7 +151,7 @@ class BaseAIProvider(ABC):
                 error_msg = self._extract_error_message(response)
                 raise Exception(f"{self.__class__.__name__} API Error {response.status_code}: {error_msg}")
 
-    async def get_completion(self, model: Optional[str] = None) -> PluginsSelectionResponse:
+    async def get_completion(self, model: Optional[str] = None) -> SelectionResponse:
         """Get completion from AI model
 
         Args:
@@ -172,7 +172,7 @@ class BaseAIProvider(ABC):
             content = await self._make_ai_request(model)
             content = await self._fix_response_content(content, model)
 
-            return PluginsSelectionResponse.success_response(PluginsSelection.from_content(content))
+            return SelectionResponse.success_response(content)
 
         except httpx.ConnectTimeout:
             raise Exception(f"Connection timeout to {self.base_url}")

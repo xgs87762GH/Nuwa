@@ -51,7 +51,7 @@ class DeepSeekProvider(BaseAIProvider, ABC):
 
 
 async def simple_test():
-    from src.core.ai.providers.response import PluginsSelectionResponse
+    from src.core.ai.providers.response import SelectionResponse
     system_prompt = """You are an intelligent plugin routing system. Filter suitable plugins based on user requirements. Current Time: 2025-09-03 10:37:02, 
     User: Gordon. Available: [{'plugin_name':'camera-plugin','plugin_id':'db111534-bddd-4a05-be3f-2c222c069a53','description':'Plugin for camera operations and configurations',
     'tags':['camera','recording','photo','video','plugin','mcp']}]. Return JSON: {"analysis":"User intent analysis","selected_plugins":
@@ -69,7 +69,7 @@ async def simple_test():
             provider.set_prompts(system_prompt, user_prompt)
 
             try:
-                response: PluginsSelectionResponse = await provider.get_completion()
+                response: SelectionResponse = await provider.get_completion()
                 print("Response:", response)
                 print("Response (dict):", response.__dict__)
             except Exception as e:

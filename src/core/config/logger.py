@@ -83,6 +83,11 @@ def setup_logging():
         root_logger = logging.getLogger()
         root_logger.setLevel(logging_config.level)
 
+        logging.getLogger("httpcore.http11").setLevel(logging.WARNING)
+        logging.getLogger("httpx").setLevel(logging.WARNING)
+        logging.getLogger("httpcore.proxy").setLevel(logging.WARNING)
+
+
         # Clear existing handlers
         root_logger.handlers.clear()
 

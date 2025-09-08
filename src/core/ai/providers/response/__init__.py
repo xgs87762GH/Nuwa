@@ -1,9 +1,12 @@
 from .plugins_selection import PluginsSelection, PluginSelectionMata
-from .plugins_selection_response import PluginsSelectionResponse, ErrorCode
+from .selection_response import SelectionResponse, ErrorCode
+from .functions_data import ExecutionPlan, FunctionSelection
 
 __all__ = [
     "ErrorCode",
     "PluginsSelection",
     "PluginSelectionMata",
-    "PluginsSelectionResponse"
+    "SelectionResponse",
+    "ExecutionPlan",
+    "FunctionSelection",
 ]
