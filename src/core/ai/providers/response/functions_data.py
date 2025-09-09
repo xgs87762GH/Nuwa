@@ -1,5 +1,5 @@
 import json
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, asdict
 from typing import Any, Dict, List, Optional
 
 
@@ -30,6 +30,10 @@ class FunctionSelection:
             required_params=data.get("required_params", []),
             suggested_params=data.get("suggested_params", {})
         )
+
+    def to_dict(self) -> Dict[str, Any]:
+        """转换为可序列化的字典"""
+        return asdict(self)
 
 
 @dataclass
@@ -70,6 +74,17 @@ class ExecutionPlan:
         except (KeyError, TypeError) as e:
             raise ValueError(f"Invalid data format: {str(e)}")
 
+    def to_dict(self):
+        """转换为可序列化的字典"""
+        result = {}
+        for key, value in self.__dict__.items():
+            if hasattr(value, '__dict__'):
+                result[key] = value.__dict__
+            elif isinstance(value, list):
+                result[key] = [item.__dict__ if hasattr(item, '__dict__') else item for item in value]
+            else:
+                result[key] = value
+        return result
     def get_ordered_functions(self) -> List[FunctionSelection]:
         """按执行顺序获取函数列表"""
         ordered_functions = []

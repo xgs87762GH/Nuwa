@@ -1,7 +1,7 @@
 import asyncio
 
 
-class PluginExecutor:
+class TaskExecutor:
     def __init__(self, plugin_manager):
         self.plugin_manager = plugin_manager
 

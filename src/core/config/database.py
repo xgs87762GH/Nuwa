@@ -9,6 +9,7 @@ import logging
 
 from src.core.config.config import ConfigManager
 from src.core.config.models.models import DatabaseConfig
+from src.core.tasks.model.models import Base
 from src.core.utils.global_tools import project_root
 
 
@@ -57,6 +58,7 @@ class DataBaseManager:
         """Test database connection."""
         try:
             async with self.engine.begin() as conn:
+                await conn.run_sync(Base.metadata.create_all)
                 await conn.execute(text("SELECT 1"))
             self.logger.info("Successfully connected to database")
             return True

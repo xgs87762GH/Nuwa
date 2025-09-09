@@ -28,7 +28,7 @@ class PlanService:
             return []
         return data.selected_plugins
 
-    async def generate_execution_plan(self, user_input, plugin_functions):
+    async def generate_execution_plan(self, user_input, plugin_functions)->ExecutionPlan:
         prompt = self.prompt_templates.get_function_matching_prompt(plugin_functions, user_input)
         response = await self.ai_service.call_ai_with_fallback(
             system_prompt=prompt.system_prompt,

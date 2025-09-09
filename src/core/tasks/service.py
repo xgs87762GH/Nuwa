@@ -1,0 +1,88 @@
+import logging
+import uuid
+from datetime import datetime, timezone
+from typing import Dict, Any
+
+from src.core.ai.providers.response import ExecutionPlan
+from src.core.config import DataBaseManager
+from src.core.orchestration import IntelligentPluginRouter
+from src.core.orchestration.model import PlanResult
+from src.core.tasks.model.models import Task, TaskStep, TaskStatus
+
+
+class TaskService:
+    def __init__(self, db: DataBaseManager, router: IntelligentPluginRouter):
+        self.db = db
+        self.router = router
+        self.logger = logging.getLogger(__name__)
+
+    async def create_task_from_input(self, user_input: str, user_id: str = "1") -> Dict[str, Any]:
+        """
+        Create a task from user input
+
+        1. Call IntelligentPluginRouter to get the orchestration plan
+        2. Save Task to the database
+        3. Return the task information
+        """
+        try:
+            # 1. Generate orchestration plan
+            plan_result: PlanResult = await self.router.analyze_and_plan(user_input)
+            if not plan_result.success:
+                self.logger.warning(f"Plan generation failed: {plan_result.error}")
+                return {
+                    "success": False,
+                    "error": plan_result.error or "Plan generation failed",
+                    "plan_result": plan_result.__dict__
+                }
+
+            task_id = str(uuid.uuid4())
+            current_time = datetime.now(timezone.utc)
+
+            # 2. Construct Task object
+            task = Task(
+                task_id=task_id,
+                user_id=user_id,
+                description=plan_result.user_input or user_input,
+                status=TaskStatus.PENDING,
+                execution_plan=plan_result.execution_plan.to_dict() if plan_result.execution_plan else None,
+                extra={
+                    "selected_plugins": plan_result.selected_plugins_to_dict() or []
+                },
+                created_at=current_time,
+                scheduled_at=current_time
+            )
+
+            # 3. Create task steps
+            execution_plan: ExecutionPlan = plan_result.execution_plan
+            if execution_plan:
+                execution_functions = execution_plan.get_ordered_functions()
+                if execution_functions:
+                    for idx, function_selection in enumerate(execution_functions):
+                        step_id = f"{task_id}_{idx + 1}"
+                        task_step = TaskStep(
+                            step_id=step_id,
+                            task_id=task_id,  # Explicitly set task_id
+                            plugin_id=function_selection.plugin_id,
+                            plugin_name=function_selection.plugin_name,
+                            function_name=function_selection.function_name,
+                            params=function_selection.suggested_params or {},
+                            status=TaskStatus.PENDING
+                        )
+                        task.add_step(task_step)
+
+            # 4. Save to database
+            async with self.db.get_session() as session:
+                session.add(task)
+                await session.commit()
+
+            self.logger.info(f"Task {task_id} created successfully with {len(task.steps)} steps")
+            return {"success": True, "task_id": task_id, "step_count": len(task.steps)}
+
+        except Exception as e:
+            self.logger.error(f"Failed to create task from input '{user_input}': {e}")
+            self.logger.exception(e)
+            return {
+                "success": False,
+                "error": f"Failed to create task: {str(e)}",
+                "plan_result": plan_result.__dict__ if 'plan_result' in locals() else None
+            }

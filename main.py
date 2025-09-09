@@ -1,22 +1,20 @@
-import sys
-from contextlib import asynccontextmanager
-from logging import getLogger
-from pathlib import Path
-
 import uvicorn
+from fastapi import FastAPI
 
 from src.api.main import init_router
-from src.core.config import (get_logger, get_app_config)
-
-project_root = Path(__file__).parent
-sys.path.insert(0, str(project_root))
-
-# create the FastAPI app
-app = init_router()
+from src.core.config import get_logger, get_app_config
 
 LOGGER = get_logger()
+app_config = get_app_config()
 
-if __name__ == '__main__':
+
+def create_app() -> FastAPI:
+    return init_router()
+
+
+# 供 uvicorn 加载的应用实例
+app = create_app()
+
+if __name__ == "__main__":
     LOGGER.info("Starting application")
-    appConfig = get_app_config()
-    uvicorn.run(app, host=appConfig.host, port=appConfig.port)
+    uvicorn.run(app, host=app_config.host, port=app_config.port)

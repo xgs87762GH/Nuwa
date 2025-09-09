@@ -1,7 +1,9 @@
 import json
 from typing import Any, Dict, Optional
 
+from src.core.ai.providers.response import ExecutionPlan
 from src.core.config.logger import get_logger
+from src.core.orchestration.model import PlanResult, PluginStatusResult, AIStatusResult
 from src.core.utils.global_tools import project_root
 from src.core.utils.template import EnhancedPromptTemplates
 from src.core.orchestration import AIService, PlanService, PluginService
@@ -29,34 +31,46 @@ class IntelligentPluginRouter:
         self.plan_service = PlanService(self.prompt_templates, self.ai_service)
         self.ai_service.validate_ai_manager(LOGGER)
 
-    async def analyze_and_plan(self, user_input: str) -> Dict[str, Any]:
+    async def analyze_and_plan(self, user_input: str) -> PlanResult:
         try:
             LOGGER.info(f"🤖 开始分析用户需求: {user_input}")
             if not user_input or not user_input.strip():
-                return {"error": "用户输入不能为空"}
+                return PlanResult.error_result("用户输入不能为空")
             available_plugins = await self.plugin_service.get_available_plugins()
             if not available_plugins:
-                return {"error": "没有可用的插件", "suggestion": "请检查插件是否正确加载和启用"}
+                return PlanResult.error_result("没有可用的插件", suggestion="请检查插件是否正确加载和启用")
             selected_plugins = await self.plan_service.select_plugins(user_input, available_plugins)
             if not selected_plugins:
-                return {"error": "未找到合适的插件", "available_plugins": [p["plugin_name"] for p in available_plugins]}
+                return PlanResult.error_result(
+                    "未找到合适的插件",
+                    user_input=user_input,
+                    selected_plugins=[],
+                    suggestion="请检查插件配置"
+                )
             plugin_functions = await self.plugin_service.get_plugin_functions(selected_plugins, available_plugins)
             if not plugin_functions:
-                return {"error": "未找到合适的函数", "selected_plugins": selected_plugins}
-            execution_plan = await self.plan_service.generate_execution_plan(user_input, plugin_functions)
+                return PlanResult.error_result(
+                    "未找到合适的函数",
+                    user_input=user_input,
+                    selected_plugins=selected_plugins
+                )
+            execution_plan: ExecutionPlan = await self.plan_service.generate_execution_plan(user_input,
+                                                                                            plugin_functions)
             if not execution_plan:
-                return {"error": "执行计划生成失败"}
+                return PlanResult.error_result(
+                    "执行计划生成失败",
+                    user_input=user_input
+                )
             LOGGER.info("✅ 执行计划生成成功")
-            return {
-                "success": True,
-                "user_input": user_input,
-                "selected_plugins": selected_plugins,
-                "plugin_functions": plugin_functions,
-                "execution_plan": execution_plan
-            }
+            return PlanResult.success_result(
+                user_input=user_input,
+                selected_plugins=selected_plugins,
+                plugin_functions=plugin_functions,
+                execution_plan=execution_plan
+            )
         except Exception as e:
             LOGGER.exception(f"❌ 分析失败: {e}")
-            return {"error": f"分析过程中发生错误: {str(e)}"}
+            return PlanResult.error_result(f"分析过程中发生错误: {str(e)}")
 
     def _parse_ai_response(self, content: str) -> Optional[Dict[str, Any]]:
         try:
@@ -78,32 +92,32 @@ class IntelligentPluginRouter:
             LOGGER.error(f"❌ 解析AI响应失败: {e}")
             return None
 
-    async def get_plugin_status(self) -> Dict[str, Any]:
+    async def get_plugin_status(self) -> PluginStatusResult:
         try:
             available_plugins = await self.plugin_service.get_available_plugins()
             all_plugins = await self.plugin_service.plugin_manager.list_plugins()
-            return {
-                "total_plugins": len(all_plugins),
-                "available_plugins": len(available_plugins),
-                "plugin_names": [p["plugin_name"] for p in available_plugins]
-            }
+            return PluginStatusResult(
+                total_plugins=len(all_plugins),
+                available_plugins=len(available_plugins),
+                plugin_names=[p["plugin_name"] for p in available_plugins]
+            )
         except Exception as e:
             LOGGER.error(f"❌ 获取插件状态失败: {e}")
-            return {"error": str(e)}
+            return PluginStatusResult.error_result(str(e))
 
-    def get_ai_status(self) -> Dict[str, Any]:
+    def get_ai_status(self) -> AIStatusResult:
         try:
             ai_manager = self.ai_service.ai_manager
-            return {
-                "available_providers": ai_manager.list_available_providers(),
-                "provider_types": ai_manager.list_provider_types(),
-                "health_status": ai_manager.health_check(),
-                "preferred_provider": self.ai_service.preferred_provider,
-                "fallback_providers": self.ai_service.fallback_providers
-            }
+            return AIStatusResult(
+                available_providers=ai_manager.list_available_providers(),
+                provider_types=ai_manager.list_provider_types(),
+                health_status=ai_manager.health_check(),
+                preferred_provider=self.ai_service.preferred_provider,
+                fallback_providers=self.ai_service.fallback_providers
+            )
         except Exception as e:
             LOGGER.error(f"❌ 获取AI状态失败: {e}")
-            return {"error": str(e)}
+            return AIStatusResult.error_result(str(e))
 
 
 # 测试函数
@@ -124,27 +138,23 @@ async def test_simple_case():
             preferred_provider="anthropic",  # 可以根据你的配置调整
             fallback_providers=["openai", "local"]  # 备选方案
         )
-
-        # 检查状态
         ai_status = router.get_ai_status()
         plugin_status = await router.get_plugin_status()
 
         print(f"🤖 AI状态: {ai_status}")
         print(f"📊 插件状态: {plugin_status}")
 
-        # 测试一个简单命令
         result = await router.analyze_and_plan("帮我拍一张照片")
 
-        if "error" in result:
-            print(f"❌ 简单测试失败: {result['error']}")
-            if "suggestion" in result:
-                print(f"💡 建议: {result['suggestion']}")
+        if not result.success:
+            print(f"❌ 简单测试失败: {result.error}")
+            if result.suggestion:
+                print(f"💡 建议: {result.suggestion}")
             return False
 
         print("✅ 简单测试通过!")
-        print(f"筛选的插件数: {len(result.get('selected_plugins', []))}")
-        print(f"可用函数数: {len(result.get('plugin_functions', []))}")
-
+        print(f"筛选的插件数: {len(result.selected_plugins)}")
+        print(f"可用函数数: {len(result.plugin_functions)}")
         return True
 
     except Exception as e:

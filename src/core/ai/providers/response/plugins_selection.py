@@ -1,5 +1,5 @@
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 from typing import List
 
 
@@ -10,6 +10,9 @@ class PluginSelectionMata:
     plugin_id: str
     reason: str
     confidence: float
+
+    def to_dict(self) -> dict:
+        return asdict(self)
 
 
 @dataclass

@@ -166,24 +166,9 @@ class BaseAIProvider(ABC):
         """
         if not self.system_prompt or not self.user_prompt:
             raise ValueError("Prompts not set. Call set_prompts() first.")
-
-        try:
-
-            content = await self._make_ai_request(model)
-            content = await self._fix_response_content(content, model)
-
-            return SelectionResponse.success_response(content)
-
-        except httpx.ConnectTimeout:
-            raise Exception(f"Connection timeout to {self.base_url}")
-        except httpx.ReadTimeout:
-            raise Exception(f"Read timeout from {self.base_url}")
-        except httpx.RequestError as e:
-            raise Exception(f"Request error: {str(e)}")
-        except Exception as e:
-            if "API Error" in str(e):
-                raise
-            raise Exception(f"Unexpected error: {str(e)}")
+        content = await self._make_ai_request(model)
+        content = await self._fix_response_content(content, model)
+        return SelectionResponse.success_response(content)
 
     async def _fix_response_content(self, content: str, model: str) -> str:
         if JsonValidator.is_valid_json(content):
