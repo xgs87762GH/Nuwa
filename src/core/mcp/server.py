@@ -3,48 +3,30 @@ import asyncio
 import logging
 # PluginRegistration
 from typing import Dict, Any
-from rpc import JSONRPCRequest, JSONRPCResponse, JSONRPCError
+
+from src.core.mcp.rpc import MCPRequestSchema, MCPResponseSchema
+from src.core.mcp.rpc.response import JSONRPCError
+from src.core.plugin import PluginManager
 
 LOGGER = logging.getLogger(__name__)
 
 
 class MCPServer:
-    def __init__(self) -> None:
-        self.adapters: Dict[str, Any] = {}
+    def __init__(self, plugin_manager: PluginManager) -> None:
+        self.plugin_manager = plugin_manager
 
-    def add_adapter(self, name: str, adapter) -> None:
-        self.adapters[name] = adapter
-
-    async def call(self, req: JSONRPCRequest) -> JSONRPCResponse:
-        full_name: str = req.method
+    async def call(self, req: MCPRequestSchema) -> MCPResponseSchema:
+        plugin_id: str = req.method
         params: Dict[str, Any] = req.params or {}
-
-        if "." not in full_name:
-            LOGGER.warning("Invalid method format: %s", full_name)
-            return JSONRPCResponse(id=req.id, error=JSONRPCError.invalid_request("Invalid method format"))
-
-        adapter_name, method_name = full_name.rsplit(".", 1)
-
-        if adapter_name not in self.adapters:
-            LOGGER.warning("Adapter '%s' not found", adapter_name)
-            return JSONRPCResponse(id=req.id, error=JSONRPCError.method_not_found("Adapter not found"))
-
-        method = getattr(self.adapters[adapter_name], method_name, None)
-        if method is None:
-            LOGGER.warning("Method '%s' not found in adapter '%s'", method_name, adapter_name)
-            return JSONRPCResponse(id=req.id, error=JSONRPCError.method_not_found("Method not found"))
-
         try:
-            result = await method(**params) if asyncio.iscoroutinefunction(method) else method(**params)
-
-            if result.get("status", "").upper() == "SUCCESS":
-                LOGGER.info("✅ %s.%s executed successfully -> %s", adapter_name, method_name, result)
-                return JSONRPCResponse(id=req.id, result=result.get("data"))
+            result = self.plugin_manager.call(plugin_id, req.method, **params)
+            if result:
+                return MCPResponseSchema.success(result)
             else:
-                return JSONRPCResponse(id=req.id,
-                                       error=JSONRPCError.custom(-32000, result.get("message", "Execution failed"),
-                                                                 result.get("data")))
-
+                return MCPResponseSchema.success(None)
         except Exception as exc:
-            LOGGER.exception("❌ %s.%s call failed: %s", adapter_name, method_name, exc)
-            return JSONRPCResponse(id=req.id, error=JSONRPCError.internal_error(str(exc)))
+            # LOGGER.exception("❌ %s.%s call failed: %s", adapter_name, method_name, exc)
+            LOGGER.error("❌ %s.%s call failed: %s", plugin_id, req.method, exc)
+            LOGGER.exception(exc)
+            return MCPResponseSchema.fail(req.id, JSONRPCError.internal_error(str(exc)))
+

@@ -32,6 +32,10 @@ class PluginRegistry:
     async def list_plugins(self) -> list[str]:
         return list(self._registry.keys())
 
+    async def clean_all(self):
+        for plugin_id, plugin in list(self._registry.items()):
+            self.unregister(plugin_id)
+
     def _get_plugin_by_path(self, path: str):
         for plugin in self._registry.values():
             if plugin.path == path:

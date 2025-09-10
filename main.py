@@ -18,3 +18,5 @@ app = create_app()
 if __name__ == "__main__":
     LOGGER.info("Starting application")
     uvicorn.run(app, host=app_config.host, port=app_config.port)
+    LOGGER.info(f"Application started at {app_config.host}:{app_config.port}")
+    LOGGER.info(f"Swagger UI: http://{app_config.host}:{app_config.port}/docs")

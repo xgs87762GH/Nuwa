@@ -1,7 +1,7 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
-from .routers import tasks
+from .routers import tasks, mcp, system
 from src.core.config import get_app_config, get_logger
 from src.core.di.bootstrap import ServiceBootstrap
 
@@ -53,6 +53,8 @@ def init_router() -> FastAPI:
 
     # 注册路由
     fastapi.include_router(tasks.router, prefix="/v1", tags=["tasks"])
+    fastapi.include_router(mcp.router, prefix="/v1", tags=["mcp"])
+    fastapi.include_router(system.router, prefix="/v1", tags=["system"])
 
     @fastapi.get("/", tags=["root"])
     async def root():

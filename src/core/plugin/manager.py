@@ -8,9 +8,9 @@ from typing import Dict, List, Optional
 
 from src.core.config import get_plugin_config, PluginConfig, get_logger
 from src.core.plugin import PluginDiscovery, PluginLoader, PluginRegistry
-from src.core.plugin.model import PluginRegistration
+from src.core.plugin.model import PluginRegistration, PluginServiceDefinition
 
-logger = get_logger("PluginManager")
+LOGGER = get_logger("PluginManager")
 
 
 class PluginManager:
@@ -26,7 +26,7 @@ class PluginManager:
 
     async def start(self):
         """Start the plugin manager"""
-        logger.info("Starting plugin manager")
+        LOGGER.info("Starting plugin manager")
         self._running = True
 
         # Start plugin discovery
@@ -39,9 +39,20 @@ class PluginManager:
         # Start health check
         asyncio.create_task(self._health_check_loop())
 
+    async def reload(self):
+        """Reload all plugins"""
+        LOGGER.info("Reloading all plugins")
+        await self.registry.clean_all()
+        LOGGER.info(f"Plugin manager reloaded: {self.registry.list_plugins()}")
+        if self.config.auto_discovery:
+            await self.discovery.reload()
+            for plugin_result in self.discovery.plugins:
+                plugin_registration = self.loader.load_plugin(plugin_result)
+                self.registry.register(plugin_registration)
+
     async def stop(self):
         """Stop the plugin manager"""
-        logger.info("Stopping plugin manager")
+        LOGGER.info("Stopping plugin manager")
         self._running = False
 
         # Stop discovery
@@ -62,11 +73,45 @@ class PluginManager:
         try:
             # Remove from registry
             await self.registry.unregister(plugin_id)
-            logger.info(f"Plugin {plugin_id} uninstalled successfully")
+            LOGGER.info(f"Plugin {plugin_id} uninstalled successfully")
             return True
         except Exception as e:
-            logger.error(f"Error uninstalling plugin {plugin_id}, error: {str(e)}")
+            LOGGER.error(f"Error uninstalling plugin {plugin_id}, error: {str(e)}")
             return False
+
+    async def call(self, plugin_id: str, method_name: str, **kwargs):
+        """调用插件方法并判断返回值"""
+        try:
+            plugin: PluginRegistration = self.registry.get_plugin(plugin_id)
+            if not plugin:
+                LOGGER.warning(f"Plugin {plugin_id} not found")
+                return None
+            services: List[PluginServiceDefinition] = plugin.plugin_services
+            for service in services:
+                if method_name in service.functions:
+                    try:
+                        result = await service.instance.call(method_name, **kwargs)
+
+                        # 判断返回值类型
+                        if result is None:
+                            LOGGER.debug(f"Method {method_name} returned None")
+                            return None
+                        elif result == "":  # 空字符串
+                            LOGGER.debug(f"Method {method_name} returned empty string")
+                            return result
+                        else:
+                            LOGGER.debug(f"Method {method_name} returned: {type(result).__name__}")
+                            return result
+
+                    except Exception as method_error:
+                        LOGGER.error(f"Error calling method {method_name}: {str(method_error)}")
+                        raise method_error
+            # 如果没找到对应的方法
+            LOGGER.warning(f"Method {method_name} not found in plugin {plugin_id}")
+            return None
+        except Exception as e:
+            LOGGER.error(f"Error calling plugin {plugin_id} method {method_name}: {str(e)}")
+            raise e
 
     async def get_plugin_info(self, plugin_id: str) -> Optional[Dict]:
         """Get plugin information"""
@@ -105,7 +150,8 @@ async def main():
     plugins = await manager.list_plugins()
     if plugins:
         for plugin in plugins:
-            logger.info(f"Plugin: {plugin}")
+            LOGGER.info(f"Plugin: {plugin}")
+
 
 if __name__ == '__main__':
     asyncio.run(main())
