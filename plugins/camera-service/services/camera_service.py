@@ -1,6 +1,7 @@
 """Camera service with dynamic parameter configuration - Optimized version."""
 
 import logging
+import sys
 import time
 from abc import ABC
 from contextlib import contextmanager
@@ -17,6 +18,22 @@ from utils.media_writer import ImageWriter
 from utils.file_path_manager import PathService
 
 logger = logging.getLogger(__name__)
+
+try:
+    # 检查是否存在 DictValue 问题
+    if hasattr(cv2, 'dnn') and not hasattr(cv2.dnn, 'DictValue'):
+        # 为新版本 OpenCV 添加兼容性
+        class DictValue:
+            def __init__(self, value=None):
+                self.value = value
+
+
+        cv2.dnn.DictValue = DictValue
+        print("Applied OpenCV compatibility patch")
+
+except ImportError as e:
+    print(f"Failed to import cv2: {e}")
+    sys.exit(1)
 
 
 class CameraService(ICameraService, ABC):

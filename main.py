@@ -5,7 +5,7 @@ from src.api.main import init_router
 from src.core.config import get_logger, get_app_config
 
 LOGGER = get_logger()
-app_config = get_app_config()
+application = get_app_config()
 
 
 def create_app() -> FastAPI:
@@ -17,6 +17,4 @@ app = create_app()
 
 if __name__ == "__main__":
     LOGGER.info("Starting application")
-    uvicorn.run(app, host=app_config.host, port=app_config.port)
-    LOGGER.info(f"Application started at {app_config.host}:{app_config.port}")
-    LOGGER.info(f"Swagger UI: http://{app_config.host}:{app_config.port}/docs")
+    uvicorn.run(app, host=application.host, port=application.port)

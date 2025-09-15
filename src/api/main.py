@@ -1,9 +1,10 @@
 from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 
-from .routers import tasks, mcp, system
 from src.core.config import get_app_config, get_logger
 from src.core.di.bootstrap import ServiceBootstrap
+from .routers import tasks, mcp, system
 
 application = get_app_config()
 LOGGER = get_logger()
@@ -26,6 +27,8 @@ async def lifespan(app: FastAPI):
         app.state.app_config = application
 
         LOGGER.info("All services registered successfully")
+        LOGGER.info(f"Application started at http://{application.host}:{application.port}")
+        LOGGER.info(f"Swagger UI: http://{application.host}:{application.port}/docs")
 
         # 交还控制权给 FastAPI
         yield

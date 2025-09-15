@@ -1,5 +1,6 @@
 import importlib.util
 import os
+import subprocess
 import sys
 from pathlib import Path
 from typing import List
@@ -9,7 +10,8 @@ from src.core.plugin.model.plugins import PluginDiscoveryResult
 from src.core.utils.global_tools import project_root
 from src.core.utils.plugin_loader import PluginEnvironment, PluginModuleRewriter
 
-logger = get_logger("PluginDiscovery")
+logger = get_logger(__name__)
+
 
 class PluginDiscovery:
     """Improved plugin discovery system with fully isolated plugin environments"""
@@ -40,6 +42,30 @@ class PluginDiscovery:
         entry_path = init_path if init_path.exists() else (main_path if main_path.exists() else None)
         return entry_path
 
+    def install_plugin_dependencies(self, plugin_dir: Path):
+        req_file = plugin_dir / "requirements.txt"
+        pyproject_file = plugin_dir / "pyproject.toml"
+        setup_cfg_file = plugin_dir / "setup.cfg"
+        # pip cache purge
+        # 检查 setup.cfg 里是否有非法依赖
+        if setup_cfg_file.exists():
+            with open(setup_cfg_file, "r") as f:
+                for i, line in enumerate(f, 1):
+                    if ":none:" in line:
+                        logger.error(f"Error: Invalid dependency ':none:' found in setup.cfg at line {i}")
+                        raise ValueError("Invalid dependency ':none:' found in setup.cfg. Please remove it.")
+
+        try:
+            if req_file.exists():
+                logger.info(f"Installing requirements.txt for {plugin_dir.name}")
+                subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "-r", str(req_file)])
+            elif pyproject_file.exists():
+                logger.info(f"Installing pyproject.toml for {plugin_dir.name}")
+                subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", str(plugin_dir)])
+        except subprocess.CalledProcessError as e:
+            logger.error(f"Dependency installation failed for {plugin_dir.name}: {e}")
+            # raise
+
     def _load_plugin_with_isolation(self, plugin_dir: Path):
         """Load plugin in an isolated environment"""
         plugin_name = plugin_dir.name
@@ -51,6 +77,9 @@ class PluginDiscovery:
             # logger_handler.debug(f"Skipping plugin {plugin_name}: no __init__.py file")
             logger.warning(f"❌ Skipping plugin {plugin_name}: missing __init__.py or main.py file")
             return
+
+        # Install dependencies
+        self.install_plugin_dependencies(plugin_dir=plugin_dir)
 
         # Create plugin environment
         with PluginEnvironment(plugin_dir) as env:
@@ -92,6 +121,8 @@ class PluginDiscovery:
 
     async def reload(self):
         """Reload all plugins"""
+        import warnings
+        warnings.warn("PluginDiscovery.reload expired there are compatibility issues", DeprecationWarning)
         self.plugins = []
         await self.start()
 

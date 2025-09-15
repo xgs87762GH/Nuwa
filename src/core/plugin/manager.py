@@ -41,6 +41,8 @@ class PluginManager:
 
     async def reload(self):
         """Reload all plugins"""
+        import warnings
+        warnings.filterwarnings("ignore", category=DeprecationWarning)
         LOGGER.info("Reloading all plugins")
         await self.registry.clean_all()
         LOGGER.info(f"Plugin manager reloaded: {self.registry.list_plugins()}")
