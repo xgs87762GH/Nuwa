@@ -1,6 +1,7 @@
 [ai.openai]
 api_key = "${OPENAI_KEY}"
-model = "gpt-3.5-turbo"
+models = ["gpt-3.5-turbo"]
+default_model = "gpt-3.5-turbo"
 user = "Nuwa"
 max_tokens = 2048
 base_url = "https://api.openai.com/v1"
@@ -8,7 +9,8 @@ request_timeout = 30
 
 [ai.anthropic]
 api_key = "${ANTHROPIC_KEY}"
-model = "claude-3-5-sonnet"
+models = ["claude-3-5-sonnet"]
+default_model = "claude-3-5-sonnet"
 user = "Nuwa"
 max_tokens = 2048
 base_url = "https://api.anthropic.com/v1"
@@ -18,7 +20,8 @@ anthropic-version = "2023-06-01"
 
 [ai.deepseek]
 api_key = "${DEEPSEEK_KEY}"
-model = "gpt-3.5-turbo"
+models = ["gpt-3.5-turbo"]
+default_model = "gpt-3.5-turbo"
 user = "Nuwa"
 max_tokens = 2048
 #base_url = "https://api.deepseek.com"

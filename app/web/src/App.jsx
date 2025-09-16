@@ -12,6 +12,8 @@ import Home from './pages/Home';
 import Tasks from './pages/Tasks';
 import Tools from './pages/Tools';
 import System from './pages/System';
+import FloatingChatBot from './components/FloatingChatBot';
+import { ChatProvider } from './contexts/ChatContext';
 
 const { Header, Content, Sider } = Layout;
 
@@ -45,55 +47,60 @@ const App = () => {
   ];
 
   return (
-    <Layout style={{ minHeight: '100vh' }}>
-      <Sider collapsible>
-        <div className="logo" style={{ 
-          height: 32, 
-          margin: 16, 
-          background: 'rgba(255, 255, 255, 0.3)',
-          borderRadius: 6,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          color: 'white',
-          fontWeight: 'bold'
-        }}>
-          Nuwa
-        </div>
-        <Menu
-          theme="dark"
-          selectedKeys={[location.pathname]}
-          mode="inline"
-          items={menuItems}
-        />
-      </Sider>
-      <Layout>
-        <Header style={{ 
-          padding: 0, 
-          background: colorBgContainer,
-          display: 'flex',
-          alignItems: 'center',
-          paddingLeft: 24
-        }}>
-          <h1 style={{ margin: 0, fontSize: 20 }}>智能AI插件管理和任务调度平台</h1>
-        </Header>
-        <Content style={{ margin: '16px' }}>
-          <div style={{
-            padding: 24,
-            minHeight: 360,
-            background: colorBgContainer,
-            borderRadius: 8,
+    <ChatProvider>
+      <Layout style={{ minHeight: '100vh' }}>
+        <Sider collapsible>
+          <div className="logo" style={{ 
+            height: 32, 
+            margin: 16, 
+            background: 'rgba(255, 255, 255, 0.3)',
+            borderRadius: 6,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: 'white',
+            fontWeight: 'bold'
           }}>
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/tasks" element={<Tasks />} />
-              <Route path="/tools" element={<Tools />} />
-              <Route path="/system" element={<System />} />
-            </Routes>
+            Nuwa
           </div>
-        </Content>
+          <Menu
+            theme="dark"
+            selectedKeys={[location.pathname]}
+            mode="inline"
+            items={menuItems}
+          />
+        </Sider>
+        <Layout>
+          <Header style={{ 
+            padding: 0, 
+            background: colorBgContainer,
+            display: 'flex',
+            alignItems: 'center',
+            paddingLeft: 24
+          }}>
+            <h1 style={{ margin: 0, fontSize: 20 }}>智能AI插件管理和任务调度平台</h1>
+          </Header>
+          <Content style={{ margin: '16px' }}>
+            <div style={{
+              padding: 24,
+              minHeight: 360,
+              background: colorBgContainer,
+              borderRadius: 8,
+            }}>
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/tasks" element={<Tasks />} />
+                <Route path="/tools" element={<Tools />} />
+                <Route path="/system" element={<System />} />
+              </Routes>
+            </div>
+          </Content>
+        </Layout>
+        
+        {/* 全局悬浮聊天机器人 */}
+        <FloatingChatBot />
       </Layout>
-    </Layout>
+    </ChatProvider>
   );
 };
 

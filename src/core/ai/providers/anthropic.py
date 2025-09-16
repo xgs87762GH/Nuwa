@@ -24,7 +24,7 @@ class AnthropicProvider(BaseAIProvider, ABC):
         :return: The payload for the Anthropic API request.
         """
         return {
-            "model": model or self.config.model,
+            "model": model,
             "max_tokens": self.get_max_tokens(),
             "temperature": self.get_temperature(),
             "system": self.system_prompt,
@@ -77,4 +77,4 @@ class AnthropicProvider(BaseAIProvider, ABC):
 
         :return: The default model for the Anthropic API.
         """
-        return self.config.model
+        return self.config.default_model

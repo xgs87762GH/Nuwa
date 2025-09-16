@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from enum import Enum
-from typing import Optional
+from typing import Optional, List
 
 
 class AIProviderEnum(Enum):
@@ -24,7 +24,8 @@ class AIConfig:
     """AI配置数据模型"""
     base_url: str = None
     api_key: str = None
-    model: str = None
+    models: List[str] = None
+    default_model: str = None
     user: str = None
     max_tokens: int = 1024
     request_timeout: int = 60

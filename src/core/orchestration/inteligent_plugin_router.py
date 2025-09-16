@@ -29,7 +29,7 @@ class IntelligentPluginRouter:
         self.prompt_templates = EnhancedPromptTemplates(template_dir or str(project_root() / "templates" / "prompts"),
                                                         user_name)
         self.plan_service = PlanService(self.prompt_templates, self.ai_service)
-        self.ai_service.validate_ai_manager(LOGGER)
+        self.ai_service.validate_ai_manager()
 
     async def analyze_and_plan(self, user_input: str) -> PlanResult:
         try:
@@ -70,7 +70,7 @@ class IntelligentPluginRouter:
             )
         except Exception as e:
             LOGGER.exception(f"❌ 分析失败: {e}")
-            return PlanResult.error_result(f"分析过程中发生错误: {str(e)}")
+            return PlanResult.error_result(f"{str(e)}")
 
     def _parse_ai_response(self, content: str) -> Optional[Dict[str, Any]]:
         try:
@@ -121,56 +121,56 @@ class IntelligentPluginRouter:
 
 
 # 测试函数
-async def test_simple_case():
-    from src.core.plugin import PluginManager
-
-    try:
-        # 初始化组件
-        plugin_manager = PluginManager()
-        await plugin_manager.start()
-
-        ai_manager = AIManager()
-
-        # 创建路由器，可以指定首选AI提供者
-        router = IntelligentPluginRouter(
-            plugin_manager=plugin_manager,
-            ai_manager=ai_manager,
-            preferred_provider="anthropic",  # 可以根据你的配置调整
-            fallback_providers=["openai", "local"]  # 备选方案
-        )
-        ai_status = router.get_ai_status()
-        plugin_status = await router.get_plugin_status()
-
-        print(f"🤖 AI状态: {ai_status}")
-        print(f"📊 插件状态: {plugin_status}")
-
-        result = await router.analyze_and_plan("帮我拍一张照片")
-
-        if not result.success:
-            print(f"❌ 简单测试失败: {result.error}")
-            if result.suggestion:
-                print(f"💡 建议: {result.suggestion}")
-            return False
-
-        print("✅ 简单测试通过!")
-        print(f"筛选的插件数: {len(result.selected_plugins)}")
-        print(f"可用函数数: {len(result.plugin_functions)}")
-        return True
-
-    except Exception as e:
-        print(f"❌ 测试过程中发生错误: {e}")
-        LOGGER.exception(e)
-        return False
-
-
-def main():
-    """主函数"""
-    print("🚀 启动智能插件路由器测试程序")
-    print(f"当前时间: 2025-09-05 03:46:44 UTC")
-    print(f"当前用户: Gordon")
-    import asyncio
-    asyncio.run(test_simple_case())
-
-
-if __name__ == "__main__":
-    main()
+# async def test_simple_case():
+#     from src.core.plugin import PluginManager
+#
+#     try:
+#         # 初始化组件
+#         plugin_manager = PluginManager()
+#         await plugin_manager.start()
+#
+#         ai_manager = AIManager()
+#
+#         # 创建路由器，可以指定首选AI提供者
+#         router = IntelligentPluginRouter(
+#             plugin_manager=plugin_manager,
+#             ai_manager=ai_manager,
+#             preferred_provider="anthropic",  # 可以根据你的配置调整
+#             fallback_providers=["openai", "local"]  # 备选方案
+#         )
+#         ai_status = router.get_ai_status()
+#         plugin_status = await router.get_plugin_status()
+#
+#         print(f"🤖 AI状态: {ai_status}")
+#         print(f"📊 插件状态: {plugin_status}")
+#
+#         result = await router.analyze_and_plan("帮我拍一张照片")
+#
+#         if not result.success:
+#             print(f"❌ 简单测试失败: {result.error}")
+#             if result.suggestion:
+#                 print(f"💡 建议: {result.suggestion}")
+#             return False
+#
+#         print("✅ 简单测试通过!")
+#         print(f"筛选的插件数: {len(result.selected_plugins)}")
+#         print(f"可用函数数: {len(result.plugin_functions)}")
+#         return True
+#
+#     except Exception as e:
+#         print(f"❌ 测试过程中发生错误: {e}")
+#         LOGGER.exception(e)
+#         return False
+#
+#
+# def main():
+#     """主函数"""
+#     print("🚀 启动智能插件路由器测试程序")
+#     print(f"当前时间: 2025-09-05 03:46:44 UTC")
+#     print(f"当前用户: Gordon")
+#     import asyncio
+#     asyncio.run(test_simple_case())
+#
+#
+# if __name__ == "__main__":
+#     main()

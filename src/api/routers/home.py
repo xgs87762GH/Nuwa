@@ -1,22 +1,37 @@
 from fastapi import APIRouter
 
-from src.api.models import APIResponse
+from src.api.models import SystemInfoAPIResponse, HealthStatusAPIResponse, SystemInfo, HealthStatus, APIResponse
 from src.core.config import get_logger, get_app_config
 
 LOGGER = get_logger(__name__)
 application = get_app_config()
-router = APIRouter()
+router = APIRouter(tags=["System"])
 
 
-@router.get("/", summary="获取系统信息", response_model=APIResponse)
-async def root():
-    return APIResponse.ok(data={
-        "message": "Welcome to the Nuwa API",
-        "version": application.version,
-        "documentation": "/docs"
-    })
+@router.get(
+    "/",
+    summary="Get system information",
+    description="Get basic system information including version and documentation",
+    response_model=SystemInfoAPIResponse
+)
+async def root() -> SystemInfoAPIResponse:
+    """Get system information"""
+    system_info = SystemInfo(
+        message="Welcome to the Nuwa API",
+        version=application.version,
+        documentation="/docs"
+    )
+
+    return APIResponse.ok(data=system_info, message="System information retrieved")
 
 
-@router.get("/health", summary="检查系统状态", response_model=APIResponse)
-async def health_check():
-    return APIResponse.ok(data={"status": "ok"})
+@router.get(
+    "/health",
+    summary="Check system status",
+    description="Perform a basic health check of the system",
+    response_model=HealthStatusAPIResponse
+)
+async def health_check() -> HealthStatusAPIResponse:
+    """System health check"""
+    health_status = HealthStatus(status="ok")
+    return APIResponse.ok(data=health_status, message="System is healthy")

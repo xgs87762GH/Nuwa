@@ -1,7 +1,7 @@
 # AI Manager Module
 import asyncio
 import datetime
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Any
 
 from src.core.ai.model import AIProviderMap
 from src.core.ai.providers.interface import BaseAIProvider
@@ -73,19 +73,20 @@ class AIManager:
                 provider_types[config.provider.name] = config.provider.name
         return provider_types
 
-    def get_provider_status(self) -> Dict[str, Dict]:
+    def get_provider_status(self) -> list[Any]:
         """Get status of all providers"""
-        status = {}
+        list = []
         for name, provider in self.providers.items():
             config = next((c for c in self.configs if c.provider.name == name), None)
-            status[name] = {
+            list.append({
                 "type": config.provider.name if config else "unknown",
-                "model": getattr(provider.config, 'model', 'unknown'),
+                "default_model": getattr(provider.config, 'default_model', 'unknown'),
+                "models": getattr(provider.config, 'models', []),
                 "base_url": getattr(provider.config, 'base_url', 'default'),
                 "status": "active",
                 "initialized_at": "2025-09-04 08:32:29"
-            }
-        return status
+            })
+        return list
 
     async def call_provider(self, provider_name: str, system_prompt: str, user_prompt: str,
                             **kwargs) -> SelectionResponse:
@@ -107,7 +108,7 @@ class AIManager:
         except Exception as e:
             LOGGER.exception(e)
             LOGGER.error(f"❌ Provider {provider_name} failed: {e}")
-            raise
+            raise e
 
     async def call_best_available(self, system_prompt: str, user_prompt: str, **kwargs) -> SelectionResponse:
         """Call the first available provider"""
@@ -149,6 +150,8 @@ class AIManager:
             except Exception as e:
                 LOGGER.exception(e)
                 LOGGER.warning(f"⚠️ Provider {actual_provider_name} failed: {e}")
+                if not fallback_providers or len(providers_to_try) <= 1:
+                    raise e
                 continue
 
         raise RuntimeError(f"All providers failed: {providers_to_try}")
@@ -169,31 +172,30 @@ class AIManager:
                 health_status[name] = False
         return health_status
 
-
-system_prompt = """You are an intelligent plugin routing system. Filter suitable plugins based on user requirements. Current Time: 2025-09-03 10:37:02, 
-User: Gordon. Available: [{'plugin_name':'camera-plugin','plugin_id':'db111534-bddd-4a05-be3f-2c222c069a53','description':'Plugin for camera operations and configurations',
-'tags':['camera','recording','photo','video','plugin','mcp']}]. Return JSON: {"analysis":"User intent analysis","selected_plugins":
-[{"plugin_name":"Plugin name","plugin_id":"Plugin ID","reason":"Selection reason","confidence":0.9}],"overall_confidence":0.8}. Principles: 1.Match descriptions/tags 
-2.Consider relevance 3.Multiple if needed 4.Confidence 0.0-1.0 5.Only needed plugins 6.Plugin-level only."""
-
-user_prompt = "User Requirement: Help me take a photo. Analyze intent and filter suitable plugins."
-
-
-async def test_call_best_available():
-    """Test AI providers"""
-    manager = AIManager()
-    resp = await manager.call_best_available(system_prompt, user_prompt, model="gpt-4-1106-preview")
-    print("Response:", resp)
-    print("Response (dict):", resp.__dict__)
-
-
-async def test_call_with_fallback():
-    """Test AI providers"""
-    manager = AIManager()
-    resp = await manager.call_with_fallback("anthropic", ["openai"], system_prompt, user_prompt)
-    print("Response:", resp)
-    print("Response (dict):", resp.__dict__)
-
-
-if __name__ == '__main__':
-    asyncio.run(test_call_best_available())
+# system_prompt = """You are an intelligent plugin routing system. Filter suitable plugins based on user requirements. Current Time: 2025-09-03 10:37:02,
+# User: Gordon. Available: [{'plugin_name':'camera-plugin','plugin_id':'db111534-bddd-4a05-be3f-2c222c069a53','description':'Plugin for camera operations and configurations',
+# 'tags':['camera','recording','photo','video','plugin','mcp']}]. Return JSON: {"analysis":"User intent analysis","selected_plugins":
+# [{"plugin_name":"Plugin name","plugin_id":"Plugin ID","reason":"Selection reason","confidence":0.9}],"overall_confidence":0.8}. Principles: 1.Match descriptions/tags
+# 2.Consider relevance 3.Multiple if needed 4.Confidence 0.0-1.0 5.Only needed plugins 6.Plugin-level only."""
+#
+# user_prompt = "User Requirement: Help me take a photo. Analyze intent and filter suitable plugins."
+#
+#
+# async def test_call_best_available():
+#     """Test AI providers"""
+#     manager = AIManager()
+#     resp = await manager.call_best_available(system_prompt, user_prompt, model="gpt-4-1106-preview")
+#     print("Response:", resp)
+#     print("Response (dict):", resp.__dict__)
+#
+#
+# async def test_call_with_fallback():
+#     """Test AI providers"""
+#     manager = AIManager()
+#     resp = await manager.call_with_fallback("anthropic", ["openai"], system_prompt, user_prompt)
+#     print("Response:", resp)
+#     print("Response (dict):", resp.__dict__)
+#
+#
+# if __name__ == '__main__':
+#     asyncio.run(test_call_best_available())

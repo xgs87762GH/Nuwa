@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 
 from src.api.config.cors_config import get_cors_config
-from src.api.routers import tasks, mcp, system, home
+from src.api.routers import tasks, mcp, system, home, ai_server
 from src.core.config import get_app_config, get_logger
 from src.core.di.bootstrap import ServiceBootstrap
 
@@ -49,10 +49,12 @@ async def lifespan(app: FastAPI):
 def register_routers(fastapi: FastAPI):
     """注册路由"""
 
+    fastapi.include_router(home.router, tags=["APP"])
     fastapi.include_router(tasks.router, prefix="/v1", tags=["TASK"])
     fastapi.include_router(mcp.router, prefix="/v1", tags=["MCP"])
     fastapi.include_router(system.router, prefix="/v1", tags=["SYSTEM"])
-    fastapi.include_router(home.router, tags=["APP"])
+    fastapi.include_router(ai_server.router, prefix="/v1", tags=["AISERVER"])
+
 
 
 def init_router() -> FastAPI:

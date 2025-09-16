@@ -40,7 +40,7 @@ class OpenAIProvider(BaseAIProvider, ABC):
         return response_data["choices"][0]["message"]["content"]
 
     def get_default_model(self) -> str:
-        return self.config.model
+        return self.config.default_model
 
 
 async def simple_test():

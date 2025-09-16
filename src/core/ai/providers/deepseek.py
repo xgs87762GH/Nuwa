@@ -37,7 +37,7 @@ class DeepSeekProvider(BaseAIProvider, ABC):
         return response_data["choices"][0]["message"]["content"]
 
     def get_default_model(self) -> str:
-        return getattr(self.config, "model")
+        return self.config.default_model
 
     def chat(self, system_prompt: str, user_prompt: str) -> str:
         self.system_prompt = system_prompt

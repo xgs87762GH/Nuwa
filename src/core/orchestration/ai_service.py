@@ -1,3 +1,4 @@
+from src.core.ai.providers.response import SelectionResponse, ErrorCode
 from src.core.config import get_logger
 
 Logger = get_logger(__name__)
@@ -10,7 +11,7 @@ class AIService:
         self.fallback_providers = fallback_providers or []
         self.model = model
 
-    def validate_ai_manager(self, logger):
+    def validate_ai_manager(self):
         try:
             available_providers = self.ai_manager.list_available_providers()
             if not available_providers:
@@ -25,20 +26,17 @@ class AIService:
             return False
 
     async def call_ai_with_fallback(self, system_prompt, user_prompt):
-        try:
-            if self.preferred_provider:
-                return await self.ai_manager.call_with_fallback(
-                    primary_provider=self.preferred_provider,
-                    fallback_providers=self.fallback_providers,
-                    system_prompt=system_prompt,
-                    user_prompt=user_prompt,
-                    model=self.model
-                )
-            else:
-                return await self.ai_manager.call_best_available(
-                    system_prompt=system_prompt,
-                    user_prompt=user_prompt,
-                    model=self.model
-                )
-        except Exception as e:
-            raise
+        if self.preferred_provider:
+            return await self.ai_manager.call_with_fallback(
+                primary_provider=self.preferred_provider,
+                fallback_providers=self.fallback_providers,
+                system_prompt=system_prompt,
+                user_prompt=user_prompt,
+                model=self.model
+            )
+        else:
+            return await self.ai_manager.call_best_available(
+                system_prompt=system_prompt,
+                user_prompt=user_prompt,
+                model=self.model
+            )
