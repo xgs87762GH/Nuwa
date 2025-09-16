@@ -49,17 +49,22 @@ class ServiceBootstrap:
 
     async def _register_services(self):
         """注册业务服务"""
+        # 创建并注册 AIService 单例
         self.ai_service = AIService(self._ai_manager)
         container.register_singleton(AIService, self.ai_service)
 
-        # 计划生成服务
+        # 创建并注册 PluginService 单例
+        plugin_service = PluginService(self._plugin_manager)
+        container.register_singleton(PluginService, plugin_service)
+
+        # 计划生成服务 - 使用已注册的 AIService 单例
         self.prompt_templates = EnhancedPromptTemplates(str(project_root() / "templates" / "prompts"))
-        self.plan_service = PlanService(ai_service=AIService(self._ai_manager), prompt_templates=self.prompt_templates)
+        self.plan_service = PlanService(ai_service=self.ai_service, prompt_templates=self.prompt_templates)
         container.register_singleton(PlanService, self.plan_service)
 
-        # 智能插件路由器
+        # 智能插件路由器 - 使用已注册的服务单例
         router = IntelligentPluginRouter(
-            plugin_service=PluginService(self._plugin_manager),
+            plugin_service=plugin_service,
             ai_service=self.ai_service,
             plan_service=self.plan_service
         )
