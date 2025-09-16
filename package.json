@@ -1,0 +1,15 @@
+{
+  "name": "nuwa",
+  "version": "1.0.0",
+  "description": "Nuwa AI Plugin Management Platform",
+  "scripts": {
+    "dev": "./scripts/start-dev.sh",
+    "stop-dev": "./scripts/stop-dev.sh",
+    "start-backend": "python main.py",
+    "start-frontend": "cd app && npm start",
+    "build": "cd app && npm run build",
+    "test": "cd app && npm test"
+  },
+  "author": "ISAISAI",
+  "license": "GPL-3.0"
+}

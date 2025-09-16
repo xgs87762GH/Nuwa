@@ -6,7 +6,7 @@ from src.api.dependencies import PluginManagerDep
 from src.api.models import APIResponse
 from src.core.config import get_logger
 
-router = APIRouter(prefix="/mcp", tags=["MCP"])
+router = APIRouter(prefix="/mcp")
 
 LOGGER = get_logger(__name__)
 
@@ -23,6 +23,18 @@ async def get_tools(plugin_manager: PluginManagerDep):
     })
 
 
+@router.get("/tools/stats", summary="Count all plugins.", response_model=APIResponse)
+async def get_tools_statistics(plugin_manager: PluginManagerDep):
+    """
+    Count all plugins.
+    """
+    plugins: List[Dict[str, Any]] = await plugin_manager.list_plugins()
+    LOGGER.info(f"Total plugins: {len(plugins)}")
+    return APIResponse.ok({
+        "total": len(plugins) if plugins else 0
+    })
+
+
 @router.get("/tools/{tool_id}", summary="Get tool details.", response_model=APIResponse)
 async def get_tool_details(tool_id: str, plugin_manager: PluginManagerDep):
     """
@@ -31,7 +43,6 @@ async def get_tool_details(tool_id: str, plugin_manager: PluginManagerDep):
     plugin: Dict[str, Any] = await plugin_manager.get_plugin_info(tool_id)
     return APIResponse.ok(plugin)
 
-
 # @router.post("/tools/reload", summary="Reload all plugins.", response_model=APIResponse)
 # async def reload_plugins(plugin_manager: PluginManagerDep):
 #     """
@@ -39,4 +50,3 @@ async def get_tool_details(tool_id: str, plugin_manager: PluginManagerDep):
 #     """
 #     await plugin_manager.reload()
 #     return APIResponse.ok()
-

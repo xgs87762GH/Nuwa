@@ -127,7 +127,8 @@ class PluginManager:
                 "description": plugin.description,
                 "registered_at": plugin.registered_at,
                 "is_enabled": plugin.is_enabled,
-                "tags": plugin.tags
+                "tags": plugin.tags,
+                "metadata": plugin.metadata
             }
         return None
 

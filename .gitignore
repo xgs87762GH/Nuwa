@@ -82,3 +82,14 @@ ipython_config.py
 *.pid
 *.seed
 *.sqlite3-journal
+
+# ------------- front -------------
+node_modules/
+dist/
+build/
+.next/
+.nuxt/
+.nuxt.config.js
+.nuxt.config.ts
+.nuxt.config.mjs
+.nuxt.config.cjs

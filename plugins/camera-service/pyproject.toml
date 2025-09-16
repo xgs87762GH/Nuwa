@@ -3,13 +3,13 @@ requires = ["setuptools>=45", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "camera-plugin"
+name = "Camera & Vision"
 version = "1.0.0"
-description = "Plugin for camera operations and configurations"
+description = "Professional camera operations and computer vision capabilities"
 authors = [{ name = "Gordon", email = "Gordon@gmail.com" }]
 license = { text = "GPL-3.0" }
 requires-python = ">=3.8"
-keywords = ["camera", "recording", "photo", "video", "plugin", "mcp"]
+keywords = ["camera", "video", "photo", "opencv", "vision"]
 dependencies = [
     "opencv-python>=4.12.0.88",
     "pillow>=10.0.0",

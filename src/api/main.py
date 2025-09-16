@@ -1,10 +1,12 @@
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from starlette.middleware.cors import CORSMiddleware
 
+from src.api.config.cors_config import get_cors_config
+from src.api.routers import tasks, mcp, system, home
 from src.core.config import get_app_config, get_logger
 from src.core.di.bootstrap import ServiceBootstrap
-from .routers import tasks, mcp, system
 
 application = get_app_config()
 LOGGER = get_logger()
@@ -44,6 +46,15 @@ async def lifespan(app: FastAPI):
             LOGGER.exception("Error while cleaning up services: %s", e)
 
 
+def register_routers(fastapi: FastAPI):
+    """注册路由"""
+
+    fastapi.include_router(tasks.router, prefix="/v1", tags=["TASK"])
+    fastapi.include_router(mcp.router, prefix="/v1", tags=["MCP"])
+    fastapi.include_router(system.router, prefix="/v1", tags=["SYSTEM"])
+    fastapi.include_router(home.router, tags=["APP"])
+
+
 def init_router() -> FastAPI:
     """初始化FastAPI路由"""
 
@@ -54,21 +65,9 @@ def init_router() -> FastAPI:
         lifespan=lifespan
     )
 
+    cors_config = get_cors_config()
+    fastapi.add_middleware(CORSMiddleware, **cors_config)
+
     # 注册路由
-    fastapi.include_router(tasks.router, prefix="/v1", tags=["tasks"])
-    fastapi.include_router(mcp.router, prefix="/v1", tags=["mcp"])
-    fastapi.include_router(system.router, prefix="/v1", tags=["system"])
-
-    @fastapi.get("/", tags=["root"])
-    async def root():
-        return {
-            "message": "Welcome to the Nuwa API",
-            "version": application.version,
-            "documentation": "/docs"
-        }
-
-    @fastapi.get("/health", tags=["health"])
-    async def health_check():
-        return {"status": "ok", "version": application.version}
-
+    register_routers(fastapi)
     return fastapi

@@ -8,21 +8,18 @@ import psutil
 from fastapi import APIRouter, HTTPException, Request
 
 from src.api.models import APIResponse, SystemInfoResponse, CPUInfoResponse, DiskInfoResponse, MemoryInfoResponse, \
-    NetworkInfoResponse, \
-    ProcessInfoResponse
+    NetworkInfoResponse, ProcessInfoResponse
 from src.core.config import AppConfig
 from src.core.config.logger import get_logger
 
-router = APIRouter(prefix="/system", tags=["System"])
+router = APIRouter(prefix="/system")
 
 LOGGER = get_logger(__name__)
 
 
 @router.get("/info", summary="获取系统基本信息", response_model=APIResponse)
 async def get_system_info(req: Request):
-    """
-    获取系统基本信息：主机名、平台、架构等
-    """
+    """获取系统基本信息：主机名、平台、架构等"""
     try:
         app_config: AppConfig = req.app.state.app_config
         LOGGER.info(f"获取系统基本信息 - APP: {app_config.name}")
@@ -48,9 +45,7 @@ async def get_system_info(req: Request):
 
 @router.get("/cpu", summary="获取CPU信息", response_model=APIResponse)
 async def get_cpu_info(req: Request):
-    """
-    获取CPU信息：核心数、频率、使用率等
-    """
+    """获取CPU信息：核心数、频率、使用率等"""
     try:
         app_config: AppConfig = req.app.state.app_config
         LOGGER.info(f"获取CPU信息 - APP: {app_config.name}")
@@ -74,9 +69,7 @@ async def get_cpu_info(req: Request):
 
 @router.get("/memory", summary="获取内存信息", response_model=APIResponse)
 async def get_memory_info(req: Request):
-    """
-    获取内存信息：总内存、已用内存、可用内存等
-    """
+    """获取内存信息：总内存、已用内存、可用内存等"""
     try:
         app_config: AppConfig = req.app.state.app_config
         LOGGER.info(f"获取内存信息 - APP: {app_config.name}")
@@ -98,9 +91,7 @@ async def get_memory_info(req: Request):
 
 @router.get("/disk", summary="获取磁盘信息", response_model=APIResponse)
 async def get_disk_info(req: Request):
-    """
-    获取磁盘信息：磁盘使用情况、挂载点等
-    """
+    """获取磁盘信息：磁盘使用情况、挂载点等"""
     try:
         app_config: AppConfig = req.app.state.app_config
         LOGGER.info(f"获取磁盘信息 - APP: {app_config.name}")
@@ -122,10 +113,13 @@ async def get_disk_info(req: Request):
                 )
                 disk_info_list.append(disk_info.dict())
             except PermissionError:
-                # 某些系统分区可能没有权限访问
                 continue
 
-        return APIResponse.ok(disk_info_list)
+        # 修改这里：将列表包装在字典中
+        return APIResponse.ok({
+            "disks": disk_info_list,
+            "total_disks": len(disk_info_list)
+        })
     except Exception as e:
         LOGGER.error(f"获取磁盘信息失败: {str(e)}")
         raise HTTPException(status_code=500, detail=f"获取磁盘信息失败: {str(e)}")
@@ -133,9 +127,7 @@ async def get_disk_info(req: Request):
 
 @router.get("/network", summary="获取网络信息", response_model=APIResponse)
 async def get_network_info(req: Request):
-    """
-    获取网络信息：网络接口、IP地址、网络统计等
-    """
+    """获取网络信息：网络接口、IP地址、网络统计等"""
     try:
         app_config: AppConfig = req.app.state.app_config
         LOGGER.info(f"获取网络信息 - APP: {app_config.name}")
@@ -160,7 +152,11 @@ async def get_network_info(req: Request):
                     )
                     network_info_list.append(network_info.dict())
 
-        return APIResponse.ok(network_info_list)
+        # 修改这里：将列表包装在字典中
+        return APIResponse.ok({
+            "interfaces": network_info_list,
+            "total_interfaces": len(network_info_list)
+        })
     except Exception as e:
         LOGGER.error(f"获取网络信息失败: {str(e)}")
         raise HTTPException(status_code=500, detail=f"获取网络信息失败: {str(e)}")
@@ -168,9 +164,7 @@ async def get_network_info(req: Request):
 
 @router.get("/processes", summary="获取进程信息", response_model=APIResponse)
 async def get_process_info(req: Request, limit: int = 10):
-    """
-    获取进程信息：按CPU使用率排序的前N个进程
-    """
+    """获取进程信息：按CPU使用率排序的前N个进程"""
     try:
         app_config: AppConfig = req.app.state.app_config
         LOGGER.info(f"获取进程信息 - APP: {app_config.name}")
@@ -192,7 +186,13 @@ async def get_process_info(req: Request, limit: int = 10):
 
         # 按CPU使用率排序并限制数量
         processes.sort(key=lambda x: x['cpu_percent'], reverse=True)
-        return APIResponse.ok(processes[:limit])
+
+        # 修改这里：将列表包装在字典中
+        return APIResponse.ok({
+            "processes": processes[:limit],
+            "total_processes": len(processes),
+            "limit": limit
+        })
     except Exception as e:
         LOGGER.error(f"获取进程信息失败: {str(e)}")
         raise HTTPException(status_code=500, detail=f"获取进程信息失败: {str(e)}")
@@ -200,9 +200,7 @@ async def get_process_info(req: Request, limit: int = 10):
 
 @router.get("/health", summary="系统健康检查", response_model=APIResponse)
 async def system_health_check(req: Request):
-    """
-    系统健康检查：综合评估系统状态
-    """
+    """系统健康检查：综合评估系统状态"""
     try:
         app_config: AppConfig = req.app.state.app_config
         LOGGER.info(f"执行系统健康检查 - APP: {app_config.name}")
@@ -214,9 +212,16 @@ async def system_health_check(req: Request):
         memory = psutil.virtual_memory()
         memory_percent = memory.percent
 
-        # 磁盘使用率（根分区）
-        disk_usage = psutil.disk_usage('/')
-        disk_percent = (disk_usage.used / disk_usage.total) * 100
+        # 磁盘使用率
+        try:
+            # Windows 系统使用 C:\ 而不是 /
+            if platform.system() == "Windows":
+                disk_usage = psutil.disk_usage('C:\\')
+            else:
+                disk_usage = psutil.disk_usage('/')
+            disk_percent = (disk_usage.used / disk_usage.total) * 100
+        except:
+            disk_percent = 0.0
 
         # 系统负载（仅Linux/Unix）
         load_avg = None
