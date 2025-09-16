@@ -3,9 +3,11 @@ from typing import Optional
 from src.core.ai import AIManager
 from src.core.config import create_database_manager, DataBaseManager
 from src.core.di.container import container
-from src.core.orchestration import IntelligentPluginRouter
+from src.core.orchestration import IntelligentPluginRouter, PluginService, AIService, PlanService
 from src.core.plugin import PluginManager
 from src.core.tasks.service import TaskService
+from src.core.utils.global_tools import project_root
+from src.core.utils.template import EnhancedPromptTemplates
 
 
 class ServiceBootstrap:
@@ -36,7 +38,6 @@ class ServiceBootstrap:
         await self._database_manager.connect()
         container.register_singleton(DataBaseManager, self._database_manager)
 
-
         # 插件管理器
         self._plugin_manager = PluginManager()
         await self._plugin_manager.start()
@@ -48,9 +49,20 @@ class ServiceBootstrap:
 
     async def _register_services(self):
         """注册业务服务"""
+        self.ai_service = AIService(self._ai_manager)
+        container.register_singleton(AIService, self.ai_service)
+
+        # 计划生成服务
+        self.prompt_templates = EnhancedPromptTemplates(str(project_root() / "templates" / "prompts"))
+        self.plan_service = PlanService(ai_service=AIService(self._ai_manager), prompt_templates=self.prompt_templates)
+        container.register_singleton(PlanService, self.plan_service)
 
         # 智能插件路由器
-        router = IntelligentPluginRouter(plugin_manager=self._plugin_manager)
+        router = IntelligentPluginRouter(
+            plugin_service=PluginService(self._plugin_manager),
+            ai_service=self.ai_service,
+            plan_service=self.plan_service
+        )
         container.register_singleton(IntelligentPluginRouter, router)
 
         # 任务服务 - 使用工厂注册，支持依赖注入

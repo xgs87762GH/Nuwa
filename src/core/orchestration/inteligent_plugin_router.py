@@ -15,20 +15,15 @@ LOGGER = get_logger(__name__)
 class IntelligentPluginRouter:
     def __init__(
             self,
-            plugin_manager,
-            ai_manager=None,
-            template_dir=None,
-            user_name="Gordon",
-            preferred_provider=None,
-            fallback_providers=None,
+            plugin_service: PluginService,
+            ai_service: AIService,
+            plan_service: PlanService,
             model=None
     ):
-        self.plugin_service = PluginService(plugin_manager)
-        self.ai_service = AIService(ai_manager or AIManager(), preferred_provider, fallback_providers, model)
+        self.plugin_service = plugin_service
+        self.ai_service = ai_service
+        self.plan_service = plan_service
         self.model = model
-        self.prompt_templates = EnhancedPromptTemplates(template_dir or str(project_root() / "templates" / "prompts"),
-                                                        user_name)
-        self.plan_service = PlanService(self.prompt_templates, self.ai_service)
         self.ai_service.validate_ai_manager()
 
     async def analyze_and_plan(self, user_input: str) -> PlanResult:
