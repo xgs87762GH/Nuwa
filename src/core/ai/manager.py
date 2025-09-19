@@ -1,7 +1,7 @@
 # AI Manager Module
 import asyncio
 import datetime
-from typing import List, Dict, Optional, Any
+from typing import List, Dict, Optional, Any, Type
 
 from src.core.ai.model import AIProviderMap
 from src.core.ai.providers.interface import BaseAIProvider
@@ -21,6 +21,13 @@ class AIManager:
         self.configs: List[AIModel] = []
         self.provider_map = AIProviderMap()
         self.__initialize_providers()
+
+    def get_models_by_provider(self, provider_name: str) -> List[str]:
+        """Get available models for a specific provider"""
+        config = next((c for c in self.configs if c.provider.name == provider_name), None)
+        if config and hasattr(config.config, 'models'):
+            return config.config.models
+        return []
 
     def __initialize_providers(self):
         """Initialize all AI providers based on configuration"""

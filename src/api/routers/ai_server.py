@@ -1,3 +1,5 @@
+from typing import List
+
 from fastapi import APIRouter
 
 from src.api.dependencies import AIManagerDep, IntelligentPluginRouterDep
@@ -38,12 +40,27 @@ async def get_all_ai_server(ai_manager: AIManagerDep) -> AIServerListResponse:
 
 
 @router.post("/set_default/{provider_type}", summary="Set default AI provider", response_model=APIResponse)
-async def set_default_ai_provider(provider_type: str, intelligent_plugin_router: IntelligentPluginRouterDep) -> APIResponse:
+async def set_default_ai_provider(provider_type: str,
+                                  intelligent_plugin_router: IntelligentPluginRouterDep) -> APIResponse:
     """
     Set the default AI provider by type.
     """
-    intelligent_plugin_router.ai_service.preferred_provider = provider_type
-    intelligent_plugin_router.ai_service.fallback_providers = []
+    intelligent_plugin_router.set_preferred_provider(provider_type)
     LOGGER.info(f"Set default AI provider to {provider_type}")
     LOGGER.info(f"preferred providers: {intelligent_plugin_router.ai_service.preferred_provider}")
     return APIResponse.ok(message="Default AI provider set successfully")
+
+
+@router.get("/provider/current", summary="Get current AI provider", response_model=APIResponse)
+async def get_current_ai_provider(intelligent_plugin_router: IntelligentPluginRouterDep) -> APIResponse:
+    """Get current AI provider"""
+    return APIResponse.ok(data=intelligent_plugin_router.ai_service.preferred_provider)
+
+
+@router.get("/provider/models/{provider_type}", summary="Get models for AI provider", response_model=APIResponse)
+async def get_models_for_provider(provider_type: str, aiManagerDep: AIManagerDep):
+    """
+    Get models for a specific AI provider.
+    """
+    models: List[str] = aiManagerDep.get_models_by_provider(provider_type)
+    return APIResponse.ok(data=models)

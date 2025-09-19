@@ -1,5 +1,5 @@
 import json
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, List
 
 from src.core.ai.providers.response import ExecutionPlan
 from src.core.config.logger import get_logger
@@ -114,6 +114,15 @@ class IntelligentPluginRouter:
             LOGGER.error(f"❌ 获取AI状态失败: {e}")
             return AIStatusResult.error_result(str(e))
 
+    def set_preferred_provider(self, provider_type: str, fallback_providers: Optional[list] = None):
+        if not self.ai_service.ai_manager.is_provider_available(provider_type):
+            LOGGER.error(f"The specified provider {provider_type} is not available.")
+            raise ValueError(f"Provider {provider_type} not found.")
+
+        self.ai_service.preferred_provider = provider_type
+        self.ai_service.fallback_providers = fallback_providers or []
+        LOGGER.info(f"Set the preferred AI provider as: {provider_type}")
+        LOGGER.info(f"List of alternative AI providers: {self.ai_service.fallback_providers}")
 
 # 测试函数
 # async def test_simple_case():

@@ -1,11 +1,17 @@
-from src.core.ai.providers.response import SelectionResponse, ErrorCode
+from src.core.ai import AIManager
 from src.core.config import get_logger
 
 Logger = get_logger(__name__)
 
 
 class AIService:
-    def __init__(self, ai_manager, preferred_provider=None, fallback_providers=None, model=None):
+    def __init__(
+            self,
+            ai_manager: AIManager,
+            preferred_provider: str = None,
+            fallback_providers: str = None,
+            model: str = None
+    ):
         self.ai_manager = ai_manager
         self.preferred_provider = preferred_provider
         self.fallback_providers = fallback_providers or []
