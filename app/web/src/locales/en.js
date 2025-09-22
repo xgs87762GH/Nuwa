@@ -121,9 +121,14 @@ const enLocale = {
     status: {
       title: 'Status',
       pending: 'Pending',
+      scheduled: 'Scheduled',
       running: 'Running',
+      success: 'Success',
       completed: 'Completed',
-      failed: 'Failed'
+      failed: 'Failed',
+      cancelled: 'Cancelled',
+      paused: 'Paused',
+      timeout: 'Timeout'
     },
     priority: {
       title: 'Priority',
@@ -231,10 +236,19 @@ const enLocale = {
     systemInfoFailed: 'Failed to get system information',
     selectAIProvider: 'Select AI Provider',
     bytesReceived: 'Bytes Received',
-    bytesSent: 'Bytes Sent'
+    bytesSent: 'Bytes Sent',
+    hostname: 'Hostname',
+    operatingSystem: 'Operating System',
+    architecture: 'Architecture',
+    bootTime: 'Boot Time',
+    cpuInfo: 'CPU Information',
+    cpuCores: 'CPU Cores',
+    memoryInfo: 'Memory Information',
+    totalMemory: 'Total Memory'
   },
   // Common
   common: {
+    locale: 'en',
     loading: 'Loading...',
     success: 'Success',
     error: 'Error',
@@ -321,8 +335,9 @@ const enLocale = {
     disableFailed: 'Failed to disable',
     loadSuccess: 'Loaded successfully',
     loadFailed: 'Failed to load',
-    providerSwitchSuccess: 'AI provider switched successfully',
     loadProvidersFailed: 'Failed to load AI providers',
+    providerSwitchSuccess: 'AI provider switched successfully',
+    providerSwitchFailed: 'Failed to switch AI provider',
     noSpeechSupport: 'Your browser does not support speech features',
     speechRecognitionFailed: 'Speech recognition failed, please try again',
     speechSynthesisFailed: 'Speech synthesis failed',

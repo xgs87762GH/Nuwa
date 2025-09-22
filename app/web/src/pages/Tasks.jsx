@@ -242,7 +242,9 @@ const Tasks = () => {
     try {
       const date = new Date(timeString);
       if (isNaN(date.getTime())) return '-';
-      return date.toLocaleString('zh-CN');
+      // Use current language for time formatting
+      const locale = t('common.locale') === 'zh' ? 'zh-CN' : 'en-US';
+      return date.toLocaleString(locale);
     } catch (error) {
       return '-';
     }
@@ -288,12 +290,23 @@ const Tasks = () => {
       title: t('tasks.taskId'),
       dataIndex: 'task_id',
       key: 'task_id',
-      width: 150,
+      width: 140,
       ellipsis: true,
+      align: 'left',
       render: (text) => (
         <Tooltip title={text}>
-          <Text code style={{ fontSize: '12px' }}>
-            {text.substring(0, 8)}...
+          <Text 
+            code 
+            style={{ 
+              fontSize: '11px', 
+              fontFamily: 'Consolas, Monaco, monospace',
+              background: 'rgba(255, 255, 255, 0.1)',
+              padding: '2px 6px',
+              borderRadius: '4px',
+              color: '#40a9ff'
+            }}
+          >
+            {text ? text.substring(0, 8) + '...' : '-'}
           </Text>
         </Tooltip>
       )
@@ -302,11 +315,17 @@ const Tasks = () => {
       title: t('tasks.status.title'),
       dataIndex: 'status',
       key: 'status',
-      width: 120,
+      width: 110,
+      align: 'center',
       render: (status) => (
         <Tag 
           color={TASK_STATUS_COLORS[status] || 'default'}
           icon={getStatusIcon(status)}
+          style={{ 
+            minWidth: '80px', 
+            textAlign: 'center',
+            fontWeight: '500'
+          }}
         >
           {t(TASK_STATUS_LABELS[status]) || status}
         </Tag>
@@ -317,9 +336,20 @@ const Tasks = () => {
       dataIndex: 'description',
       key: 'description',
       ellipsis: true,
+      align: 'left',
       render: (text) => (
         <Tooltip title={text}>
-          <Text>{text || '-'}</Text>
+          <Text 
+            style={{ 
+              maxWidth: '200px',
+              display: 'inline-block',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap'
+            }}
+          >
+            {text || '-'}
+          </Text>
         </Tooltip>
       )
     },
@@ -327,34 +357,51 @@ const Tasks = () => {
       title: t('tasks.priority.title'),
       dataIndex: 'priority',
       key: 'priority',
-      width: 80,
+      width: 90,
+      align: 'center',
       render: (priority) => getPriorityTag(priority)
     },
     {
       title: t('tasks.createdAt'),
       dataIndex: 'created_at',
       key: 'created_at',
-      width: 160,
-      render: (text) => formatTime(text)
+      width: 150,
+      align: 'center',
+      render: (text) => (
+        <Text style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.7)' }}>
+          {formatTime(text)}
+        </Text>
+      )
     },
     {
       title: t('tasks.startedAt'),
       dataIndex: 'started_at',
       key: 'started_at',
-      width: 160,
-      render: (text) => formatTime(text)
+      width: 150,
+      align: 'center',
+      render: (text) => (
+        <Text style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.7)' }}>
+          {formatTime(text)}
+        </Text>
+      )
     },
     {
       title: t('tasks.finishedAt'),
       dataIndex: 'finished_at',
       key: 'finished_at',
-      width: 160,
-      render: (text) => formatTime(text)
+      width: 150,
+      align: 'center',
+      render: (text) => (
+        <Text style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.7)' }}>
+          {formatTime(text)}
+        </Text>
+      )
     },
     {
       title: t('common.actions'),
       key: 'actions',
-      width: 150,
+      width: 140,
+      align: 'center',
       fixed: 'right',
       render: (_, record) => (
         <Space size="small">
@@ -364,6 +411,11 @@ const Tasks = () => {
               size="small"
               icon={<EyeOutlined />}
               onClick={() => handleViewTask(record)}
+              style={{
+                color: '#40a9ff',
+                background: 'rgba(64, 169, 255, 0.1)',
+                border: 'none'
+              }}
             />
           </Tooltip>
           {record.status === 'pending' && (
@@ -372,7 +424,10 @@ const Tasks = () => {
                 type="text"
                 size="small"
                 icon={<PlayCircleOutlined />}
-                style={{ color: '#52c41a' }}
+                style={{ 
+                  color: '#52c41a',
+                  background: 'rgba(82, 196, 26, 0.1)'
+                }}
               />
             </Tooltip>
           )}
@@ -382,7 +437,10 @@ const Tasks = () => {
                 type="text"
                 size="small"
                 icon={<PauseCircleOutlined />}
-                style={{ color: '#faad14' }}
+                style={{ 
+                  color: '#faad14',
+                  background: 'rgba(250, 173, 20, 0.1)'
+                }}
               />
             </Tooltip>
           )}
@@ -391,7 +449,10 @@ const Tasks = () => {
               type="text"
               size="small"
               icon={<DeleteOutlined />}
-              danger
+              style={{
+                color: '#ff4d4f',
+                background: 'rgba(255, 77, 79, 0.1)'
+              }}
             />
           </Tooltip>
         </Space>
@@ -517,20 +578,34 @@ const Tasks = () => {
               showTotal: (total, range) =>
                 t('pagination.showTotal', { start: range[0], end: range[1], total }),
               pageSizeOptions: ['10', '20', '50', '100'],
-              size: 'small'
+              size: 'small',
+              style: { marginTop: '16px' }
             }}
             onChange={handleTableChange}
             rowKey="task_id"
-            scroll={{ x: 1200 }}
+            scroll={{ x: 1100 }}
             size="middle"
+            bordered={false}
+            showHeader={true}
             locale={{
               emptyText: (
                 <Empty
                   image={Empty.PRESENTED_IMAGE_SIMPLE}
-                  description={t('tasks.noTasksData')}
+                  description={
+                    <span style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
+                      {t('tasks.noTasksData')}
+                    </span>
+                  }
+                  style={{ 
+                    padding: '60px 20px',
+                    background: 'transparent'
+                  }}
                 />
               )
             }}
+            rowClassName={(record, index) => 
+              `task-row ${index % 2 === 0 ? 'even' : 'odd'}`
+            }
           />
         </div>
       </Card>

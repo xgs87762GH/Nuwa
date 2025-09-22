@@ -56,6 +56,77 @@
   margin-bottom: 24px;
 }
 
+.stats-cards .nuwa-glass-card {
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.stats-cards .nuwa-glass-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+  transition: transform 0.3s ease;
+  transform: translateX(-100%);
+}
+
+.stats-cards .nuwa-glass-card:hover::before {
+  transform: translateX(0);
+}
+
+.stats-cards .nuwa-glass-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.stats-cards .ant-card-body {
+  padding: 16px;
+  text-align: center;
+}
+
+.stats-cards .ant-statistic-title {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 12px;
+  font-weight: 500;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.stats-cards .ant-statistic-content {
+  color: white;
+}
+
+.stats-cards .stat-icon {
+  margin-right: 8px;
+  font-size: 16px;
+}
+
+.stats-cards .stat-icon.total {
+  color: #3f8bff;
+}
+
+.stats-cards .stat-icon.running {
+  color: #ff9500;
+}
+
+.stats-cards .stat-icon.completed {
+  color: #52c41a;
+}
+
+.stats-cards .stat-icon.failed {
+  color: #ff4d4f;
+}
+
 .stat-card {
   border: none;
   border-radius: 16px;
@@ -1106,32 +1177,252 @@
 
 /* 任务列表卡片样式 */
 .task-list-card {
-  background: transparent;
+  background: rgba(255, 255, 255, 0.02);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  overflow: hidden;
 }
 
 .task-table-container {
   background: transparent;
+  border-radius: 12px;
+  overflow: hidden;
 }
 
+/* 表格整体样式 */
 .task-table-container .ant-table {
   background: transparent;
+  color: rgba(255, 255, 255, 0.9);
 }
 
+/* 表格包装器 */
+.task-table-container .ant-table-container {
+  border: none;
+  border-radius: 12px;
+}
+
+/* 表头样式 */
 .task-table-container .ant-table-thead > tr > th {
-  background: rgba(255, 255, 255, 0.1);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-  color: white;
+  background: rgba(255, 255, 255, 0.08);
+  border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.95);
+  font-weight: 600;
+  font-size: 13px;
+  padding: 16px 12px;
+  text-align: center;
+  border-radius: 0;
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
 }
 
+.task-table-container .ant-table-thead > tr > th:last-child {
+  border-right: none;
+}
+
+/* 表头排序按钮 */
+.task-table-container .ant-table-thead > tr > th .ant-table-column-sorters {
+  justify-content: center;
+}
+
+.task-table-container .ant-table-thead > tr > th .ant-table-column-title {
+  color: rgba(255, 255, 255, 0.95);
+}
+
+/* 表格行样式 */
 .task-table-container .ant-table-tbody > tr {
   background: transparent;
+  transition: all 0.2s ease;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.task-table-container .ant-table-tbody > tr.task-row.even {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.task-table-container .ant-table-tbody > tr.task-row.odd {
+  background: rgba(255, 255, 255, 0.01);
 }
 
 .task-table-container .ant-table-tbody > tr:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.08) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 }
 
+.task-table-container .ant-table-tbody > tr:last-child {
+  border-bottom: none;
+}
+
+/* 表格单元格样式 */
 .task-table-container .ant-table-tbody > tr > td {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.85);
+  padding: 14px 12px;
+  text-align: center;
+  border-right: 1px solid rgba(255, 255, 255, 0.03);
+  vertical-align: middle;
+}
+
+.task-table-container .ant-table-tbody > tr > td:last-child {
+  border-right: none;
+}
+
+/* 任务ID列样式 */
+.task-table-container .ant-table-tbody > tr > td:first-child {
+  text-align: left;
+  font-family: 'Consolas', 'Monaco', monospace;
+}
+
+/* 操作列样式 */
+.task-table-container .ant-table-tbody > tr > td:last-child {
+  text-align: center;
+}
+
+/* Tag 样式优化 */
+.task-table-container .ant-tag {
+  border: none;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 2px 8px;
+  margin: 0;
+  backdrop-filter: blur(10px);
+}
+
+/* 优先级标签 */
+.task-table-container .ant-tag[color="default"] {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.task-table-container .ant-tag[color="blue"] {
+  background: rgba(64, 169, 255, 0.2);
+  color: #40a9ff;
+}
+
+.task-table-container .ant-tag[color="orange"] {
+  background: rgba(255, 173, 71, 0.2);
+  color: #ffad47;
+}
+
+.task-table-container .ant-tag[color="red"] {
+  background: rgba(255, 77, 79, 0.2);
+  color: #ff4d4f;
+}
+
+/* 状态标签特殊样式 */
+.task-table-container .ant-tag[color="success"] {
+  background: rgba(82, 196, 26, 0.15);
+  color: #52c41a;
+}
+
+.task-table-container .ant-tag[color="processing"] {
+  background: rgba(24, 144, 255, 0.15);
+  color: #1890ff;
+}
+
+.task-table-container .ant-tag[color="error"] {
+  background: rgba(255, 77, 79, 0.15);
+  color: #ff4d4f;
+}
+
+/* 操作按钮样式 */
+.task-table-container .ant-btn {
+  border: none;
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.7);
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.task-table-container .ant-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
   color: rgba(255, 255, 255, 0.9);
+  transform: scale(1.05);
+}
+
+.task-table-container .ant-btn-dangerous {
+  color: #ff4d4f;
+}
+
+.task-table-container .ant-btn-dangerous:hover {
+  background: rgba(255, 77, 79, 0.2);
+  color: #ff4d4f;
+}
+
+/* 分页样式 */
+.task-table-container .ant-pagination {
+  margin-top: 24px;
+  text-align: center;
+}
+
+.task-table-container .ant-pagination .ant-pagination-item {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+}
+
+.task-table-container .ant-pagination .ant-pagination-item a {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.task-table-container .ant-pagination .ant-pagination-item-active {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-color: transparent;
+}
+
+.task-table-container .ant-pagination .ant-pagination-item-active a {
+  color: white;
+}
+
+/* 空状态样式 */
+.task-table-container .ant-empty {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.task-table-container .ant-empty-description {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* 加载状态 */
+.task-table-container .ant-spin-container {
+  background: transparent;
+}
+
+/* 响应式优化 */
+@media (max-width: 768px) {
+  .task-table-container .ant-table-tbody > tr > td {
+    padding: 8px 6px;
+    font-size: 12px;
+  }
+  
+  .task-table-container .ant-table-thead > tr > th {
+    padding: 12px 6px;
+    font-size: 12px;
+  }
+  
+  .task-table-container .ant-tag {
+    font-size: 10px;
+    padding: 1px 6px;
+  }
+}
+
+/* 表格滚动条美化 */
+.task-table-container .ant-table-body::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.task-table-container .ant-table-body::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
+}
+
+.task-table-container .ant-table-body::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 3px;
+}
+
+.task-table-container .ant-table-body::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
 }

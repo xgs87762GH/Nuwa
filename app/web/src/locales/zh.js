@@ -121,9 +121,14 @@ const zhLocale = {
     status: {
       title: '状态',
       pending: '待处理',
-      running: '进行中',
+      scheduled: '已调度',
+      running: '执行中',
+      success: '成功',
       completed: '已完成',
-      failed: '失败'
+      failed: '失败',
+      cancelled: '已取消',
+      paused: '已暂停',
+      timeout: '超时'
     },
     priority: {
       title: '优先级',
@@ -231,10 +236,19 @@ const zhLocale = {
     systemInfoFailed: '获取系统信息失败',
     selectAIProvider: '选择AI提供商',
     bytesReceived: '接收字节',
-    bytesSent: '发送字节'
+    bytesSent: '发送字节',
+    hostname: '主机名',
+    operatingSystem: '操作系统',
+    architecture: '架构',
+    bootTime: '启动时间',
+    cpuInfo: 'CPU信息',
+    cpuCores: 'CPU核心数',
+    memoryInfo: '内存信息',
+    totalMemory: '总内存'
   },
   // Common
   common: {
+    locale: 'zh',
     loading: '加载中...',
     success: '成功',
     error: '错误',
@@ -312,8 +326,9 @@ const zhLocale = {
     disableFailed: '禁用失败',
     loadSuccess: '加载成功',
     loadFailed: '加载失败',
-    providerSwitchSuccess: 'AI提供商切换成功',
     loadProvidersFailed: '加载AI提供商列表失败',
+    providerSwitchSuccess: 'AI提供商切换成功',
+    providerSwitchFailed: 'AI提供商切换失败',
     noSpeechSupport: '您的浏览器不支持语音功能',
     speechRecognitionFailed: '语音识别失败，请重试',
     speechSynthesisFailed: '语音播报失败',

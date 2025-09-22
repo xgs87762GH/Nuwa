@@ -324,23 +324,44 @@ const AIChat = () => {
   // Handle space key long press for voice input
   const handleSpaceKeyDown = useCallback((e) => {
     if (e.code === 'Space' && !isSpacePressed && !isProcessing) {
-      e.preventDefault();
-      setIsSpacePressed(true);
+      // 只有在输入框没有焦点时才阻止默认行为
+      const activeElement = document.activeElement;
+      const isInputFocused = activeElement && (
+        activeElement.tagName === 'INPUT' || 
+        activeElement.tagName === 'TEXTAREA' ||
+        activeElement.contentEditable === 'true'
+      );
       
-      // Start voice recording after 300ms hold
-      spaceTimeoutRef.current = setTimeout(() => {
-        setCurrentMode('voice');
-        startListening();
-      }, 300);
+      if (!isInputFocused) {
+        e.preventDefault();
+        setIsSpacePressed(true);
+        
+        // Start voice recording after 2000ms hold (2 seconds)
+        spaceTimeoutRef.current = setTimeout(() => {
+          setCurrentMode('voice');
+          startListening();
+        }, 2000);
+      }
     }
   }, [isSpacePressed, isProcessing]);
 
   const handleSpaceKeyUp = useCallback((e) => {
     if (e.code === 'Space' && isSpacePressed) {
-      e.preventDefault();
+      // 只有在输入框没有焦点时才阻止默认行为
+      const activeElement = document.activeElement;
+      const isInputFocused = activeElement && (
+        activeElement.tagName === 'INPUT' || 
+        activeElement.tagName === 'TEXTAREA' ||
+        activeElement.contentEditable === 'true'
+      );
+      
+      if (!isInputFocused) {
+        e.preventDefault();
+      }
+      
       setIsSpacePressed(false);
       
-      // Clear timeout if released before 300ms
+      // Clear timeout if released before 2000ms
       if (spaceTimeoutRef.current) {
         clearTimeout(spaceTimeoutRef.current);
         spaceTimeoutRef.current = null;
@@ -589,7 +610,7 @@ const AIChat = () => {
           </Tag>
           {isSpacePressed && (
             <Tag color="blue" style={{ borderRadius: '12px', fontSize: '11px' }}>
-              Hold Space...
+              Hold Space (2s)...
             </Tag>
           )}
         </Space>
@@ -779,7 +800,7 @@ const AIChat = () => {
             color: 'rgba(255, 255, 255, 0.5)', 
             fontSize: '12px' 
           }}>
-            Hold Space for voice • Shift+Enter for new line • Enter to send
+            Hold Space for 2s for voice • Shift+Enter for new line • Enter to send
           </Text>
         </div>
       </div>

@@ -9,11 +9,6 @@ import {
   getNetworkInfo, 
   getProcessInfo 
 } from '../api/system';
-import { 
-  getAllProviders, 
-  getCurrentProvider, 
-  setDefaultProvider 
-} from '../api/ai';
 import { useLanguage } from '../contexts/LanguageContext';
 
 const { Title } = Typography;
@@ -35,34 +30,9 @@ const System = () => {
   const [currentProvider, setCurrentProvider] = useState(null);
   const [loadingProviders, setLoadingProviders] = useState(false);
 
-  // Fetch AI provider information
-  const fetchAIProviders = async () => {
-    setLoadingProviders(true);
-    try {
-      const [providersRes, currentProviderRes] = await Promise.all([
-        getAllProviders(),
-        getCurrentProvider()
-      ]);
-
-      if (providersRes.success && providersRes.data) {
-        setAiProviders(providersRes.data.providers || []);
-      }
-
-      if (currentProviderRes.success && currentProviderRes.data) {
-        setCurrentProvider(currentProviderRes.data);
-      }
-    } catch (error) {
-      console.error('Failed to fetch AI provider information:', error);
-      message.error(t('messages.loadProvidersFailed'));
-    } finally {
-      setLoadingProviders(false);
-    }
-  };
-
   useEffect(() => {
     fetchAllSystemData();
-    fetchAIProviders();
-  }, [fetchAIProviders]);
+  }, []);
 
   const fetchAllSystemData = async () => {
     setLoading(true);
@@ -97,27 +67,6 @@ const System = () => {
     }
   };
 
-  // Switch AI provider
-  const handleProviderChange = async (providerType) => {
-    try {
-      const response = await setDefaultProvider(providerType);
-      if (response.success) {
-        message.success(t('messages.providerSwitchSuccess'));
-        fetchAIProviders(); // Refresh current provider information
-      } else {
-        message.error(response.message || 'Failed to switch AI provider');
-      }
-    } catch (error) {
-      console.error('Failed to switch AI provider:', error);
-      message.error('Failed to switch AI provider');
-    }
-  };
-
-  // Refresh AI provider information
-  const refreshAIProviders = () => {
-    fetchAIProviders();
-  };
-
   const processColumns = [
     {
       title: 'PID',
@@ -145,92 +94,12 @@ const System = () => {
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-        <Title level={2}>{t('system.title')}</Title>
-        <Button 
-          icon={<ReloadOutlined />}
-          onClick={fetchAllSystemData} 
-          loading={loading}
-        >
-          {t('system.refreshData')}
-        </Button>
-      </div>
-
-      {/* 系统配置 */}
-      <Row gutter={16} style={{ marginBottom: 24 }}>
-        {/* AI提供商设置 */}
-        <Col span={12}>
-          <Card 
-            title={
-              <Space>
-                <ThunderboltOutlined />
-                {t('system.aiProviderSettings')}
-              </Space>
-            }
-            loading={loadingProviders}
-            extra={
-              <Button 
-                icon={<ReloadOutlined />} 
-                size="small" 
-                onClick={refreshAIProviders}
-              >
-                {t('system.refresh')}
-              </Button>
-            }
-          >
-            <Space direction="vertical" style={{ width: '100%' }}>
-              <div style={{ marginBottom: 16 }}>
-                <div style={{ marginBottom: 8 }}>
-                  <strong>{t('system.currentProvider')}:</strong>
-                </div>
-                {currentProvider ? (
-                  <Tag color="blue" style={{ fontSize: '14px', padding: '4px 8px' }}>
-                    {currentProvider.type?.toUpperCase() || 'N/A'}
-                  </Tag>
-                ) : (
-                  <Tag color="red">未设置</Tag>
-                )}
-              </div>
-              
-              <Divider style={{ margin: '12px 0' }} />
-              
-              <div>
-                <div style={{ marginBottom: 8 }}>
-                  <strong>{t('system.selectProvider')}:</strong>
-                </div>
-                <Select
-                  style={{ width: '100%' }}
-                  placeholder={t('system.selectAIProvider')}
-                  value={currentProvider?.type}
-                  onChange={handleProviderChange}
-                  loading={loadingProviders}
-                >
-                  {aiProviders.map(provider => (
-                    <Option key={provider.type} value={provider.type}>
-                      <Space>
-                        <Tag 
-                          size="small" 
-                          color={provider.status === 'active' ? 'green' : 'orange'}
-                        >
-                          {provider.status === 'active' ? '可用' : '不可用'}
-                        </Tag>
-                        {provider.type.toUpperCase()}
-                      </Space>
-                    </Option>
-                  ))}
-                </Select>
-              </div>
-            </Space>
-          </Card>
-        </Col>
-      </Row>
-
       {/* 系统基本信息 */}
       <Row gutter={16} style={{ marginBottom: 24 }}>
         <Col span={6}>
           <Card loading={loading}>
             <Statistic
-              title="主机名"
+              title={t('system.hostname')}
               value={systemInfo.hostname || '-'}
             />
           </Card>
@@ -238,7 +107,7 @@ const System = () => {
         <Col span={6}>
           <Card loading={loading}>
             <Statistic
-              title="操作系统"
+              title={t('system.operatingSystem')}
               value={systemInfo.platform || '-'}
             />
           </Card>
@@ -246,7 +115,7 @@ const System = () => {
         <Col span={6}>
           <Card loading={loading}>
             <Statistic
-              title="架构"
+              title={t('system.architecture')}
               value={systemInfo.architecture || '-'}
             />
           </Card>
@@ -254,7 +123,7 @@ const System = () => {
         <Col span={6}>
           <Card loading={loading}>
             <Statistic
-              title="启动时间"
+              title={t('system.bootTime')}
               value={systemInfo.boot_time || '-'}
             />
           </Card>
@@ -264,9 +133,9 @@ const System = () => {
       {/* CPU和内存信息 */}
       <Row gutter={16} style={{ marginBottom: 24 }}>
         <Col span={12}>
-          <Card title="CPU信息" loading={loading}>
+          <Card title={t('system.cpuInfo')} loading={loading}>
             <Statistic
-              title="CPU核心数"
+              title={t('system.cpuCores')}
               value={cpuInfo.total_cores || 0}
               style={{ marginBottom: 16 }}
             />
@@ -281,9 +150,9 @@ const System = () => {
           </Card>
         </Col>
         <Col span={12}>
-          <Card title="内存信息" loading={loading}>
+          <Card title={t('system.memoryInfo')} loading={loading}>
             <Statistic
-              title="总内存"
+              title={t('system.totalMemory')}
               value={Math.round((memoryInfo.total || 0) / (1024 ** 3))}
               suffix="GB"
               style={{ marginBottom: 16 }}
