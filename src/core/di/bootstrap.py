@@ -3,7 +3,7 @@ from typing import Optional
 from src.core.ai import AIManager
 from src.core.config import create_database_manager, DataBaseManager
 from src.core.di.container import container
-from src.core.orchestration import IntelligentPluginRouter, PluginService, AIService, PlanService
+from src.core.orchestration import IntelligentPluginRouter, PluginService, PlanService
 from src.core.plugin import PluginManager
 from src.core.tasks.service import TaskService
 from src.core.utils.global_tools import project_root
@@ -49,23 +49,19 @@ class ServiceBootstrap:
 
     async def _register_services(self):
         """注册业务服务"""
-        # 创建并注册 AIService 单例
-        self.ai_service = AIService(self._ai_manager)
-        container.register_singleton(AIService, self.ai_service)
-
         # 创建并注册 PluginService 单例
         plugin_service = PluginService(self._plugin_manager)
         container.register_singleton(PluginService, plugin_service)
 
         # 计划生成服务 - 使用已注册的 AIService 单例
         self.prompt_templates = EnhancedPromptTemplates(str(project_root() / "templates" / "prompts"))
-        self.plan_service = PlanService(ai_service=self.ai_service, prompt_templates=self.prompt_templates)
+        self.plan_service = PlanService(ai_manager=self._ai_manager, prompt_templates=self.prompt_templates)
         container.register_singleton(PlanService, self.plan_service)
 
         # 智能插件路由器 - 使用已注册的服务单例
         router = IntelligentPluginRouter(
             plugin_service=plugin_service,
-            ai_service=self.ai_service,
+            ai_manager=self._ai_manager,
             plan_service=self.plan_service
         )
         container.register_singleton(IntelligentPluginRouter, router)

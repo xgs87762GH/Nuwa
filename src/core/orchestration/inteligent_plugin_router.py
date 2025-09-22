@@ -1,13 +1,11 @@
 import json
-from typing import Any, Dict, Optional, List
+from typing import Any, Dict, Optional
 
+from src.core.ai import AIManager
 from src.core.ai.providers.response import ExecutionPlan
 from src.core.config.logger import get_logger
-from src.core.orchestration.model import PlanResult, PluginStatusResult, AIStatusResult
-from src.core.utils.global_tools import project_root
-from src.core.utils.template import EnhancedPromptTemplates
-from src.core.orchestration import AIService, PlanService, PluginService
-from src.core.ai import AIManager
+from src.core.orchestration import PlanService, PluginService
+from src.core.orchestration.model import PlanResult, PluginStatusResult
 
 LOGGER = get_logger(__name__)
 
@@ -16,15 +14,14 @@ class IntelligentPluginRouter:
     def __init__(
             self,
             plugin_service: PluginService,
-            ai_service: AIService,
+            ai_manager: AIManager,
             plan_service: PlanService,
             model=None
     ):
         self.plugin_service = plugin_service
-        self.ai_service = ai_service
+        self.ai_manager = ai_manager
         self.plan_service = plan_service
         self.model = model
-        self.ai_service.validate_ai_manager()
 
     async def analyze_and_plan(self, user_input: str) -> PlanResult:
         try:
@@ -100,81 +97,12 @@ class IntelligentPluginRouter:
             LOGGER.error(f"❌ 获取插件状态失败: {e}")
             return PluginStatusResult.error_result(str(e))
 
-    def get_ai_status(self) -> AIStatusResult:
-        try:
-            ai_manager = self.ai_service.ai_manager
-            return AIStatusResult(
-                available_providers=ai_manager.list_available_providers(),
-                provider_types=ai_manager.list_provider_types(),
-                health_status=ai_manager.health_check(),
-                preferred_provider=self.ai_service.preferred_provider,
-                fallback_providers=self.ai_service.fallback_providers
-            )
-        except Exception as e:
-            LOGGER.error(f"❌ 获取AI状态失败: {e}")
-            return AIStatusResult.error_result(str(e))
-
     def set_preferred_provider(self, provider_type: str, fallback_providers: Optional[list] = None):
-        if not self.ai_service.ai_manager.is_provider_available(provider_type):
+        if not self.ai_manager.is_provider_available(provider_type):
             LOGGER.error(f"The specified provider {provider_type} is not available.")
             raise ValueError(f"Provider {provider_type} not found.")
 
-        self.ai_service.preferred_provider = provider_type
-        self.ai_service.fallback_providers = fallback_providers or []
+        self.preferred_provider = provider_type
+        self.fallback_providers = fallback_providers or []
         LOGGER.info(f"Set the preferred AI provider as: {provider_type}")
-        LOGGER.info(f"List of alternative AI providers: {self.ai_service.fallback_providers}")
-
-# 测试函数
-# async def test_simple_case():
-#     from src.core.plugin import PluginManager
-#
-#     try:
-#         # 初始化组件
-#         plugin_manager = PluginManager()
-#         await plugin_manager.start()
-#
-#         ai_manager = AIManager()
-#
-#         # 创建路由器，可以指定首选AI提供者
-#         router = IntelligentPluginRouter(
-#             plugin_manager=plugin_manager,
-#             ai_manager=ai_manager,
-#             preferred_provider="anthropic",  # 可以根据你的配置调整
-#             fallback_providers=["openai", "local"]  # 备选方案
-#         )
-#         ai_status = router.get_ai_status()
-#         plugin_status = await router.get_plugin_status()
-#
-#         print(f"🤖 AI状态: {ai_status}")
-#         print(f"📊 插件状态: {plugin_status}")
-#
-#         result = await router.analyze_and_plan("帮我拍一张照片")
-#
-#         if not result.success:
-#             print(f"❌ 简单测试失败: {result.error}")
-#             if result.suggestion:
-#                 print(f"💡 建议: {result.suggestion}")
-#             return False
-#
-#         print("✅ 简单测试通过!")
-#         print(f"筛选的插件数: {len(result.selected_plugins)}")
-#         print(f"可用函数数: {len(result.plugin_functions)}")
-#         return True
-#
-#     except Exception as e:
-#         print(f"❌ 测试过程中发生错误: {e}")
-#         LOGGER.exception(e)
-#         return False
-#
-#
-# def main():
-#     """主函数"""
-#     print("🚀 启动智能插件路由器测试程序")
-#     print(f"当前时间: 2025-09-05 03:46:44 UTC")
-#     print(f"当前用户: Gordon")
-#     import asyncio
-#     asyncio.run(test_simple_case())
-#
-#
-# if __name__ == "__main__":
-#     main()
+        LOGGER.info(f"List of alternative AI providers: {self.fallback_providers}")

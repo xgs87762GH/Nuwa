@@ -472,15 +472,6 @@ const Tasks = () => {
   return (
     <div className="nuwa-container">
       <div className="nuwa-content">
-        <div className="tasks-header">
-          <Title level={2} style={{ color: 'white', textAlign: 'center' }}>
-            <Space>
-              <SettingOutlined />
-              {t('tasks.title')}
-              <Badge count={tasks.length} showZero style={{ backgroundColor: '#52c41a' }} />
-            </Space>
-          </Title>
-        </div>
 
         {/* 统计卡片 */}
         <div style={{ marginBottom: 16 }}>

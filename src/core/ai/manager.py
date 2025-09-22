@@ -19,63 +19,60 @@ class AIManager:
     def __init__(self):
         self.configs: List[AIModel] = []
         self._providers: Dict[str, BaseAIProvider] = {}
-        self.activate_provider: Optional[BaseAIProvider] = None
+        self.primary_provider: Optional[str] = None
+        self.fallback_providers: List[str] = []
+
         self._provider_map = AIProviderMap()
         self.__initialize_providers()
+
+    def __initialize_providers(self):
+        """Initialize all AI providers based on configuration"""
+        conf_loader = AiConfigLoader()
+        self.configs = conf_loader.ai_configs
+
+        LOGGER.info(f"Initializing {len(self.configs)} AI providers")
+
+        for config in self.configs:
+            try:
+                provider_class = self._provider_map.get_provider_class(config.provider.name)
+                if provider_class:
+                    provider = provider_class(config.config)
+                    self._providers[config.provider.name] = provider
+                    LOGGER.info(f"Initialized provider: {config.provider.name}")
+                else:
+                    LOGGER.warning(f"Unknown provider type: {config.provider.name}")
+            except Exception as e:
+                LOGGER.error(f"Failed to initialize {config.provider.name}: {e}")
+
+        if not self.first_provider_name:
+            raise RuntimeError("No valid AI providers configured")
+
+        # Set default provider
+        self.primary_provider = self.first_provider_name
+        LOGGER.info(f"Successfully initialized {len(self._providers)} providers")
 
     async def call_provider(self, provider_name: str, system_prompt: str, user_prompt: str,
                             **kwargs) -> SelectionResponse:
         """Call specific provider with prompts"""
-        self.activate_provider = self.get_provider(provider_name)
-        if not self.activate_provider:
+        activate_provider = self.get_provider(provider_name)
+        if not activate_provider:
             raise ValueError(f"Provider '{provider_name}' not found")
 
-        self.activate_provider.set_prompts(system_prompt, user_prompt)
+        activate_provider.set_prompts(system_prompt, user_prompt)
 
         try:
-            response = await self.activate_provider.get_completion(**kwargs)
+            response = await activate_provider.get_completion(**kwargs)
             return response
         except Exception as e:
             LOGGER.error(f"Provider {provider_name} failed: {e}")
             raise e
 
-    # async def call_best_available(self, system_prompt: str, user_prompt: str, **kwargs) -> SelectionResponse:
-    #     """Call providers in order until one succeeds or all fail"""
-    #     if not self._providers:
-    #         raise RuntimeError("No providers available")
-    #
-    #     provider_names = list(self._providers.keys())
-    #     last_exception = None
-    #
-    #     for provider_name in provider_names:
-    #         try:
-    #             LOGGER.info(f"Trying provider: {provider_name}")
-    #             response = await self.call_provider(provider_name, system_prompt, user_prompt, **kwargs)
-    #             if response and response.success:
-    #                 LOGGER.info(f"Successfully used provider: {provider_name}")
-    #                 return response
-    #             else:
-    #                 LOGGER.warning(f"Provider {provider_name} returned unsuccessful response")
-    #                 continue
-    #         except Exception as e:
-    #             LOGGER.warning(f"Provider {provider_name} failed: {e}")
-    #             last_exception = e
-    #             continue
-    #
-    #     # All providers failed
-    #     if last_exception:
-    #         raise last_exception
-    #     else:
-    #         raise RuntimeError(f"All providers failed: {provider_names}")
-
     async def call_with_fallback(self,
-                                 primary_provider: str,
-                                 fallback_providers: List[str],
                                  system_prompt: str,
                                  user_prompt: str,
                                  **kwargs) -> SelectionResponse:
         """Call provider with fallback mechanism"""
-        providers_to_try = [primary_provider] + fallback_providers
+        providers_to_try = [self.primary_provider] + self.fallback_providers
         last_exception = None
 
         for provider_name in providers_to_try:
@@ -136,41 +133,12 @@ class AIManager:
             return config.config.models
         return []
 
-    def __initialize_providers(self):
-        """Initialize all AI providers based on configuration"""
-        conf_loader = AiConfigLoader()
-        self.configs = conf_loader.ai_configs
-
-        LOGGER.info(f"Initializing {len(self.configs)} AI providers")
-
-        for config in self.configs:
-            try:
-                provider_class = self._provider_map.get_provider_class(config.provider.name)
-                if provider_class:
-                    provider = provider_class(config.config)
-                    self._providers[config.provider.name] = provider
-                    LOGGER.info(f"Initialized provider: {config.provider.name}")
-                else:
-                    LOGGER.warning(f"Unknown provider type: {config.provider.name}")
-            except Exception as e:
-                LOGGER.error(f"Failed to initialize {config.provider.name}: {e}")
-
-        LOGGER.info(f"Successfully initialized {len(self._providers)} providers")
-
     def get_provider(self, name: str) -> Optional[BaseAIProvider]:
         """Get specific provider by name"""
         provider = self._providers.get(name)
         if not provider:
             LOGGER.warning(f"Provider '{name}' not found. Available: {list(self._providers.keys())}")
         return provider
-
-    def get_providers_by_type(self, provider_type: str) -> List[BaseAIProvider]:
-        """Get all providers of specific type"""
-        matching_providers = []
-        for config in self.configs:
-            if config.provider.name == provider_type and config.provider.name in self._providers:
-                matching_providers.append(self._providers[config.provider.name])
-        return matching_providers
 
     def list_available_providers(self) -> List[str]:
         """List all available provider names"""
@@ -199,26 +167,9 @@ class AIManager:
             })
         return status_list
 
-    def get_provider_count(self) -> int:
-        """Get total number of active providers"""
-        return len(self._providers)
-
     def is_provider_available(self, provider_name: str) -> bool:
         """Check if specific provider is available"""
         return provider_name in self._providers
-
-    async def test_provider_connectivity(self, provider_name: str) -> bool:
-        """Test if provider can be reached"""
-        try:
-            test_response = await self.call_provider(
-                provider_name,
-                "You are a test assistant.",
-                "Respond with 'OK' if you receive this message.",
-                max_tokens=10
-            )
-            return test_response.success if test_response else False
-        except Exception:
-            return False
 
     @property
     def first_provider_name(self) -> Optional[str]:

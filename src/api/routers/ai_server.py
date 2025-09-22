@@ -51,17 +51,16 @@ async def set_default_ai_provider(provider_type: str,
     return APIResponse.ok(message="Default AI provider set successfully")
 
 
-
 @router.get("/provider/current", summary="Get current AI provider", response_model=APIResponse)
-async def get_current_ai_provider(intelligent_plugin_router: IntelligentPluginRouterDep) -> APIResponse:
+async def get_current_ai_provider(ai_manager_dep: AIManagerDep) -> APIResponse:
     """Get current AI provider"""
-    return APIResponse.ok(data=intelligent_plugin_router.ai_service.preferred_provider)
+    return APIResponse.ok(data=ai_manager_dep.primary_provider)
 
 
 @router.get("/provider/models/{provider_type}", summary="Get models for AI provider", response_model=APIResponse)
-async def get_models_for_provider(provider_type: str, aiManagerDep: AIManagerDep) -> APIResponse:
+async def get_models_for_provider(provider_type: str, ai_manager_dep: AIManagerDep) -> APIResponse:
     """
     Get models for a specific AI provider.
     """
-    models: List[str] = aiManagerDep.get_models_by_provider(provider_type)
+    models: List[str] = ai_manager_dep.get_models_by_provider(provider_type)
     return APIResponse.ok(data=models)
