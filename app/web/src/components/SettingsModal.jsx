@@ -282,7 +282,7 @@ const SettingsModal = ({ visible, onClose }) => {
       onCancel={onClose}
       footer={null}
       width={800}
-      destroyOnClose
+      destroyOnHidden
     >
       <Tabs defaultActiveKey="ai" items={tabItems} />
     </Modal>

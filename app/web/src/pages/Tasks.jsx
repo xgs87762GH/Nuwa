@@ -12,19 +12,16 @@ import {
   Switch,
   Row,
   Col,
-  Modal,
-  Form,
-  Descriptions,
   Drawer,
   Badge,
   Tooltip,
   Empty,
   Statistic
 } from 'antd';
+import { useLanguage } from '../contexts/LanguageContext';
 import {
   ReloadOutlined,
   SearchOutlined,
-  PlusOutlined,
   SyncOutlined,
   EyeOutlined,
   PlayCircleOutlined,
@@ -39,7 +36,7 @@ import {
   FireOutlined,
   BugOutlined
 } from '@ant-design/icons';
-import { createTask } from '../api/tasks';
+import { getTasksList } from '../api/tasks';
 import {
   TASK_STATUS,
   TASK_STATUS_LABELS,
@@ -49,12 +46,11 @@ import './Tasks.css';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
-const { TextArea } = Input;
 
 const Tasks = () => {
+  const { t } = useLanguage();
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [createLoading, setCreateLoading] = useState(false);
   const [pagination, setPagination] = useState({
     current: 1,
     pageSize: 10,
@@ -63,81 +59,12 @@ const Tasks = () => {
   const [filters, setFilters] = useState({
     status: null,
     task_id: '',
-    user_id: ''
+    description: ''
   });
   const [autoRefresh, setAutoRefresh] = useState(true);
-  const [createModalVisible, setCreateModalVisible] = useState(false);
   const [taskDetailVisible, setTaskDetailVisible] = useState(false);
   const [selectedTask, setSelectedTask] = useState(null);
-  const [createForm] = Form.useForm();
   const refreshTimerRef = useRef(null);
-
-  // Mock task data - moved to useMemo to fix ESLint warning
-  const mockTasks = useMemo(() => [
-    {
-      task_id: "392e09da-ffbc-41f5-b0ff-6344543740e5",
-      user_id: "1",
-      description: "拍摄一张照片",
-      created_at: "2025-09-22T02:27:50.891770",
-      scheduled_at: "2025-09-22T02:27:50.891770",
-      started_at: null,
-      finished_at: null,
-      status: "pending",
-      priority: 1,
-      timeout: 300,
-      execution_plan: {
-        analysis: "根据用户需求拍照，选择拍摄单张照片功能。",
-        selected_functions: [
-          {
-            plugin_name: "Camera & Vision",
-            function_name: "take_photo"
-          }
-        ]
-      }
-    },
-    {
-      task_id: "fadf1c88-07ec-470f-9f54-e8375b23e58c",
-      user_id: "1",
-      description: "拍摄照片，文件名为zhangsan223",
-      created_at: "2025-09-16T13:16:37.641928",
-      scheduled_at: "2025-09-16T13:16:37.641928",
-      started_at: "2025-09-16T13:16:40.000000",
-      finished_at: null,
-      status: "running",
-      priority: 2,
-      timeout: 300,
-      execution_plan: {
-        analysis: "根据用户需求拍摄单张照片并保存指定文件名。",
-        selected_functions: [
-          {
-            plugin_name: "Camera & Vision",
-            function_name: "take_photo"
-          }
-        ]
-      }
-    },
-    {
-      task_id: "68e415e8-1b44-4ab3-babb-4d509d7031e9",
-      user_id: "1",
-      description: "录制一段视频",
-      created_at: "2025-09-16T12:07:20.458935",
-      scheduled_at: "2025-09-16T12:07:20.458935",
-      started_at: "2025-09-16T12:07:25.000000",
-      finished_at: "2025-09-16T12:08:30.000000",
-      status: "success",
-      priority: 0,
-      timeout: 600,
-      execution_plan: {
-        analysis: "根据用户需求，需要对视频进行处理，可以选择'录制视频'功能来实现。",
-        selected_functions: [
-          {
-            plugin_name: "Camera & Vision",
-            function_name: "record_video"
-          }
-        ]
-      }
-    }
-  ], []); // Empty dependency array since this is static mock data
 
   // Load task list
   const loadTasks = useCallback(async (page = pagination.current, pageSize = pagination.pageSize, currentFilters = filters) => {
@@ -145,40 +72,38 @@ const Tasks = () => {
     try {
       const params = {
         page,
-        page_size: pageSize,
+        size: pageSize,
         ...currentFilters
       };
       
-      // 过滤空值
+      // Filter out empty values
       Object.keys(params).forEach(key => {
         if (params[key] === '' || params[key] === null || params[key] === undefined) {
           delete params[key];
         }
       });
 
-      // 使用模拟数据
-      const filteredTasks = mockTasks.filter(task => {
-        if (currentFilters.status && task.status !== currentFilters.status) return false;
-        if (currentFilters.task_id && !task.task_id.includes(currentFilters.task_id)) return false;
-        if (currentFilters.user_id && !task.user_id.includes(currentFilters.user_id)) return false;
-        return true;
-      });
-
-      setTasks(filteredTasks);
-      setPagination({
-        current: page,
-        pageSize,
-        total: filteredTasks.length
-      });
+      const response = await getTasksList(params);
+      
+      if (response?.success) {
+        setTasks(response.data.items || []);
+        setPagination({
+          current: parseInt(response.data.page) || 1,
+          pageSize: parseInt(response.data.size) || 10,
+          total: parseInt(response.data.total) || 0
+        });
+      } else {
+        message.error(response?.message || t('tasks.loadTasksFailed'));
+      }
     } catch (error) {
       console.error('Load tasks error:', error);
-      message.error('加载任务列表失败');
+      message.error(t('tasks.loadTasksFailed'));
     } finally {
       setLoading(false);
     }
-  }, [filters, mockTasks, pagination]); // 添加缺失的依赖项
+  }, [filters, pagination, t]);
 
-  // 清理轮询定时器
+  // Clear refresh timer
   const clearRefreshTimer = useCallback(() => {
     if (refreshTimerRef.current) {
       clearInterval(refreshTimerRef.current);
@@ -186,7 +111,7 @@ const Tasks = () => {
     }
   }, []);
 
-  // 自动刷新逻辑
+  // Auto refresh logic
   useEffect(() => {
     clearRefreshTimer();
     if (autoRefresh) {
@@ -197,12 +122,12 @@ const Tasks = () => {
     return clearRefreshTimer;
   }, [autoRefresh, loadTasks, clearRefreshTimer]);
 
-  // 手动刷新
+  // Manual refresh
   const handleRefresh = () => {
     loadTasks();
   };
 
-  // 分页变化
+  // Handle pagination change
   const handleTableChange = (paginationInfo) => {
     setPagination(prev => ({
       ...prev,
@@ -212,46 +137,25 @@ const Tasks = () => {
     loadTasks(paginationInfo.current, paginationInfo.pageSize);
   };
 
-  // 过滤条件变化
+  // Handle filter changes
   const handleFiltersChange = (newFilters) => {
     setFilters(newFilters);
     setPagination(prev => ({ ...prev, current: 1 }));
     loadTasks(1, pagination.pageSize, newFilters);
   };
 
-  // 自动刷新开关
+  // Toggle auto refresh
   const handleAutoRefreshToggle = (checked) => {
     setAutoRefresh(checked);
   };
 
-  // 创建任务
-  const handleCreateTask = async (values) => {
-    setCreateLoading(true);
-    try {
-      const response = await createTask(values.user_input);
-      if (response.data?.success) {
-        message.success('任务创建成功');
-        setCreateModalVisible(false);
-        createForm.resetFields();
-        loadTasks(); // 重新加载任务列表
-      } else {
-        message.error(response.data?.message || '创建任务失败');
-      }
-    } catch (error) {
-      console.error('Create task error:', error);
-      message.error('网络错误，请稍后重试');
-    } finally {
-      setCreateLoading(false);
-    }
-  };
-
-  // 查看任务详情
+  // View task details
   const handleViewTask = (task) => {
     setSelectedTask(task);
     setTaskDetailVisible(true);
   };
 
-  // 统计数据计算
+  // Calculate statistics
   const taskStats = React.useMemo(() => {
     const stats = {
       total: tasks.length,
@@ -286,13 +190,13 @@ const Tasks = () => {
     return stats;
   }, [tasks]);
 
-  // 渲染统计卡片
+  // Render statistics cards
   const renderStatsCards = () => (
     <Row gutter={[16, 16]} className="stats-cards">
       <Col xs={12} sm={6}>
         <Card className="nuwa-glass-card" size="small">
           <Statistic
-            title="总任务"
+            title={t('tasks.totalTasks')}
             value={taskStats.total}
             prefix={<TeamOutlined className="stat-icon total" />}
             valueStyle={{ color: '#3f8bff', fontSize: '20px', fontWeight: 'bold' }}
@@ -302,7 +206,7 @@ const Tasks = () => {
       <Col xs={12} sm={6}>
         <Card className="nuwa-glass-card" size="small">
           <Statistic
-            title="运行中"
+            title={t('tasks.activeTasks')}
             value={taskStats.running}
             prefix={<FireOutlined className="stat-icon running" />}
             valueStyle={{ color: '#ff9500', fontSize: '20px', fontWeight: 'bold' }}
@@ -312,7 +216,7 @@ const Tasks = () => {
       <Col xs={12} sm={6}>
         <Card className="nuwa-glass-card" size="small">
           <Statistic
-            title="已完成"
+            title={t('tasks.completedTasks')}
             value={taskStats.completed}
             prefix={<TrophyOutlined className="stat-icon completed" />}
             valueStyle={{ color: '#52c41a', fontSize: '20px', fontWeight: 'bold' }}
@@ -322,7 +226,7 @@ const Tasks = () => {
       <Col xs={12} sm={6}>
         <Card className="nuwa-glass-card" size="small">
           <Statistic
-            title="失败/等待"
+            title={t('tasks.failedTasks')}
             value={taskStats.failed + taskStats.waiting}
             prefix={<BugOutlined className="stat-icon failed" />}
             valueStyle={{ color: '#ff4d4f', fontSize: '20px', fontWeight: 'bold' }}
@@ -332,7 +236,7 @@ const Tasks = () => {
     </Row>
   );
 
-  // 格式化时间
+  // Format time
   const formatTime = (timeString) => {
     if (!timeString) return '-';
     try {
@@ -344,7 +248,7 @@ const Tasks = () => {
     }
   };
 
-  // 获取状态图标
+  // Get status icon
   const getStatusIcon = (status) => {
     switch (status) {
       case 'pending':
@@ -362,21 +266,26 @@ const Tasks = () => {
     }
   };
 
-  // 获取优先级标签
+  // Get priority tag
   const getPriorityTag = (priority) => {
     const colors = ['default', 'blue', 'orange', 'red'];
-    const labels = ['普通', '低', '中', '高'];
+    const labels = [
+      t('tasks.priority.normal'), 
+      t('tasks.priority.low'), 
+      t('tasks.priority.medium'), 
+      t('tasks.priority.high')
+    ];
     return (
       <Tag color={colors[priority] || 'default'}>
-        {labels[priority] || '普通'}
+        {labels[priority] || t('tasks.priority.normal')}
       </Tag>
     );
   };
 
-  // 表格列定义
+  // Table columns definition
   const columns = [
     {
-      title: '任务ID',
+      title: t('tasks.taskId'),
       dataIndex: 'task_id',
       key: 'task_id',
       width: 150,
@@ -390,7 +299,7 @@ const Tasks = () => {
       )
     },
     {
-      title: '状态',
+      title: t('tasks.status.title'),
       dataIndex: 'status',
       key: 'status',
       width: 120,
@@ -399,12 +308,12 @@ const Tasks = () => {
           color={TASK_STATUS_COLORS[status] || 'default'}
           icon={getStatusIcon(status)}
         >
-          {TASK_STATUS_LABELS[status] || status}
+          {t(TASK_STATUS_LABELS[status]) || status}
         </Tag>
       )
     },
     {
-      title: '描述',
+      title: t('tasks.taskDescription'),
       dataIndex: 'description',
       key: 'description',
       ellipsis: true,
@@ -415,52 +324,41 @@ const Tasks = () => {
       )
     },
     {
-      title: '优先级',
+      title: t('tasks.priority.title'),
       dataIndex: 'priority',
       key: 'priority',
       width: 80,
       render: (priority) => getPriorityTag(priority)
     },
     {
-      title: '用户ID',
-      dataIndex: 'user_id',
-      key: 'user_id',
-      width: 100,
-      render: (text) => (
-        <Text code style={{ fontSize: '12px' }}>
-          {text}
-        </Text>
-      )
-    },
-    {
-      title: '创建时间',
+      title: t('tasks.createdAt'),
       dataIndex: 'created_at',
       key: 'created_at',
       width: 160,
       render: (text) => formatTime(text)
     },
     {
-      title: '开始时间',
+      title: t('tasks.startedAt'),
       dataIndex: 'started_at',
       key: 'started_at',
       width: 160,
       render: (text) => formatTime(text)
     },
     {
-      title: '完成时间',
+      title: t('tasks.finishedAt'),
       dataIndex: 'finished_at',
       key: 'finished_at',
       width: 160,
       render: (text) => formatTime(text)
     },
     {
-      title: '操作',
+      title: t('common.actions'),
       key: 'actions',
       width: 150,
       fixed: 'right',
       render: (_, record) => (
         <Space size="small">
-          <Tooltip title="查看详情">
+          <Tooltip title={t('tasks.actions.view')}>
             <Button
               type="text"
               size="small"
@@ -469,7 +367,7 @@ const Tasks = () => {
             />
           </Tooltip>
           {record.status === 'pending' && (
-            <Tooltip title="开始执行">
+            <Tooltip title={t('tasks.actions.start')}>
               <Button
                 type="text"
                 size="small"
@@ -479,7 +377,7 @@ const Tasks = () => {
             </Tooltip>
           )}
           {record.status === 'running' && (
-            <Tooltip title="暂停">
+            <Tooltip title={t('tasks.actions.pause')}>
               <Button
                 type="text"
                 size="small"
@@ -488,7 +386,7 @@ const Tasks = () => {
               />
             </Tooltip>
           )}
-          <Tooltip title="删除">
+          <Tooltip title={t('tasks.actions.delete')}>
             <Button
               type="text"
               size="small"
@@ -517,7 +415,7 @@ const Tasks = () => {
           <Title level={2} style={{ color: 'white', textAlign: 'center' }}>
             <Space>
               <SettingOutlined />
-              任务管理
+              {t('tasks.title')}
               <Badge count={tasks.length} showZero style={{ backgroundColor: '#52c41a' }} />
             </Space>
           </Title>
@@ -528,14 +426,14 @@ const Tasks = () => {
           {renderStatsCards()}
         </div>
 
-        {/* 筛选和操作区域 */}
+        {/* Filters and actions */}
         <Card className="nuwa-glass-card" style={{ marginBottom: 16 }}>
           <Row gutter={[16, 16]} align="middle">
-            <Col xl={4} lg={6} md={8} sm={12} xs={24}>
+            <Col xl={5} lg={8} md={10} sm={12} xs={24}>
               <Space>
-                <Text strong style={{ color: 'var(--text-primary)' }}>状态:</Text>
+                <Text strong style={{ color: 'var(--text-primary)' }}>{t('tasks.status.title')}:</Text>
                 <Select
-                  placeholder="选择状态"
+                  placeholder={t('tasks.selectStatus')}
                   allowClear
                   style={{ width: 120 }}
                   value={filters.status}
@@ -547,88 +445,67 @@ const Tasks = () => {
                       <Space>
                         {getStatusIcon(value)}
                         <Tag color={TASK_STATUS_COLORS[value]} style={{ margin: 0 }}>
-                          {TASK_STATUS_LABELS[value]}
+                          {t(TASK_STATUS_LABELS[value])}
                         </Tag>
                       </Space>
                     </Option>
                   ))}
                 </Select>
               </Space>
-            </Col>          <Col xl={4} lg={6} md={8} sm={12} xs={24}>
-            <Space>
-              <Text strong>任务ID:</Text>
-              <Input
-                placeholder="输入任务ID"
-                style={{ width: 140 }}
-                value={filters.task_id}
-                onChange={(e) => handleFiltersChange({ ...filters, task_id: e.target.value })}
-                prefix={<SearchOutlined />}
-              />
-            </Space>
-          </Col>
-
-          <Col xl={4} lg={6} md={8} sm={12} xs={24}>
-            <Space>
-              <Text strong>用户ID:</Text>
-              <Input
-                placeholder="输入用户ID"
-                style={{ width: 140 }}
-                value={filters.user_id}
-                onChange={(e) => handleFiltersChange({ ...filters, user_id: e.target.value })}
-                prefix={<SearchOutlined />}
-              />
-            </Space>
-          </Col>
-
-          <Col xl={12} lg={6} md={24} sm={24} xs={24}>
-            <Space wrap>
-              <Button
-                type="primary"
-                icon={<PlusOutlined />}
-                onClick={() => setCreateModalVisible(true)}
-              >
-                创建任务
-              </Button>
-
-              <Button
-                icon={<ReloadOutlined />}
-                onClick={handleRefresh}
-                loading={loading}
-              >
-                刷新
-              </Button>
-
+            </Col>
+            <Col xl={5} lg={8} md={10} sm={12} xs={24}>
               <Space>
-                <Text>自动刷新:</Text>
-                <Switch
-                  checked={autoRefresh}
-                  onChange={handleAutoRefreshToggle}
-                  checkedChildren={<SyncOutlined />}
-                  unCheckedChildren="关"
+                <Text strong>{t('tasks.taskId')}:</Text>
+                <Input
+                  placeholder={t('tasks.inputTaskId')}
+                  style={{ width: 140 }}
+                  value={filters.task_id}
+                  onChange={(e) => handleFiltersChange({ ...filters, task_id: e.target.value })}
+                  prefix={<SearchOutlined />}
                 />
               </Space>
-            </Space>
-          </Col>
-        </Row>
-      </Card>
+            </Col>
+            
+            <Col xl={5} lg={8} md={10} sm={12} xs={24}>
+              <Space>
+                <Text strong>{t('tasks.description')}:</Text>
+                <Input
+                  placeholder={t('tasks.inputDescription')}
+                  style={{ width: 140 }}
+                  value={filters.description}
+                  onChange={(e) => handleFiltersChange({ ...filters, description: e.target.value })}
+                  prefix={<SearchOutlined />}
+                />
+              </Space>
+            </Col>
+
+            <Col xl={9} lg={8} md={24} sm={24} xs={24}>
+              <Space wrap>
+                <Button
+                  icon={<ReloadOutlined />}
+                  onClick={handleRefresh}
+                  loading={loading}
+                >
+                  {t('common.refresh')}
+                </Button>
+
+                <Space>
+                  <Text>{t('tasks.autoRefresh')}:</Text>
+                  <Switch
+                    checked={autoRefresh}
+                    onChange={handleAutoRefreshToggle}
+                    checkedChildren={<SyncOutlined />}
+                    unCheckedChildren={t('common.off')}
+                  />
+                </Space>
+              </Space>
+            </Col>
+          </Row>
+        </Card>
 
       {/* 任务列表 */}
-      <Card className="nuwa-glass-card">
-        <div style={{ 
-          background: 'transparent',
-          '& .ant-table': { background: 'transparent' },
-          '& .ant-table-thead > tr > th': {
-            background: 'rgba(255, 255, 255, 0.1)',
-            borderBottom: '1px solid rgba(255, 255, 255, 0.2)',
-            color: 'white'
-          },
-          '& .ant-table-tbody > tr': { background: 'transparent' },
-          '& .ant-table-tbody > tr:hover': { background: 'rgba(255, 255, 255, 0.05)' },
-          '& .ant-table-tbody > tr > td': {
-            borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-            color: 'rgba(255, 255, 255, 0.9)'
-          }
-        }}>
+      <Card className="nuwa-glass-card task-list-card">
+        <div className="task-table-container">
           <Table
             columns={columns}
             dataSource={tasks}
@@ -638,7 +515,7 @@ const Tasks = () => {
               showSizeChanger: true,
               showQuickJumper: true,
               showTotal: (total, range) =>
-                `第 ${range[0]}-${range[1]} 条 / 共 ${total} 条`,
+                t('pagination.showTotal', { start: range[0], end: range[1], total }),
               pageSizeOptions: ['10', '20', '50', '100'],
               size: 'small'
             }}
@@ -650,7 +527,7 @@ const Tasks = () => {
               emptyText: (
                 <Empty
                   image={Empty.PRESENTED_IMAGE_SIMPLE}
-                  description="暂无任务数据"
+                  description={t('tasks.noTasksData')}
                 />
               )
             }}
@@ -658,120 +535,91 @@ const Tasks = () => {
         </div>
       </Card>
 
-      {/* 创建任务弹窗 */}
-      <Modal
-        title="创建新任务"
-        open={createModalVisible}
-        onCancel={() => {
-          setCreateModalVisible(false);
-          createForm.resetFields();
-        }}
-        footer={null}
-        width={600}
-      >
-        <Form
-          form={createForm}
-          layout="vertical"
-          onFinish={handleCreateTask}
-        >
-          <Form.Item
-            name="user_input"
-            label="任务描述"
-            rules={[
-              { required: true, message: '请输入任务描述' },
-              { min: 5, message: '任务描述至少5个字符' }
-            ]}
-          >
-            <TextArea
-              rows={4}
-              placeholder="请详细描述您要执行的任务，例如：拍摄一张照片、录制30秒视频等..."
-              showCount
-              maxLength={500}
-            />
-          </Form.Item>
-
-          <Form.Item style={{ marginBottom: 0, textAlign: 'right' }}>
-            <Space>
-              <Button onClick={() => {
-                setCreateModalVisible(false);
-                createForm.resetFields();
-              }}>
-                取消
-              </Button>
-              <Button type="primary" htmlType="submit" loading={createLoading}>
-                创建任务
-              </Button>
-            </Space>
-          </Form.Item>
-        </Form>
-      </Modal>
-
-      {/* 任务详情抽屉 */}
+      {/* Task Details Drawer */}
       <Drawer
-        title="任务详情"
+        title={t('tasks.taskDetails')}
         open={taskDetailVisible}
         onClose={() => setTaskDetailVisible(false)}
         width={600}
       >
         {selectedTask && (
           <div>
-            <Descriptions title="基本信息" bordered size="small">
-              <Descriptions.Item label="任务ID" span={3}>
-                <Text code>{selectedTask.task_id}</Text>
-              </Descriptions.Item>
-              <Descriptions.Item label="状态">
-                <Tag 
-                  color={TASK_STATUS_COLORS[selectedTask.status]}
-                  icon={getStatusIcon(selectedTask.status)}
-                >
-                  {TASK_STATUS_LABELS[selectedTask.status]}
-                </Tag>
-              </Descriptions.Item>
-              <Descriptions.Item label="优先级">
-                {getPriorityTag(selectedTask.priority)}
-              </Descriptions.Item>
-              <Descriptions.Item label="用户ID">
-                <Text code>{selectedTask.user_id}</Text>
-              </Descriptions.Item>
-              <Descriptions.Item label="描述" span={3}>
-                {selectedTask.description}
-              </Descriptions.Item>
-              <Descriptions.Item label="创建时间">
-                {formatTime(selectedTask.created_at)}
-              </Descriptions.Item>
-              <Descriptions.Item label="开始时间">
-                {formatTime(selectedTask.started_at)}
-              </Descriptions.Item>
-              <Descriptions.Item label="完成时间">
-                {formatTime(selectedTask.finished_at)}
-              </Descriptions.Item>
-              <Descriptions.Item label="超时时间">
-                {selectedTask.timeout ? `${selectedTask.timeout}秒` : '-'}
-              </Descriptions.Item>
-            </Descriptions>
+            <Card size="small" className="nuwa-glass-card" style={{ marginBottom: 16 }}>
+              <Row gutter={[16, 8]}>
+                <Col span={24}>
+                  <Space>
+                    <Text strong>{t('tasks.taskId')}:</Text>
+                    <Text code>{selectedTask.task_id}</Text>
+                  </Space>
+                </Col>
+                <Col span={12}>
+                  <Space>
+                    <Text strong>{t('tasks.status.title')}:</Text>
+                    <Tag 
+                      color={TASK_STATUS_COLORS[selectedTask.status]}
+                      icon={getStatusIcon(selectedTask.status)}
+                    >
+                      {t(TASK_STATUS_LABELS[selectedTask.status])}
+                    </Tag>
+                  </Space>
+                </Col>
+                <Col span={12}>
+                  <Space>
+                    <Text strong>{t('tasks.priority.title')}:</Text>
+                    {getPriorityTag(selectedTask.priority)}
+                  </Space>
+                </Col>
+                <Col span={24}>
+                  <Text strong>{t('tasks.taskDescription')}:</Text>
+                  <div style={{ margin: '8px 0' }}>
+                    {selectedTask.description}
+                  </div>
+                </Col>
+                <Col span={8}>
+                  <Space>
+                    <Text strong>{t('tasks.createdAt')}:</Text>
+                    <Text>{formatTime(selectedTask.created_at)}</Text>
+                  </Space>
+                </Col>
+                <Col span={8}>
+                  <Space>
+                    <Text strong>{t('tasks.startedAt')}:</Text>
+                    <Text>{formatTime(selectedTask.started_at)}</Text>
+                  </Space>
+                </Col>
+                <Col span={8}>
+                  <Space>
+                    <Text strong>{t('tasks.finishedAt')}:</Text>
+                    <Text>{formatTime(selectedTask.finished_at)}</Text>
+                  </Space>
+                </Col>
+              </Row>
+            </Card>
 
             {selectedTask.execution_plan && (
-              <div style={{ marginTop: 24 }}>
-                <Title level={4}>执行计划</Title>
-                <Card size="small">
-                  <Descriptions size="small">
-                    <Descriptions.Item label="分析" span={3}>
+              <Card size="small" className="nuwa-glass-card" title={t('tasks.executionPlan')}>
+                <Row gutter={[16, 8]}>
+                  <Col span={24}>
+                    <Text strong>{t('tasks.analysis')}:</Text>
+                    <div style={{ margin: '8px 0' }}>
                       {selectedTask.execution_plan.analysis}
-                    </Descriptions.Item>
-                  </Descriptions>
+                    </div>
+                  </Col>
                   
                   {selectedTask.execution_plan.selected_functions && (
-                    <div style={{ marginTop: 16 }}>
-                      <Text strong>选择的功能:</Text>
-                      {selectedTask.execution_plan.selected_functions.map((func, index) => (
-                        <Tag key={index} style={{ marginTop: 8, display: 'block' }}>
-                          {func.plugin_name}.{func.function_name}
-                        </Tag>
-                      ))}
-                    </div>
+                    <Col span={24}>
+                      <Text strong>{t('tasks.selectedFunctions')}:</Text>
+                      <div style={{ marginTop: 8 }}>
+                        {selectedTask.execution_plan.selected_functions.map((func, index) => (
+                          <Tag key={index} style={{ marginRight: 8, marginBottom: 8 }}>
+                            {func.plugin_name}.{func.function_name}
+                          </Tag>
+                        ))}
+                      </div>
+                    </Col>
                   )}
-                </Card>
-              </div>
+                </Row>
+              </Card>
             )}
           </div>
         )}

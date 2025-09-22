@@ -91,7 +91,7 @@ const System = () => {
       // Note the change here: processRes.data.processes
       setProcesses(processRes.data?.processes || []);
     } catch (error) {
-      console.error('获取系统信息失败:', error);
+      console.error('Failed to get system information:', error);
     } finally {
       setLoading(false);
     }
@@ -125,18 +125,18 @@ const System = () => {
       key: 'pid',
     },
     {
-      title: '进程名',
+      title: t('system.processName'),
       dataIndex: 'name',
       key: 'name',
     },
     {
-      title: 'CPU使用率',
+      title: t('system.cpuUsagePercent'),
       dataIndex: 'cpu_percent',
       key: 'cpu_percent',
       render: (value) => `${value}%`,
     },
     {
-      title: '内存使用',
+      title: t('system.memoryUsageAmount'),
       dataIndex: 'memory_percent',
       key: 'memory_percent',
       render: (value) => `${value?.toFixed(2)}%`,
@@ -146,14 +146,13 @@ const System = () => {
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-        <Title level={2}>系统监控</Title>
+        <Title level={2}>{t('system.title')}</Title>
         <Button 
-          type="primary" 
-          icon={<ReloadOutlined />} 
-          onClick={fetchAllSystemData}
+          icon={<ReloadOutlined />}
+          onClick={fetchAllSystemData} 
           loading={loading}
         >
-          刷新数据
+          {t('system.refreshData')}
         </Button>
       </div>
 
@@ -165,7 +164,7 @@ const System = () => {
             title={
               <Space>
                 <ThunderboltOutlined />
-                {t('system.aiProvider')}
+                {t('system.aiProviderSettings')}
               </Space>
             }
             loading={loadingProviders}
@@ -175,7 +174,7 @@ const System = () => {
                 size="small" 
                 onClick={refreshAIProviders}
               >
-                刷新
+                {t('system.refresh')}
               </Button>
             }
           >
@@ -201,7 +200,7 @@ const System = () => {
                 </div>
                 <Select
                   style={{ width: '100%' }}
-                  placeholder="选择AI提供商"
+                  placeholder={t('system.selectAIProvider')}
                   value={currentProvider?.type}
                   onChange={handleProviderChange}
                   loading={loadingProviders}
@@ -272,7 +271,7 @@ const System = () => {
               style={{ marginBottom: 16 }}
             />
             <div>
-              <span>CPU使用率: </span>
+              <span>{t('system.cpuUsage')}: </span>
               <Progress 
                 percent={Math.round(cpuInfo.cpu_usage || 0)} 
                 size="small"
@@ -290,7 +289,7 @@ const System = () => {
               style={{ marginBottom: 16 }}
             />
             <div>
-              <span>内存使用率: </span>
+              <span>{t('system.memoryUsage')}: </span>
               <Progress 
                 percent={Math.round(memoryInfo.percentage || 0)} 
                 size="small"
@@ -304,7 +303,7 @@ const System = () => {
       {/* 磁盘和网络信息 */}
       <Row gutter={16} style={{ marginBottom: 24 }}>
         <Col span={12}>
-          <Card title="磁盘信息" loading={loading}>
+          <Card title={t('system.diskUsage')} loading={loading}>
             {diskInfo.disks && diskInfo.disks.map((disk, index) => (
               <div key={index} style={{ marginBottom: 16 }}>
                 <div style={{ marginBottom: 8 }}>
@@ -320,9 +319,9 @@ const System = () => {
           </Card>
         </Col>
         <Col span={12}>
-          <Card title="网络信息" loading={loading}>
+          <Card title={t('system.networkInfo')} loading={loading}>
             <Statistic
-              title="网络接口数"
+              title={t('system.networkInterfaces')}
               value={networkInfo.total_interfaces || 0}
               style={{ marginBottom: 16 }}
             />
@@ -336,7 +335,7 @@ const System = () => {
       </Row>
 
       {/* 进程信息 */}
-      <Card title="进程信息" loading={loading}>
+      <Card title={t('system.processInfo')} loading={loading}>
         <Table
           dataSource={processes}
           columns={processColumns}

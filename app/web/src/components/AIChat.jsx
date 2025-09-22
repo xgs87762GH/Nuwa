@@ -21,7 +21,7 @@ import {
   MessageOutlined
 } from '@ant-design/icons';
 import { createTask } from '../api/tasks';
-import { getAllProviders, getCurrentProvider, getProviderModels } from '../api/ai';
+import { getCurrentProvider, getProviderModels } from '../api/ai';
 import { useChat } from '../contexts/ChatContext';
 import { useLanguage } from '../contexts/LanguageContext';
 
@@ -127,7 +127,6 @@ const AIChat = () => {
   
   // Space key long press states
   const [isSpacePressed, setIsSpacePressed] = useState(false);
-  const [spaceStartTime, setSpaceStartTime] = useState(null);
   const spaceTimeoutRef = useRef(null);
   
   const recognitionRef = useRef(null);
@@ -196,9 +195,7 @@ const AIChat = () => {
       } else {
         // Handle business logic errors (e.g., no suitable plugin found)
         const errorMsg = response.message || t('common.error');
-        const fullErrorMsg = currentLanguage === 'zh' 
-          ? `抱歉，${errorMsg}。请尝试重新描述您的需求或检查可用的功能。`
-          : `Sorry, ${errorMsg}. Please try to rephrase your request or check available functions.`;
+        const fullErrorMsg = t('aiChat.errorRetryMessage', { error: errorMsg });
         
         addBotMessage(fullErrorMsg, {
           error: true,
@@ -214,9 +211,7 @@ const AIChat = () => {
       }
     } catch (error) {
       console.error('Failed to send message:', error);
-      const errorMsg = currentLanguage === 'zh' 
-        ? '抱歉，处理您的请求时出现了错误。请稍后重试。'
-        : 'Sorry, an error occurred while processing your request. Please try again later.';
+      const errorMsg = t('aiChat.processErrorMessage');
       
       addBotMessage(errorMsg);
       
@@ -229,7 +224,7 @@ const AIChat = () => {
       setIsProcessing(false);
       setLoading(false);
     }
-  }, [inputText, currentMode, addUserMessage, addBotMessage, setLoading, t, currentLanguage, speakText]);
+  }, [inputText, currentMode, addUserMessage, addBotMessage, setLoading, t, currentLanguage, speakText, currentModel]);
 
   // Auto scroll to latest message
   useEffect(() => {
@@ -331,7 +326,6 @@ const AIChat = () => {
     if (e.code === 'Space' && !isSpacePressed && !isProcessing) {
       e.preventDefault();
       setIsSpacePressed(true);
-      setSpaceStartTime(Date.now());
       
       // Start voice recording after 300ms hold
       spaceTimeoutRef.current = setTimeout(() => {
@@ -470,7 +464,7 @@ const AIChat = () => {
                     fontSize: '13px',
                     fontWeight: '500'
                   }}>
-                    {message.type === 'user' ? '您' : 'AI助手'}
+                    {message.type === 'user' ? t('aiChat.user') : t('aiChat.assistant')}
                   </Text>
                   <Text style={{ 
                     color: message.type === 'user' ? 'rgba(255, 255, 255, 0.6)' : themeColors.textSecondary, 
@@ -503,7 +497,7 @@ const AIChat = () => {
                     <Text style={{ 
                       color: message.type === 'user' ? 'rgba(255, 255, 255, 0.8)' : themeColors.textSecondary
                     }}>
-                      任务ID: {message.metadata.taskId}
+                      {t('aiChat.taskId')}: {message.metadata.taskId}
                     </Text>
                   </div>
                 )}
@@ -684,7 +678,7 @@ const AIChat = () => {
           <Col flex="auto">
             <Space style={{ width: '100%', justifyContent: 'space-between' }}>
               <Text style={{ color: themeColors.textSecondary, fontSize: '13px' }}>
-                当前模型
+                {t('aiChat.currentModel')}
               </Text>
               <Select
                 value={currentModel}
@@ -694,8 +688,8 @@ const AIChat = () => {
                 }}
                 size="small"
                 className="nuwa-model-select"
-                placeholder="选择模型"
-                notFoundContent="暂无可用模型"
+                placeholder={t('aiChat.selectModel')}
+                notFoundContent={t('aiChat.noModelsAvailable')}
                 dropdownStyle={{
                   background: 'rgba(30, 41, 59, 0.95)',
                   backdropFilter: 'blur(20px)',

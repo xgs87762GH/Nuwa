@@ -92,7 +92,7 @@ const FloatingChatBot = () => {
           }} />
         }
         centered
-        destroyOnClose
+        destroyOnHidden
       >
         <AIChat />
       </Modal>

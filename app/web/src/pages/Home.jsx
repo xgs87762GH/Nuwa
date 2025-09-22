@@ -8,8 +8,10 @@ import {
 } from '@ant-design/icons';
 import { getSystemHealth } from '../api/system';
 import { getToolsStatistics } from '../api/tools';  // 从正确的位置导入
+import { useLanguage } from '../contexts/LanguageContext';
 
 const Home = () => {
+  const { t } = useLanguage();
   const [healthData, setHealthData] = useState(null);
   const [toolsCount, setToolsCount] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -24,14 +26,14 @@ const Home = () => {
         setHealthData(healthRes);
         setToolsCount(toolsRes.data?.total || 0);
       } catch (error) {
-        console.error('获取数据失败:', error);
+        console.error(t('messages.loadFailed'), error);
       } finally {
         setLoading(false);
       }
     };
 
     fetchData();
-  }, []);
+  }, [t]);
 
   return (
     <div>
@@ -39,7 +41,7 @@ const Home = () => {
         <Col span={8}>
           <Card loading={loading}>
             <Statistic
-              title="可用工具"
+              title={t('home.features.tools')}
               value={toolsCount}
               prefix={<ToolOutlined />}
             />
@@ -48,7 +50,7 @@ const Home = () => {
         <Col span={8}>
           <Card loading={loading}>
             <Statistic
-              title="活跃任务"
+              title={t('home.features.tasks')}
               value={0}
               prefix={<UnorderedListOutlined />}  
             />
@@ -57,8 +59,8 @@ const Home = () => {
         <Col span={8}>
           <Card loading={loading}>
             <Statistic
-              title="系统状态"
-              value={healthData?.success ? "正常" : "异常"}
+              title={t('common.status')}
+              value={healthData?.success ? t('common.online') : t('common.offline')}
               prefix={healthData?.success ? 
                 <CheckCircleOutlined style={{ color: '#52c41a' }} /> : 
                 <ExclamationCircleOutlined style={{ color: '#ff4d4f' }} />
@@ -69,8 +71,8 @@ const Home = () => {
       </Row>
 
       <Alert
-        message="欢迎使用 Nuwa 智能AI插件管理平台"
-        description="这是一个强大的AI插件管理和任务调度平台，可以帮助您管理各种AI工具和自动化任务。"
+        message={t('home.title')}
+        description={t('home.description')}
         type="info"
         showIcon
       />

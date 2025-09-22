@@ -32,16 +32,16 @@ export const TASK_STATUS = {
   TIMEOUT: 'timeout'
 };
 
-// 任务状态标签映射
+// 任务状态标签映射 (这里使用状态键作为国际化 ID，在实际使用时通过 t 函数翻译)
 export const TASK_STATUS_LABELS = {
-  [TASK_STATUS.PENDING]: '待处理',
-  [TASK_STATUS.SCHEDULED]: '已调度',
-  [TASK_STATUS.RUNNING]: '执行中',
-  [TASK_STATUS.SUCCESS]: '成功',
-  [TASK_STATUS.FAILED]: '失败',
-  [TASK_STATUS.CANCELLED]: '已取消',
-  [TASK_STATUS.PAUSED]: '已暂停',
-  [TASK_STATUS.TIMEOUT]: '超时'
+  [TASK_STATUS.PENDING]: 'tasks.status.pending',
+  [TASK_STATUS.SCHEDULED]: 'tasks.status.scheduled',
+  [TASK_STATUS.RUNNING]: 'tasks.status.running',
+  [TASK_STATUS.SUCCESS]: 'tasks.status.success',
+  [TASK_STATUS.FAILED]: 'tasks.status.failed',
+  [TASK_STATUS.CANCELLED]: 'tasks.status.cancelled',
+  [TASK_STATUS.PAUSED]: 'tasks.status.paused',
+  [TASK_STATUS.TIMEOUT]: 'tasks.status.timeout'
 };
 
 // 任务状态颜色映射

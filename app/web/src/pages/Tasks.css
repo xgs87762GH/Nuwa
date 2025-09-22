@@ -1103,3 +1103,35 @@
 .ant-table-body::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
 }
+
+/* 任务列表卡片样式 */
+.task-list-card {
+  background: transparent;
+}
+
+.task-table-container {
+  background: transparent;
+}
+
+.task-table-container .ant-table {
+  background: transparent;
+}
+
+.task-table-container .ant-table-thead > tr > th {
+  background: rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+.task-table-container .ant-table-tbody > tr {
+  background: transparent;
+}
+
+.task-table-container .ant-table-tbody > tr:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.task-table-container .ant-table-tbody > tr > td {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.9);
+}

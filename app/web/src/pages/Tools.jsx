@@ -32,10 +32,13 @@ import {
   ReloadOutlined
 } from '@ant-design/icons';
 import { getTools, getToolDetails } from '../api/tools';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const { Title, Text, Paragraph } = Typography;
 
 const Tools = () => {
+  const { t } = useLanguage();
+  
   const [tools, setTools] = useState([]);
   const [loading, setLoading] = useState(true);
   const [detailModal, setDetailModal] = useState(false);
@@ -70,8 +73,8 @@ const Tools = () => {
       setTools(toolsData);
       setStats(statsData);
     } catch (error) {
-      console.error('获取工具列表失败:', error);
-      setError(error.message || '获取工具列表失败');
+      console.error('Failed to fetch tools:', error);
+      setError(error.message || t('tools.fetchToolsFailed'));
       setTools([]);
     } finally {
       setLoading(false);
@@ -86,8 +89,8 @@ const Tools = () => {
       console.log('Tool Details Response:', response);
       setSelectedTool(response.data);
     } catch (error) {
-      console.error('获取工具详情失败:', error);
-      setSelectedTool({ error: '获取详情失败' });
+      console.error('Failed to fetch tool details:', error);
+      setSelectedTool({ error: t('tools.getDetailsFailed') });
     } finally {
       setDetailLoading(false);
     }
@@ -101,13 +104,13 @@ const Tools = () => {
   // 获取状态图标和颜色
   const getStatusInfo = (status) => {
     const statusMap = {
-      'active': { icon: <CheckCircleOutlined />, color: 'success', text: '运行中' },
-      'loaded': { icon: <CheckCircleOutlined />, color: 'success', text: '已加载' },
-      'inactive': { icon: <ExclamationCircleOutlined />, color: 'warning', text: '未激活' },
-      'error': { icon: <CloseCircleOutlined />, color: 'error', text: '错误' },
-      'disabled': { icon: <CloseCircleOutlined />, color: 'default', text: '已禁用' }
+      'active': { icon: <CheckCircleOutlined />, color: 'success', text: t('tools.statusTypes.active') },
+      'loaded': { icon: <CheckCircleOutlined />, color: 'success', text: t('tools.statusTypes.loaded') },
+      'inactive': { icon: <ExclamationCircleOutlined />, color: 'warning', text: t('tools.statusTypes.inactive') },
+      'error': { icon: <CloseCircleOutlined />, color: 'error', text: t('tools.statusTypes.error') },
+      'disabled': { icon: <CloseCircleOutlined />, color: 'default', text: t('tools.statusTypes.disabled') }
     };
-    return statusMap[status] || { icon: <InfoCircleOutlined />, color: 'default', text: status || '未知' };
+    return statusMap[status] || { icon: <InfoCircleOutlined />, color: 'default', text: status || t('tools.statusTypes.unknown') };
   };
 
   // 格式化时间
@@ -135,7 +138,7 @@ const Tools = () => {
               icon={<EyeOutlined />}
               onClick={() => handleViewDetails(tool.id)}
             >
-              查看详情
+              {t('tools.viewDetails')}
             </Button>
           ]}
         >
@@ -162,7 +165,7 @@ const Tools = () => {
                   ellipsis={{ rows: 2, expandable: true }}
                   style={{ marginBottom: 12 }}
                 >
-                  {tool.description || '暂无描述'}
+                  {tool.description || t('tools.noDescription')}
                 </Paragraph>
                 
                 <Space wrap size={[4, 4]}>
@@ -174,7 +177,7 @@ const Tools = () => {
                 <div style={{ marginTop: 8, fontSize: 12, color: '#666' }}>
                   <Space>
                     <CalendarOutlined />
-                    <span>注册时间: {formatTime(tool.registered_at)}</span>
+                    <span>{t('tools.registeredAt')}: {formatTime(tool.registered_at)}</span>
                   </Space>
                 </div>
               </div>
@@ -189,15 +192,15 @@ const Tools = () => {
   if (error) {
     return (
       <div>
-        <Title level={2}>工具管理</Title>
+        <Title level={2}>{t('tools.title')}</Title>
         <Alert
-          message="获取工具列表失败"
+          message={t('tools.fetchToolsFailed')}
           description={error}
           type="error"
           showIcon
           action={
             <Button size="small" onClick={fetchTools}>
-              重试
+              {t('tools.retry')}
             </Button>
           }
         />
@@ -209,13 +212,13 @@ const Tools = () => {
     <div>
       {/* 页面头部 */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-        <Title level={2}>工具管理</Title>
+        <Title level={2}>{t('tools.title')}</Title>
         <Button 
           icon={<ReloadOutlined />}
           onClick={fetchTools} 
           loading={loading}
         >
-          刷新
+          {t('tools.refresh')}
         </Button>
       </div>
 
@@ -225,7 +228,7 @@ const Tools = () => {
           <Col span={6}>
             <Card>
               <Statistic
-                title="总工具数"
+                title={t('tools.statistics.totalCount')}
                 value={stats.total_count || 0}
                 prefix={<ToolOutlined />}
               />
@@ -234,7 +237,7 @@ const Tools = () => {
           <Col span={6}>
             <Card>
               <Statistic
-                title="运行中"
+                title={t('tools.statistics.activeCount')}
                 value={stats.active_count || 0}
                 valueStyle={{ color: '#3f8600' }}
                 prefix={<CheckCircleOutlined />}
@@ -244,7 +247,7 @@ const Tools = () => {
           <Col span={6}>
             <Card>
               <Statistic
-                title="分类数"
+                title={t('tools.statistics.categoryCount')}
                 value={stats.category_count || 0}
                 prefix={<TagOutlined />}
               />
@@ -253,7 +256,7 @@ const Tools = () => {
           <Col span={6}>
             <Card>
               <Statistic
-                title="已筛选"
+                title={t('tools.statistics.filteredCount')}
                 value={stats.filtered_count || stats.total_count || 0}
                 prefix={<InfoCircleOutlined />}
               />
@@ -267,7 +270,7 @@ const Tools = () => {
         <Spin spinning={loading}>
           {!loading && (!Array.isArray(tools) || tools.length === 0) ? (
             <Empty 
-              description="暂无可用工具" 
+              description={t('tools.noToolsAvailable')} 
               image={Empty.PRESENTED_IMAGE_SIMPLE}
             />
           ) : (
@@ -285,7 +288,7 @@ const Tools = () => {
         title={
           <Space>
             <ToolOutlined />
-            <span>{selectedTool?.name || '工具详情'}</span>
+            <span>{selectedTool?.name || t('tools.toolDetails')}</span>
             {selectedTool?.version && <Tag color="blue">v{selectedTool.version}</Tag>}
           </Space>
         }
@@ -293,7 +296,7 @@ const Tools = () => {
         onCancel={handleModalClose}
         footer={[
           <Button key="close" onClick={handleModalClose}>
-            关闭
+            {t('tools.close')}
           </Button>
         ]}
         width={800}
@@ -306,10 +309,10 @@ const Tools = () => {
               ) : (
                 <div>
                   {/* 基本信息 */}
-                  <Descriptions title="基本信息" bordered column={2} size="small">
-                    <Descriptions.Item label="工具名称">{selectedTool.name}</Descriptions.Item>
-                    <Descriptions.Item label="版本">{selectedTool.version}</Descriptions.Item>
-                    <Descriptions.Item label="状态">
+                  <Descriptions title={t('tools.basicInfo')} bordered column={2} size="small">
+                    <Descriptions.Item label={t('tools.toolName')}>{selectedTool.name}</Descriptions.Item>
+                    <Descriptions.Item label={t('tools.version')}>{selectedTool.version}</Descriptions.Item>
+                    <Descriptions.Item label={t('tools.status')}>
                       {(() => {
                         const statusInfo = getStatusInfo(selectedTool.status);
                         return (
@@ -320,24 +323,24 @@ const Tools = () => {
                         );
                       })()}
                     </Descriptions.Item>
-                    <Descriptions.Item label="是否启用">
+                    <Descriptions.Item label={t('tools.enabled')}>
                       {selectedTool.is_enabled ? 
-                        <Tag color="success">已启用</Tag> : 
-                        <Tag color="default">未启用</Tag>
+                        <Tag color="success">{t('tools.statusTypes.enabled')}</Tag> : 
+                        <Tag color="default">{t('tools.statusTypes.notEnabled')}</Tag>
                       }
                     </Descriptions.Item>
-                    <Descriptions.Item label="注册时间" span={2}>
+                    <Descriptions.Item label={t('tools.registeredAt')} span={2}>
                       {formatTime(selectedTool.registered_at)}
                     </Descriptions.Item>
-                    <Descriptions.Item label="描述" span={2}>
-                      <Paragraph>{selectedTool.description || '暂无描述'}</Paragraph>
+                    <Descriptions.Item label={t('tools.description')} span={2}>
+                      <Paragraph>{selectedTool.description || t('tools.noDescription')}</Paragraph>
                     </Descriptions.Item>
                   </Descriptions>
 
                   {/* 标签 */}
                   {selectedTool.tags && selectedTool.tags.length > 0 && (
                     <>
-                      <Divider>标签</Divider>
+                      <Divider>{t('tools.tags')}</Divider>
                       <Space wrap>
                         {selectedTool.tags.map(tag => (
                           <Tag key={tag} icon={<TagOutlined />}>{tag}</Tag>
@@ -349,10 +352,10 @@ const Tools = () => {
                   {/* 元数据 */}
                   {selectedTool.metadata && (
                     <>
-                      <Divider>详细信息</Divider>
+                      <Divider>{t('tools.detailInfo')}</Divider>
                       <Descriptions bordered column={1} size="small">
                         {selectedTool.metadata.author && (
-                          <Descriptions.Item label="作者">
+                          <Descriptions.Item label={t('tools.author')}>
                             <Space>
                               <UserOutlined />
                               {selectedTool.metadata.author}
@@ -360,12 +363,12 @@ const Tools = () => {
                           </Descriptions.Item>
                         )}
                         {selectedTool.metadata.license && (
-                          <Descriptions.Item label="许可证">
+                          <Descriptions.Item label={t('tools.license')}>
                             {selectedTool.metadata.license}
                           </Descriptions.Item>
                         )}
                         {selectedTool.metadata.keywords && selectedTool.metadata.keywords.length > 0 && (
-                          <Descriptions.Item label="关键词">
+                          <Descriptions.Item label={t('tools.keywords')}>
                             <Space wrap>
                               {selectedTool.metadata.keywords.map(keyword => (
                                 <Tag key={keyword} size="small">{keyword}</Tag>
@@ -374,7 +377,7 @@ const Tools = () => {
                           </Descriptions.Item>
                         )}
                         {selectedTool.metadata.requirements && selectedTool.metadata.requirements.length > 0 && (
-                          <Descriptions.Item label="依赖项">
+                          <Descriptions.Item label={t('tools.dependencies')}>
                             <Space direction="vertical" size="small" style={{ width: '100%' }}>
                               {selectedTool.metadata.requirements.map((req, index) => (
                                 <Tag key={index} style={{ marginBottom: 4 }}>{req}</Tag>
@@ -383,7 +386,7 @@ const Tools = () => {
                           </Descriptions.Item>
                         )}
                         {selectedTool.metadata.urls && Object.keys(selectedTool.metadata.urls).length > 0 && (
-                          <Descriptions.Item label="相关链接">
+                          <Descriptions.Item label={t('tools.relatedLinks')}>
                             <Space direction="vertical" size="small">
                               {Object.entries(selectedTool.metadata.urls).map(([key, url]) => (
                                 <div key={key}>
@@ -403,7 +406,7 @@ const Tools = () => {
                   {/* 原始数据（调试用） */}
                   <details style={{ marginTop: 16 }}>
                     <summary style={{ cursor: 'pointer', color: '#666' }}>
-                      查看原始数据 (调试)
+                      {t('tools.viewRawData')}
                     </summary>
                     <pre style={{ 
                       background: '#f5f5f5', 
