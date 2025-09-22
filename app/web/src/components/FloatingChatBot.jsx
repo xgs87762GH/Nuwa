@@ -72,7 +72,7 @@ const FloatingChatBot = () => {
         style={{ top: 20 }}
         bodyStyle={{ 
           padding: 0, 
-          height: '70vh',
+          height: '75vh',
           overflow: 'hidden'
         }}
         destroyOnClose={true}

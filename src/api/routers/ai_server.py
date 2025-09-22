@@ -12,7 +12,7 @@ LOGGER = get_logger(__name__)
 
 
 @router.get(
-    "/all",
+    "/services",
     summary="Get all AI servers",
     description="Retrieve status information for all configured AI providers",
     response_model=AIServerListResponse
@@ -51,6 +51,7 @@ async def set_default_ai_provider(provider_type: str,
     return APIResponse.ok(message="Default AI provider set successfully")
 
 
+
 @router.get("/provider/current", summary="Get current AI provider", response_model=APIResponse)
 async def get_current_ai_provider(intelligent_plugin_router: IntelligentPluginRouterDep) -> APIResponse:
     """Get current AI provider"""
@@ -58,7 +59,7 @@ async def get_current_ai_provider(intelligent_plugin_router: IntelligentPluginRo
 
 
 @router.get("/provider/models/{provider_type}", summary="Get models for AI provider", response_model=APIResponse)
-async def get_models_for_provider(provider_type: str, aiManagerDep: AIManagerDep):
+async def get_models_for_provider(provider_type: str, aiManagerDep: AIManagerDep) -> APIResponse:
     """
     Get models for a specific AI provider.
     """

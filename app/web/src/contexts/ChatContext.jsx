@@ -16,7 +16,16 @@ const initialState = {
   isLoading: false,
   isConnected: true,
   chatHistory: [],
-  currentSession: null
+  currentSession: null,
+  aiConfig: {
+    serviceId: null,
+    modelId: null,
+    settings: {
+      temperature: 0.7,
+      maxTokens: 2048,
+      stream: false
+    }
+  }
 };
 
 // Action 类型
@@ -27,7 +36,8 @@ const ActionTypes = {
   CLEAR_MESSAGES: 'CLEAR_MESSAGES',
   LOAD_HISTORY: 'LOAD_HISTORY',
   START_SESSION: 'START_SESSION',
-  END_SESSION: 'END_SESSION'
+  END_SESSION: 'END_SESSION',
+  UPDATE_AI_CONFIG: 'UPDATE_AI_CONFIG'
 };
 
 // Reducer
@@ -100,6 +110,15 @@ const chatReducer = (state, action) => {
       return {
         ...state,
         currentSession: null
+      };
+
+    case ActionTypes.UPDATE_AI_CONFIG:
+      return {
+        ...state,
+        aiConfig: {
+          ...state.aiConfig,
+          ...action.payload
+        }
       };
 
     default:
@@ -198,6 +217,11 @@ export const ChatProvider = ({ children }) => {
     };
   };
 
+  // 更新AI配置
+  const updateAIConfig = (config) => {
+    dispatch({ type: ActionTypes.UPDATE_AI_CONFIG, payload: config });
+  };
+
   const value = {
     // 状态
     ...state,
@@ -211,7 +235,8 @@ export const ChatProvider = ({ children }) => {
     clearMessages,
     startSession,
     endSession,
-    getChatStats
+    getChatStats,
+    updateAIConfig
   };
 
   return (

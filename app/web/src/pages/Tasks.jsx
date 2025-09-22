@@ -9,17 +9,21 @@ import {
   Avatar, 
   Spin,
   Tooltip,
-  Modal
+  Modal,
+  Drawer
 } from 'antd';
 import { 
   SendOutlined, 
   AudioOutlined, 
   UserOutlined, 
   RobotOutlined,
-  SoundOutlined 
+  SoundOutlined,
+  SettingOutlined
 } from '@ant-design/icons';
 import { createTask } from '../api/tasks';
+import { createChatTask } from '../api/ai';
 import { useChat } from '../contexts/ChatContext';
+import AIModelSelector from '../components/AIModelSelector';
 
 const { TextArea } = Input;
 const { Title, Text } = Typography;
@@ -36,6 +40,14 @@ const Tasks = () => {
   
   const [inputValue, setInputValue] = useState('');
   const [isListening, setIsListening] = useState(false);
+  const [settingsDrawerVisible, setSettingsDrawerVisible] = useState(false);
+  const [selectedService, setSelectedService] = useState(null);
+  const [selectedModel, setSelectedModel] = useState(null);
+  const [aiSettings, setAISettings] = useState({
+    temperature: 0.7,
+    maxTokens: 2048,
+    stream: false
+  });
   const messagesEndRef = useRef(null);
   const recognitionRef = useRef(null);
 
@@ -88,11 +100,23 @@ const Tasks = () => {
     setLoading(true);
 
     try {
-      const response = await createTask(userInput);
+      let response;
+      
+      // 如果选择了AI服务和模型，使用新的聊天API
+      if (selectedService && selectedModel) {
+        response = await createChatTask(userInput, {
+          serviceId: selectedService,
+          modelId: selectedModel,
+          ...aiSettings
+        });
+      } else {
+        // 否则使用原有的任务API
+        response = await createTask(userInput);
+      }
       
       // 添加机器人回复
       addBotMessage(
-        response.message || '任务已创建成功！',
+        response.message || response.content || '任务已创建成功！',
         response
       );
     } catch (error) {
@@ -208,7 +232,30 @@ const Tasks = () => {
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <Title level={2} style={{ marginBottom: 16 }}>AI 助手</Title>
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center', 
+        marginBottom: 16 
+      }}>
+        <Title level={2} style={{ margin: 0 }}>AI 助手</Title>
+        <Space>
+          {selectedService && selectedModel && (
+            <Tooltip title={`使用 ${selectedService}/${selectedModel}`}>
+              <RobotOutlined style={{ color: '#52c41a' }} />
+            </Tooltip>
+          )}
+          <Tooltip title="AI模型设置">
+            <Button 
+              icon={<SettingOutlined />}
+              onClick={() => setSettingsDrawerVisible(true)}
+              type={selectedService && selectedModel ? 'primary' : 'default'}
+            >
+              模型配置
+            </Button>
+          </Tooltip>
+        </Space>
+      </div>
       
       <Card 
         style={{ 
@@ -289,6 +336,25 @@ const Tasks = () => {
           </Space.Compact>
         </div>
       </Card>
+
+      {/* AI模型配置抽屉 */}
+      <Drawer
+        title="AI模型配置"
+        placement="right"
+        width={400}
+        onClose={() => setSettingsDrawerVisible(false)}
+        open={settingsDrawerVisible}
+        bodyStyle={{ padding: 16 }}
+      >
+        <AIModelSelector
+          selectedService={selectedService}
+          selectedModel={selectedModel}
+          onServiceChange={setSelectedService}
+          onModelChange={setSelectedModel}
+          onSettingsChange={setAISettings}
+          settings={aiSettings}
+        />
+      </Drawer>
     </div>
   );
 };
