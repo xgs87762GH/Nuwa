@@ -1,15 +1,16 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import { useLanguage } from './LanguageContext';
 
 // 聊天状态管理
 const ChatContext = createContext();
 
-// 初始状态
-const initialState = {
+// 初始状态工厂函数
+const createInitialState = (welcomeMessage) => ({
   messages: [
     {
       id: 1,
       type: 'bot',
-      content: '您好！我是您的AI助手，有什么可以帮您的吗？',
+      content: welcomeMessage,
       timestamp: new Date()
     }
   ],
@@ -26,7 +27,7 @@ const initialState = {
       stream: false
     }
   }
-};
+});
 
 // Action 类型
 const ActionTypes = {
@@ -37,7 +38,8 @@ const ActionTypes = {
   LOAD_HISTORY: 'LOAD_HISTORY',
   START_SESSION: 'START_SESSION',
   END_SESSION: 'END_SESSION',
-  UPDATE_AI_CONFIG: 'UPDATE_AI_CONFIG'
+  UPDATE_AI_CONFIG: 'UPDATE_AI_CONFIG',
+  UPDATE_WELCOME_MESSAGE: 'UPDATE_WELCOME_MESSAGE'
 };
 
 // Reducer
@@ -68,7 +70,7 @@ const chatReducer = (state, action) => {
       localStorage.removeItem('chat_messages');
       return {
         ...state,
-        messages: [initialState.messages[0]] // 保留欢迎消息
+        messages: [state.messages[0]] // 保留欢迎消息
       };
 
     case ActionTypes.LOAD_HISTORY:
@@ -121,6 +123,19 @@ const chatReducer = (state, action) => {
         }
       };
 
+    case ActionTypes.UPDATE_WELCOME_MESSAGE:
+      const updatedMessages = [...state.messages];
+      if (updatedMessages.length > 0 && updatedMessages[0].type === 'bot' && updatedMessages[0].id === 1) {
+        updatedMessages[0] = {
+          ...updatedMessages[0],
+          content: action.payload
+        };
+      }
+      return {
+        ...state,
+        messages: updatedMessages
+      };
+
     default:
       return state;
   }
@@ -128,7 +143,17 @@ const chatReducer = (state, action) => {
 
 // 聊天上下文提供者
 export const ChatProvider = ({ children }) => {
+  const { t } = useLanguage();
+  const initialState = createInitialState(t('aiChat.defaultWelcome'));
   const [state, dispatch] = useReducer(chatReducer, initialState);
+
+  // 当语言变化时更新欢迎消息
+  useEffect(() => {
+    dispatch({ 
+      type: ActionTypes.UPDATE_WELCOME_MESSAGE, 
+      payload: t('aiChat.defaultWelcome') 
+    });
+  }, [t]);
 
   // 从本地存储加载历史消息
   useEffect(() => {
@@ -140,16 +165,16 @@ export const ChatProvider = ({ children }) => {
         if (Array.isArray(messages)) {
           dispatch({ type: ActionTypes.LOAD_HISTORY, payload: messages });
         } else {
-          console.warn('无效的聊天记录格式，将清除本地存储');
+          console.warn(t('chatContext.invalidFormat'));
           localStorage.removeItem('chat_messages');
         }
       } catch (error) {
-        console.error('加载聊天历史失败:', error);
+        console.error(t('chatContext.loadingError'), error);
         // 清除损坏的数据
         localStorage.removeItem('chat_messages');
       }
     }
-  }, []);
+  }, [t]);
 
   // 添加消息
   const addMessage = (message) => {

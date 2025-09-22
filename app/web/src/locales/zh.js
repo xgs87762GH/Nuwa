@@ -23,7 +23,15 @@ const zhLocale = {
     assistant: 'AI助手',
     taskId: '任务ID',
     errorRetryMessage: '抱歉，{error}。请尝试重新描述您的需求或检查可用的功能。',
-    processErrorMessage: '抱歉，处理您的请求时出现了错误。请稍后重试。'
+    processErrorMessage: '抱歉，处理您的请求时出现了错误。请稍后重试。',
+    defaultWelcome: '您好！我是您的AI助手，有什么可以帮您的吗？'
+  },
+  // Chat Context
+  chatContext: {
+    loadingError: '加载聊天历史失败',
+    invalidFormat: '无效的聊天记录格式，将清除本地存储',
+    dataCorrupted: '聊天数据已损坏，已清除',
+    providerError: 'useChat must be used within a ChatProvider'
   },
   // Settings Modal
   settings: {

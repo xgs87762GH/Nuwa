@@ -23,7 +23,15 @@ const enLocale = {
     assistant: 'AI Assistant',
     taskId: 'Task ID',
     errorRetryMessage: 'Sorry, {error}. Please try to rephrase your request or check available functions.',
-    processErrorMessage: 'Sorry, an error occurred while processing your request. Please try again later.'
+    processErrorMessage: 'Sorry, an error occurred while processing your request. Please try again later.',
+    defaultWelcome: 'Hello! I am your AI assistant. How can I help you today?'
+  },
+  // Chat Context
+  chatContext: {
+    loadingError: 'Failed to load chat history',
+    invalidFormat: 'Invalid chat record format, local storage will be cleared',
+    dataCorrupted: 'Chat data corrupted, cleared',
+    providerError: 'useChat must be used within a ChatProvider'
   },
   // Settings Modal
   settings: {
