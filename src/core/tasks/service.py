@@ -3,11 +3,15 @@ import uuid
 from datetime import datetime, timezone
 from typing import Dict, Any
 
+from sqlalchemy import select, func
+from sqlalchemy.orm import selectinload
+
 from src.core.ai.providers.response import ExecutionPlan
 from src.core.config import DataBaseManager
 from src.core.orchestration import IntelligentPluginRouter
 from src.core.orchestration.model import PlanResult
 from src.core.tasks.model.models import Task, TaskStep, TaskStatus
+from src.core.tasks.model.response import TaskQuery, PaginatedTaskResponse, TaskResponse
 
 
 class TaskService:
@@ -86,3 +90,43 @@ class TaskService:
                 "error": f"Failed to create task: {str(e)}",
                 "plan_result": plan_result.__dict__ if 'plan_result' in locals() else None
             }
+
+    async def query_tasks(self, query: TaskQuery) -> PaginatedTaskResponse:
+        """
+        Paginated query for tasks based on criteria.
+        """
+        async with self.db.get_session() as session:
+            # 基础查询，并预加载 steps 关系以避免 N+1 问题
+            stmt = select(Task).options(selectinload(Task.steps))
+
+            # 根据查询参数动态添加过滤条件
+            if query.task_id:
+                stmt = stmt.where(Task.task_id == query.task_id)
+            if query.description:
+                stmt = stmt.where(Task.description.contains(query.description))
+            if query.status:
+                stmt = stmt.where(Task.status == query.status)
+
+            # 获取总数
+            count_stmt = select(func.count()).select_from(stmt.subquery())
+            total = (await session.execute(count_stmt)).scalar_one()
+
+            # 添加排序、分页
+            stmt = stmt.order_by(Task.created_at.desc()) \
+                .offset((query.page - 1) * query.size) \
+                .limit(query.size)
+
+            # 执行查询
+            result = await session.execute(stmt)
+            tasks = result.scalars().all()
+
+            # 将 SQLAlchemy 模型转换为 Pydantic 模型
+            task_responses = [TaskResponse.model_validate(task, from_attributes=True) for task in tasks]
+
+            # 封装并返回 Pydantic 模型
+            return PaginatedTaskResponse(
+                total=total,
+                page=query.page,
+                size=query.size,
+                items=task_responses
+            )

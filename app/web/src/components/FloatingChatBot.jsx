@@ -2,91 +2,99 @@ import React, { useState } from 'react';
 import { 
   FloatButton, 
   Modal, 
-  Button, 
-  Space,
   Tooltip 
 } from 'antd';
 import { 
   RobotOutlined, 
   MessageOutlined, 
   AudioOutlined,
-  CloseOutlined 
+  CloseOutlined
 } from '@ant-design/icons';
-import Tasks from '../pages/Tasks';
-import VoiceChat from './VoiceChat';
+import AIChat from './AIChat';
 
 const FloatingChatBot = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [modalMode, setModalMode] = useState('chat'); // 'chat' or 'voice'
 
-  const showChatModal = () => {
-    setModalMode('chat');
+  const showModal = () => {
     setIsModalVisible(true);
   };
 
-  const showVoiceModal = () => {
-    setModalMode('voice');
-    setIsModalVisible(true);
-  };
-
-  const handleModalClose = () => {
+  const handleCancel = () => {
     setIsModalVisible(false);
   };
 
   return (
     <>
-      {/* 悬浮按钮组 */}
       <FloatButton.Group
-        trigger="click"
+        trigger="hover"
         type="primary"
-        style={{ right: 24, bottom: 24 }}
+        style={{ 
+          right: 24,
+          bottom: 24,
+        }}
         icon={<RobotOutlined />}
-        tooltip="AI助手"
+        tooltip="Nuwa AI助手"
       >
-        <Tooltip title="文字聊天" placement="left">
+        <Tooltip title="AI对话" placement="left">
           <FloatButton
             icon={<MessageOutlined />}
-            onClick={showChatModal}
+            onClick={() => showModal()}
+            style={{
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              border: 'none'
+            }}
           />
         </Tooltip>
-        <Tooltip title="语音交流" placement="left">
+        
+        <Tooltip title="语音助手" placement="left">
           <FloatButton
             icon={<AudioOutlined />}
-            onClick={showVoiceModal}
+            onClick={() => showModal()}
+            style={{
+              background: 'linear-gradient(135deg, #52c41a 0%, #73d13d 100%)',
+              border: 'none'
+            }}
           />
         </Tooltip>
       </FloatButton.Group>
 
-      {/* 聊天模态框 */}
       <Modal
-        title={
-          <Space>
-            <RobotOutlined style={{ color: '#1890ff' }} />
-            {modalMode === 'chat' ? 'AI助手 - 文字聊天' : 'AI助手 - 语音交流'}
-          </Space>
-        }
+        title={null}
         open={isModalVisible}
-        onCancel={handleModalClose}
+        onCancel={handleCancel}
         footer={null}
-        width={800}
-        style={{ top: 20 }}
-        bodyStyle={{ 
-          padding: 0, 
-          height: '75vh',
-          overflow: 'hidden'
+        width="90vw"
+        style={{ 
+          top: 20,
+          maxWidth: '1000px'
         }}
-        destroyOnClose={true}
-        closeIcon={<CloseOutlined />}
+        styles={{
+          content: {
+            padding: '0',
+            background: 'rgba(15, 23, 42, 0.98)',
+            backdropFilter: 'blur(20px)',
+            borderRadius: '16px',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            boxShadow: '0 25px 80px rgba(0, 0, 0, 0.4)',
+            overflow: 'hidden'
+          },
+          body: {
+            padding: '0',
+            height: '75vh',
+            overflow: 'hidden'
+          }
+        }}
+        closeIcon={
+          <CloseOutlined style={{ 
+            color: 'white', 
+            fontSize: '16px',
+            padding: '4px'
+          }} />
+        }
+        centered
+        destroyOnClose
       >
-        {modalMode === 'chat' && (
-          <div style={{ height: '100%' }}>
-            <Tasks />
-          </div>
-        )}
-        
-        {modalMode === 'voice' && (
-          <VoiceChat />
-        )}
+        <AIChat />
       </Modal>
     </>
   );

@@ -13,7 +13,7 @@ class AIService:
             model: str = None
     ):
         self.ai_manager = ai_manager
-        self.preferred_provider = preferred_provider
+        self.preferred_provider = preferred_provider or ai_manager.first_provider_name
         self.fallback_providers = fallback_providers or []
         self.model = model
 

@@ -1,0 +1,1105 @@
+/* 任务管理页面 - 超现代设计 */
+.tasks-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  position: relative;
+  overflow-x: hidden;
+}
+
+.tasks-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 20% 80%, rgba(120, 160, 230, 0.3) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(255, 118, 117, 0.3) 0%, transparent 50%),
+    radial-gradient(circle at 40% 40%, rgba(120, 230, 160, 0.2) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+.tasks-content {
+  position: relative;
+  z-index: 1;
+  padding: 32px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* 页面标题区域 */
+.tasks-header {
+  text-align: center;
+  margin-bottom: 40px;
+  animation: fadeInUp 0.8s ease-out;
+}
+
+.tasks-header h2 {
+  color: white;
+  font-size: 3rem;
+  font-weight: 700;
+  margin: 0;
+  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  letter-spacing: -0.02em;
+}
+
+.tasks-header .tasks-subtitle {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 1.2rem;
+  margin-top: 8px;
+  font-weight: 300;
+}
+
+/* 统计卡片区域 */
+.stats-cards {
+  margin-bottom: 24px;
+}
+
+.stat-card {
+  border: none;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+  transition: transform 0.3s ease;
+  transform: translateX(-100%);
+}
+
+.stat-card:hover::before {
+  transform: translateX(0);
+}
+
+.stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+}
+
+.stat-card .ant-card-body {
+  padding: 20px;
+  text-align: center;
+}
+
+.stat-card .ant-statistic-title {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.stat-card .ant-statistic-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.stat-icon {
+  font-size: 24px;
+  animation: float 3s ease-in-out infinite;
+}
+
+.stat-icon.total {
+  color: #3f8bff;
+  text-shadow: 0 0 20px rgba(63, 139, 255, 0.5);
+}
+
+.stat-icon.running {
+  color: #ff9500;
+  text-shadow: 0 0 20px rgba(255, 149, 0, 0.5);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.stat-icon.completed {
+  color: #52c41a;
+  text-shadow: 0 0 20px rgba(82, 196, 26, 0.5);
+}
+
+.stat-icon.failed {
+  color: #ff4d4f;
+  text-shadow: 0 0 20px rgba(255, 77, 79, 0.5);
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-6px); }
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+/* 响应式统计卡片 */
+@media (max-width: 768px) {
+  .stat-card .ant-card-body {
+    padding: 16px;
+  }
+  
+  .stat-icon {
+    font-size: 20px;
+  }
+  
+  .stat-card .ant-statistic-content-value {
+    font-size: 18px !important;
+  }
+}
+
+/* 状态标签增强 */
+.status-tag {
+  border-radius: 8px;
+  padding: 4px 8px;
+  font-weight: 500;
+  animation: statusPulse 2s ease-in-out infinite;
+}
+
+.status-tag .anticon {
+  margin-right: 4px;
+}
+
+@keyframes statusPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.3); }
+  50% { box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.1); }
+}
+
+/* 表格卡片样式 */
+.tasks-table-card {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 24px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  animation: fadeInUp 0.8s ease-out 0.6s both;
+}
+
+.tasks-table-card .ant-card-body {
+  padding: 0;
+}
+
+/* 表格样式增强 */
+.tasks-table-card .ant-table {
+  background: transparent;
+}
+
+.tasks-table-card .ant-table-thead > tr > th {
+  background: rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  font-weight: 600;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.tasks-table-card .ant-table-tbody > tr {
+  background: transparent;
+  transition: all 0.3s ease;
+}
+
+.tasks-table-card .ant-table-tbody > tr:hover {
+  background: rgba(255, 255, 255, 0.05);
+  transform: scale(1.02);
+}
+
+.tasks-table-card .ant-table-tbody > tr > td {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.9);
+  padding: 16px;
+}
+
+.tasks-table-card .ant-pagination {
+  margin: 24px;
+}
+
+.tasks-table-card .ant-pagination .ant-pagination-item {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.tasks-table-card .ant-pagination .ant-pagination-item-active {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: white;
+}
+
+.tasks-table-card .ant-pagination .ant-pagination-item a {
+  color: white;
+}
+
+/* 筛选卡片样式 */
+.tasks-filter-card {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  animation: fadeInUp 0.8s ease-out 0.4s both;
+}
+
+.tasks-filter-card .ant-select .ant-select-selector {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+.tasks-filter-card .ant-input {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+.tasks-filter-card .ant-input::placeholder {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.tasks-filter-card .ant-btn {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+
+.tasks-filter-card .ant-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.tasks-filter-card .ant-btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.tasks-filter-card .ant-btn-primary:hover {
+  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+}
+
+.tasks-filter-card .ant-typography {
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 500;
+}
+
+.tasks-filter-card .ant-switch {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.tasks-filter-card .ant-switch-checked {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+/* 动画效果 */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.tasks-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 24px;
+  margin-bottom: 32px;
+  animation: fadeInUp 0.8s ease-out 0.2s both;
+}
+
+.stat-card {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+  padding: 24px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+}
+
+.stat-card:hover::before {
+  opacity: 1;
+}
+
+.stat-card-icon {
+  font-size: 2.5rem;
+  color: white;
+  margin-bottom: 16px;
+  display: block;
+}
+
+.stat-card-title {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.stat-card-value {
+  color: white;
+  font-size: 2.5rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* 筛选区域 */
+.tasks-filter-section {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 24px;
+  padding: 32px;
+  margin-bottom: 32px;
+  animation: fadeInUp 0.8s ease-out 0.4s both;
+}
+
+.filter-row {
+  gap: 24px !important;
+}
+
+.filter-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.filter-label {
+  color: white;
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.filter-control .ant-select,
+.filter-control .ant-input {
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  backdrop-filter: blur(10px);
+}
+
+.filter-control .ant-select .ant-select-selector {
+  background: transparent;
+  border: none;
+  color: white;
+}
+
+.filter-control .ant-input {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.filter-control .ant-input::placeholder {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* 主操作按钮区域 */
+.action-buttons {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ff8e8e 100%);
+  border: none;
+  border-radius: 16px;
+  padding: 12px 32px;
+  height: auto;
+  font-weight: 600;
+  font-size: 1rem;
+  box-shadow: 0 8px 25px rgba(255, 107, 107, 0.4);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-primary:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 35px rgba(255, 107, 107, 0.6);
+  background: linear-gradient(135deg, #ff5252 0%, #ff7979 100%);
+}
+
+.btn-secondary {
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 16px;
+  padding: 12px 24px;
+  height: auto;
+  color: white;
+  font-weight: 600;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: translateY(-2px);
+  color: white;
+}
+
+/* 自动刷新开关 */
+.auto-refresh-switch {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: white;
+  font-weight: 600;
+}
+
+.auto-refresh-switch .ant-switch {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 20px;
+}
+
+.auto-refresh-switch .ant-switch-checked {
+  background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%);
+}
+
+/* 表格容器 */
+.tasks-table-container {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+  animation: fadeInUp 0.8s ease-out 0.6s both;
+}
+
+/* 表格样式 */
+.tasks-table .ant-table {
+  background: transparent;
+}
+
+.tasks-table .ant-table-thead > tr > th {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 20px 16px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  position: relative;
+}
+
+.tasks-table .ant-table-thead > tr > th::before {
+  display: none;
+}
+
+.tasks-table .ant-table-tbody > tr {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: none;
+}
+
+.tasks-table .ant-table-tbody > tr:hover {
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+  transform: scale(1.01);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.tasks-table .ant-table-tbody > tr > td {
+  border-bottom: 1px solid #f0f2f5;
+  padding: 16px;
+  vertical-align: middle;
+}
+
+/* 状态标签优化 */
+.task-status-tag {
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.status-pending {
+  background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
+  color: white;
+}
+
+.status-running {
+  background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+  color: white;
+  animation: pulse-orange 2s infinite;
+}
+
+.status-success {
+  background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+  color: white;
+}
+
+.status-failed {
+  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+  color: white;
+}
+
+/* 优先级标签 */
+.priority-tag {
+  padding: 6px 14px;
+  border-radius: 16px;
+  font-weight: 600;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.priority-0 {
+  background: linear-gradient(135deg, #bdc3c7 0%, #95a5a6 100%);
+  color: white;
+}
+
+.priority-1 {
+  background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+  color: white;
+}
+
+.priority-2 {
+  background: linear-gradient(135deg, #f39c12 0%, #d68910 100%);
+  color: white;
+}
+
+.priority-3 {
+  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+  color: white;
+}
+
+/* 任务ID显示 */
+.task-id-display {
+  font-family: 'SF Mono', 'Monaco', monospace;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #495057;
+  border: 1px solid #dee2e6;
+}
+
+/* 操作按钮 */
+.action-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  margin: 0 4px;
+}
+
+.action-btn-view {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.action-btn-play {
+  background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+  color: white;
+}
+
+.action-btn-pause {
+  background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+  color: white;
+}
+
+.action-btn-delete {
+  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+  color: white;
+}
+
+.action-btn:hover {
+  transform: translateY(-2px) scale(1.1);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+/* 模态框样式 */
+.ant-modal .ant-modal-content {
+  border-radius: 24px;
+  overflow: hidden;
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+}
+
+.ant-modal .ant-modal-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  padding: 24px 32px;
+}
+
+.ant-modal .ant-modal-title {
+  color: white;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.ant-modal .ant-modal-close {
+  color: rgba(255, 255, 255, 0.8);
+  top: 24px;
+  right: 24px;
+}
+
+.ant-modal .ant-modal-body {
+  padding: 32px;
+}
+
+/* 表单样式 */
+.ant-form-item-label > label {
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.ant-input,
+.ant-select-selector {
+  border-radius: 12px;
+  border: 2px solid #e9ecef;
+  transition: all 0.3s ease;
+}
+
+.ant-input:focus,
+.ant-select-focused .ant-select-selector {
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+/* 抽屉样式 */
+.ant-drawer .ant-drawer-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  padding: 24px 32px;
+}
+
+.ant-drawer .ant-drawer-title {
+  color: white;
+  font-size: 1.3rem;
+  font-weight: 600;
+}
+
+.ant-drawer .ant-drawer-close {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.ant-drawer .ant-drawer-body {
+  padding: 32px;
+  background: #fafbfc;
+}
+
+/* 描述列表样式 */
+.ant-descriptions-bordered .ant-descriptions-item-label {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  font-weight: 600;
+  color: #495057;
+}
+
+/* 动画定义 */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse-orange {
+  0% {
+    box-shadow: 0 4px 12px rgba(243, 156, 18, 0.4);
+  }
+  50% {
+    box-shadow: 0 4px 20px rgba(243, 156, 18, 0.8);
+  }
+  100% {
+    box-shadow: 0 4px 12px rgba(243, 156, 18, 0.4);
+  }
+}
+
+/* 响应式设计 */
+@media (max-width: 1200px) {
+  .tasks-content {
+    padding: 24px;
+  }
+  
+  .tasks-header h2 {
+    font-size: 2.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .tasks-content {
+    padding: 16px;
+  }
+  
+  .tasks-header h2 {
+    font-size: 2rem;
+  }
+  
+  .tasks-stats {
+    grid-template-columns: 1fr;
+  }
+  
+  .filter-row {
+    flex-direction: column !important;
+  }
+  
+  .action-buttons {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 576px) {
+  .tasks-content {
+    padding: 12px;
+  }
+  
+  .tasks-header h2 {
+    font-size: 1.5rem;
+  }
+  
+  .tasks-filter-section {
+    padding: 20px;
+  }
+}
+
+/* 状态标签样式 */
+.ant-tag {
+  border-radius: 20px;
+  padding: 4px 12px;
+  font-weight: 500;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* 状态特殊样式 */
+.ant-tag[data-status="running"] {
+  background: linear-gradient(135deg, #ffa726 0%, #fb8c00 100%);
+  color: white;
+  animation: pulse 2s infinite;
+}
+
+.ant-tag[data-status="success"] {
+  background: linear-gradient(135deg, #66bb6a 0%, #43a047 100%);
+  color: white;
+}
+
+.ant-tag[data-status="failed"] {
+  background: linear-gradient(135deg, #ef5350 0%, #e53935 100%);
+  color: white;
+}
+
+.ant-tag[data-status="pending"] {
+  background: linear-gradient(135deg, #bdbdbd 0%, #9e9e9e 100%);
+  color: white;
+}
+
+/* 脉冲动画 */
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 167, 38, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(255, 167, 38, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 167, 38, 0);
+  }
+}
+
+/* 优先级标签样式 */
+.ant-tag[data-priority="0"] {
+  background: #f5f5f5;
+  color: #666;
+}
+
+.ant-tag[data-priority="1"] {
+  background: linear-gradient(135deg, #64b5f6 0%, #1976d2 100%);
+  color: white;
+}
+
+.ant-tag[data-priority="2"] {
+  background: linear-gradient(135deg, #ffb74d 0%, #f57c00 100%);
+  color: white;
+}
+
+.ant-tag[data-priority="3"] {
+  background: linear-gradient(135deg, #e57373 0%, #d32f2f 100%);
+  color: white;
+}
+
+/* 代码文本样式 */
+.ant-typography code {
+  background: linear-gradient(135deg, #e8f5e8 0%, #f0f8ff 100%);
+  border: 1px solid #d1ecf1;
+  border-radius: 6px;
+  padding: 2px 6px;
+  font-family: 'SF Mono', 'Monaco', 'Cascadia Code', 'Roboto Mono', monospace;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* 按钮样式优化 */
+.ant-btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  border-radius: 8px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.ant-btn-primary:hover {
+  background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.ant-btn {
+  border-radius: 8px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.ant-btn:hover {
+  transform: translateY(-1px);
+}
+
+/* 输入框样式 */
+.ant-input,
+.ant-select-selector {
+  border-radius: 8px;
+  border: 1px solid #e0e6ed;
+  transition: all 0.3s ease;
+}
+
+.ant-input:focus,
+.ant-select-focused .ant-select-selector {
+  border-color: #667eea;
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+}
+
+/* Switch 开关样式 */
+.ant-switch {
+  border-radius: 16px;
+}
+
+.ant-switch-checked {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+/* 模态框样式 */
+.ant-modal {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.ant-modal-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-bottom: none;
+}
+
+.ant-modal-title {
+  color: white;
+  font-weight: 600;
+}
+
+.ant-modal-close {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.ant-modal-close:hover {
+  color: white;
+}
+
+/* 抽屉样式 */
+.ant-drawer-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.ant-drawer-title {
+  color: white;
+  font-weight: 600;
+}
+
+.ant-drawer-close {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.ant-drawer-close:hover {
+  color: white;
+}
+
+/* 描述列表样式 */
+.ant-descriptions-bordered .ant-descriptions-item-label {
+  background: #fafafa;
+  font-weight: 600;
+}
+
+.ant-descriptions-bordered .ant-descriptions-item-content {
+  background: white;
+}
+
+/* 空状态样式 */
+.ant-empty {
+  padding: 40px 0;
+}
+
+.ant-empty-description {
+  color: #8c8c8c;
+  font-size: 14px;
+}
+
+/* 分页样式 */
+.ant-pagination {
+  margin: 24px 0 0 0;
+  text-align: center;
+}
+
+.ant-pagination .ant-pagination-item {
+  border-radius: 6px;
+  border: 1px solid #e0e6ed;
+}
+
+.ant-pagination .ant-pagination-item-active {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-color: #667eea;
+}
+
+.ant-pagination .ant-pagination-item-active a {
+  color: white;
+}
+
+/* 徽章样式 */
+.ant-badge-count {
+  background: linear-gradient(135deg, #66bb6a 0%, #43a047 100%);
+  border-radius: 12px;
+  font-weight: 600;
+}
+
+/* 工具提示样式 */
+.ant-tooltip-inner {
+  background: rgba(0, 0, 0, 0.85);
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+/* 响应式设计 */
+@media (max-width: 1200px) {
+  .tasks-container {
+    padding: 16px;
+  }
+}
+
+@media (max-width: 768px) {
+  .tasks-container {
+    padding: 12px;
+  }
+  
+  .tasks-header .ant-typography h2 {
+    font-size: 20px;
+  }
+  
+  .tasks-filter-card .ant-card-body {
+    padding: 16px;
+  }
+  
+  .ant-table-scroll {
+    overflow-x: auto;
+  }
+}
+
+@media (max-width: 576px) {
+  .tasks-container {
+    padding: 8px;
+  }
+  
+  .tasks-header {
+    margin-bottom: 16px;
+  }
+  
+  .tasks-filter-card,
+  .tasks-table-card {
+    margin-bottom: 12px;
+  }
+}
+
+/* 加载状态样式 */
+.ant-spin-nested-loading > .ant-spin-container {
+  transition: opacity 0.3s ease;
+}
+
+.ant-spin-nested-loading .ant-spin-blur {
+  opacity: 0.7;
+}
+
+/* 文本截断 */
+.text-ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 自定义滚动条 */
+.ant-table-body::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.ant-table-body::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.ant-table-body::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 3px;
+}
+
+.ant-table-body::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+}

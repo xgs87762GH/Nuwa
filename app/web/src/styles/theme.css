@@ -1,0 +1,460 @@
+/* 全局主题系统 - Nuwa AI 平台统一设计语言 */
+
+/* CSS自定义属性 - 主题颜色 */
+:root {
+  /* 主要渐变色 */
+  --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --secondary-gradient: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+  
+  /* 背景颜色 */
+  --bg-primary: #667eea;
+  --bg-secondary: #764ba2;
+  --bg-gradient: var(--primary-gradient);
+  
+  /* 玻璃拟态效果 */
+  --glass-bg: rgba(255, 255, 255, 0.1);
+  --glass-bg-hover: rgba(255, 255, 255, 0.15);
+  --glass-border: rgba(255, 255, 255, 0.2);
+  --glass-blur: blur(20px);
+  
+  /* 文字颜色 */
+  --text-primary: rgba(255, 255, 255, 0.95);
+  --text-secondary: rgba(255, 255, 255, 0.8);
+  --text-muted: rgba(255, 255, 255, 0.6);
+  --text-dark: #333;
+  
+  /* 状态颜色 */
+  --color-success: #52c41a;
+  --color-warning: #faad14;
+  --color-error: #ff4d4f;
+  --color-info: #1890ff;
+  --color-processing: #722ed1;
+  
+  /* 阴影系统 */
+  --shadow-light: 0 4px 12px rgba(0, 0, 0, 0.1);
+  --shadow-medium: 0 8px 32px rgba(0, 0, 0, 0.15);
+  --shadow-heavy: 0 20px 40px rgba(0, 0, 0, 0.2);
+  
+  /* 圆角 */
+  --radius-small: 8px;
+  --radius-medium: 16px;
+  --radius-large: 24px;
+  --radius-full: 50px;
+  
+  /* 间距 */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --spacing-2xl: 48px;
+  
+  /* 过渡效果 */
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.3s ease;
+  --transition-slow: 0.5s ease;
+  --transition-bounce: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 全局基础样式 */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: var(--bg-gradient);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* 全局容器样式 */
+.nuwa-container {
+  min-height: 100vh;
+  background: var(--bg-gradient);
+  position: relative;
+  overflow: hidden;
+}
+
+.nuwa-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 20% 80%, rgba(120, 160, 230, 0.3) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(255, 118, 117, 0.3) 0%, transparent 50%),
+    radial-gradient(circle at 40% 40%, rgba(120, 230, 160, 0.2) 0%, transparent 50%);
+  animation: backgroundShift 20s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.nuwa-content {
+  position: relative;
+  z-index: 1;
+  padding: var(--spacing-xl);
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* 玻璃拟态卡片 */
+.nuwa-glass-card {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-large);
+  box-shadow: var(--shadow-medium);
+  transition: all var(--transition-bounce);
+  position: relative;
+  overflow: hidden;
+}
+
+.nuwa-glass-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--primary-gradient);
+  transform: translateX(-100%);
+  transition: transform var(--transition-normal);
+}
+
+.nuwa-glass-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-heavy);
+  background: var(--glass-bg-hover);
+}
+
+.nuwa-glass-card:hover::before {
+  transform: translateX(0);
+}
+
+/* 按钮样式 */
+.nuwa-btn {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-full);
+  color: var(--text-primary);
+  backdrop-filter: var(--glass-blur);
+  transition: all var(--transition-bounce);
+  font-weight: 500;
+  position: relative;
+  overflow: hidden;
+}
+
+.nuwa-btn:hover {
+  background: var(--glass-bg-hover);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-light);
+  color: var(--text-primary);
+  border-color: var(--glass-border);
+}
+
+.nuwa-btn-primary {
+  background: var(--primary-gradient);
+  border: none;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.nuwa-btn-primary:hover {
+  background: var(--secondary-gradient);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+  color: white;
+}
+
+/* 输入框样式 */
+.nuwa-input {
+  background: var(--glass-bg) !important;
+  border: 1px solid var(--glass-border) !important;
+  color: var(--text-primary) !important;
+  border-radius: var(--radius-medium) !important;
+}
+
+.nuwa-input::placeholder {
+  color: var(--text-muted) !important;
+}
+
+.nuwa-input:focus,
+.nuwa-input:hover {
+  background: var(--glass-bg-hover) !important;
+  border-color: var(--glass-border) !important;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1) !important;
+}
+
+/* 动画效果 */
+@keyframes backgroundShift {
+  0%, 100% { transform: translateX(0) translateY(0); }
+  33% { transform: translateX(-10px) translateY(-10px); }
+  66% { transform: translateX(10px) translateY(10px); }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-6px); }
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+@keyframes glow {
+  0%, 100% { box-shadow: 0 0 5px rgba(255, 255, 255, 0.2); }
+  50% { box-shadow: 0 0 20px rgba(255, 255, 255, 0.4); }
+}
+
+/* 实用工具类 */
+.nuwa-text-primary { color: var(--text-primary); }
+.nuwa-text-secondary { color: var(--text-secondary); }
+.nuwa-text-muted { color: var(--text-muted); }
+
+.nuwa-bg-glass { background: var(--glass-bg); }
+.nuwa-bg-gradient { background: var(--bg-gradient); }
+
+.nuwa-shadow-light { box-shadow: var(--shadow-light); }
+.nuwa-shadow-medium { box-shadow: var(--shadow-medium); }
+.nuwa-shadow-heavy { box-shadow: var(--shadow-heavy); }
+
+.nuwa-radius-sm { border-radius: var(--radius-small); }
+.nuwa-radius-md { border-radius: var(--radius-medium); }
+.nuwa-radius-lg { border-radius: var(--radius-large); }
+
+.nuwa-transition { transition: all var(--transition-bounce); }
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .nuwa-content {
+    padding: var(--spacing-md);
+  }
+  
+  .nuwa-glass-card {
+    border-radius: var(--radius-medium);
+  }
+}
+
+@media (max-width: 480px) {
+  .nuwa-content {
+    padding: var(--spacing-sm);
+  }
+}
+
+/* AIChat 聊天界面优化样式 */
+.nuwa-chat-container {
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* 扁平化聊天容器样式 */
+.nuwa-chat-flat-container {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-large);
+  box-shadow: var(--shadow-medium);
+}
+
+.nuwa-chat-flat-container .nuwa-chat-header {
+  background: rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+}
+
+.nuwa-chat-flat-container .nuwa-chat-header:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.nuwa-chat-flat-container .nuwa-chat-footer {
+  background: rgba(255, 255, 255, 0.02);
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.nuwa-chat-messages {
+  max-height: 100%;
+  overflow-y: auto;
+  padding-right: 8px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+}
+
+.nuwa-chat-messages::-webkit-scrollbar {
+  width: 6px;
+}
+
+.nuwa-chat-messages::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.nuwa-chat-messages::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 3px;
+  transition: background 0.3s ease;
+}
+
+.nuwa-chat-messages::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+/* 固定顶部设置栏样式 */
+.nuwa-settings-bar {
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.3s ease;
+}
+
+.nuwa-settings-bar:hover {
+  border-color: rgba(255, 255, 255, 0.3);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* 模式切换按钮组优化 */
+.nuwa-mode-toggle .ant-btn-group .ant-btn {
+  border-color: rgba(255, 255, 255, 0.2);
+  transition: all 0.3s ease;
+  min-width: 80px;
+}
+
+.nuwa-mode-toggle .ant-btn-group .ant-btn:hover {
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: translateY(-1px);
+}
+
+/* 底部模式切换样式 */
+.nuwa-bottom-mode-toggle {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: var(--radius-small);
+  padding: 8px;
+  margin-bottom: 12px;
+}
+
+.nuwa-bottom-mode-toggle .ant-btn-group {
+  display: flex;
+  width: 100%;
+}
+
+.nuwa-bottom-mode-toggle .ant-btn-group .ant-btn {
+  flex: 1;
+  border-color: rgba(255, 255, 255, 0.2);
+  transition: all 0.3s ease;
+}
+
+/* 紧凑型AI设置样式 */
+.nuwa-compact-settings {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nuwa-compact-settings .ant-select {
+  min-width: 140px;
+}
+
+.nuwa-compact-settings .ant-select-selector {
+  border-color: rgba(255, 255, 255, 0.2) !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+
+.nuwa-compact-settings .ant-select-selector:hover {
+  border-color: rgba(255, 255, 255, 0.4) !important;
+}
+
+/* 卡片标题区域优化 */
+.nuwa-glass-card .ant-card-head {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 12px 20px;
+  min-height: auto;
+}
+
+.nuwa-glass-card .ant-card-head-title {
+  padding: 0;
+  font-size: 14px;
+}
+
+.nuwa-glass-card .ant-card-extra {
+  padding: 0;
+  font-size: 12px;
+}
+
+/* 语音模式优化样式 */
+.nuwa-voice-area {
+  padding: 24px;
+  border-radius: var(--radius-medium);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+}
+
+.nuwa-voice-area.listening {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.3);
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { box-shadow: 0 0 20px rgba(255, 255, 255, 0.1); }
+  50% { box-shadow: 0 0 30px rgba(255, 255, 255, 0.2); }
+  100% { box-shadow: 0 0 20px rgba(255, 255, 255, 0.1); }
+}
+
+/* 输入区域优化 */
+.nuwa-input-area {
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: var(--radius-medium);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* 消息气泡优化 */
+.nuwa-message-bubble {
+  transition: all 0.3s ease;
+  border-radius: var(--radius-medium);
+}
+
+.nuwa-message-bubble:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* 模型选择器样式 */
+.nuwa-model-select .ant-select-selector {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  color: rgba(255, 255, 255, 0.95) !important;
+  border-radius: 8px !important;
+  backdrop-filter: blur(10px) !important;
+}
+
+.nuwa-model-select .ant-select-selector:hover {
+  background: rgba(255, 255, 255, 0.12) !important;
+  border-color: rgba(255, 255, 255, 0.25) !important;
+}
+
+.nuwa-model-select .ant-select-selection-item {
+  color: rgba(255, 255, 255, 0.95) !important;
+}
+
+.nuwa-model-select .ant-select-arrow {
+  color: rgba(255, 255, 255, 0.7) !important;
+}

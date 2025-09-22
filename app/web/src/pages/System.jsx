@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Row, Col, Statistic, Progress, Table, Button, Typography } from 'antd';
-import { ReloadOutlined } from '@ant-design/icons';
+import { Card, Row, Col, Statistic, Progress, Table, Button, Typography, Select, Tag, message, Space, Divider } from 'antd';
+import { ReloadOutlined, ThunderboltOutlined } from '@ant-design/icons';
 import { 
   getSystemInfo, 
   getCpuInfo, 
@@ -9,10 +9,19 @@ import {
   getNetworkInfo, 
   getProcessInfo 
 } from '../api/system';
+import { 
+  getAllProviders, 
+  getCurrentProvider, 
+  setDefaultProvider 
+} from '../api/ai';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const { Title } = Typography;
+const { Option } = Select;
 
 const System = () => {
+  const { t } = useLanguage();
+  
   const [systemInfo, setSystemInfo] = useState({});
   const [cpuInfo, setCpuInfo] = useState({});
   const [memoryInfo, setMemoryInfo] = useState({});
@@ -20,10 +29,40 @@ const System = () => {
   const [networkInfo, setNetworkInfo] = useState({});
   const [processes, setProcesses] = useState([]);
   const [loading, setLoading] = useState(true);
+  
+  // AI provider related states
+  const [aiProviders, setAiProviders] = useState([]);
+  const [currentProvider, setCurrentProvider] = useState(null);
+  const [loadingProviders, setLoadingProviders] = useState(false);
+
+  // Fetch AI provider information
+  const fetchAIProviders = async () => {
+    setLoadingProviders(true);
+    try {
+      const [providersRes, currentProviderRes] = await Promise.all([
+        getAllProviders(),
+        getCurrentProvider()
+      ]);
+
+      if (providersRes.success && providersRes.data) {
+        setAiProviders(providersRes.data.providers || []);
+      }
+
+      if (currentProviderRes.success && currentProviderRes.data) {
+        setCurrentProvider(currentProviderRes.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch AI provider information:', error);
+      message.error(t('messages.loadProvidersFailed'));
+    } finally {
+      setLoadingProviders(false);
+    }
+  };
 
   useEffect(() => {
     fetchAllSystemData();
-  }, []);
+    fetchAIProviders();
+  }, [fetchAIProviders]);
 
   const fetchAllSystemData = async () => {
     setLoading(true);
@@ -49,13 +88,34 @@ const System = () => {
       setMemoryInfo(memoryRes.data || {});
       setDiskInfo(diskRes.data || {});
       setNetworkInfo(networkRes.data || {});
-      // 注意这里的变化：processRes.data.processes
+      // Note the change here: processRes.data.processes
       setProcesses(processRes.data?.processes || []);
     } catch (error) {
       console.error('获取系统信息失败:', error);
     } finally {
       setLoading(false);
     }
+  };
+
+  // Switch AI provider
+  const handleProviderChange = async (providerType) => {
+    try {
+      const response = await setDefaultProvider(providerType);
+      if (response.success) {
+        message.success(t('messages.providerSwitchSuccess'));
+        fetchAIProviders(); // Refresh current provider information
+      } else {
+        message.error(response.message || 'Failed to switch AI provider');
+      }
+    } catch (error) {
+      console.error('Failed to switch AI provider:', error);
+      message.error('Failed to switch AI provider');
+    }
+  };
+
+  // Refresh AI provider information
+  const refreshAIProviders = () => {
+    fetchAIProviders();
   };
 
   const processColumns = [
@@ -96,6 +156,75 @@ const System = () => {
           刷新数据
         </Button>
       </div>
+
+      {/* 系统配置 */}
+      <Row gutter={16} style={{ marginBottom: 24 }}>
+        {/* AI提供商设置 */}
+        <Col span={12}>
+          <Card 
+            title={
+              <Space>
+                <ThunderboltOutlined />
+                {t('system.aiProvider')}
+              </Space>
+            }
+            loading={loadingProviders}
+            extra={
+              <Button 
+                icon={<ReloadOutlined />} 
+                size="small" 
+                onClick={refreshAIProviders}
+              >
+                刷新
+              </Button>
+            }
+          >
+            <Space direction="vertical" style={{ width: '100%' }}>
+              <div style={{ marginBottom: 16 }}>
+                <div style={{ marginBottom: 8 }}>
+                  <strong>{t('system.currentProvider')}:</strong>
+                </div>
+                {currentProvider ? (
+                  <Tag color="blue" style={{ fontSize: '14px', padding: '4px 8px' }}>
+                    {currentProvider.type?.toUpperCase() || 'N/A'}
+                  </Tag>
+                ) : (
+                  <Tag color="red">未设置</Tag>
+                )}
+              </div>
+              
+              <Divider style={{ margin: '12px 0' }} />
+              
+              <div>
+                <div style={{ marginBottom: 8 }}>
+                  <strong>{t('system.selectProvider')}:</strong>
+                </div>
+                <Select
+                  style={{ width: '100%' }}
+                  placeholder="选择AI提供商"
+                  value={currentProvider?.type}
+                  onChange={handleProviderChange}
+                  loading={loadingProviders}
+                >
+                  {aiProviders.map(provider => (
+                    <Option key={provider.type} value={provider.type}>
+                      <Space>
+                        <Tag 
+                          size="small" 
+                          color={provider.status === 'active' ? 'green' : 'orange'}
+                        >
+                          {provider.status === 'active' ? '可用' : '不可用'}
+                        </Tag>
+                        {provider.type.toUpperCase()}
+                      </Space>
+                    </Option>
+                  ))}
+                </Select>
+              </div>
+            </Space>
+          </Card>
+        </Col>
+      </Row>
 
       {/* 系统基本信息 */}
       <Row gutter={16} style={{ marginBottom: 24 }}>

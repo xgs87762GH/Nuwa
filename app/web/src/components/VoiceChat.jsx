@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { 
   Button, 
   Space, 
@@ -9,7 +9,6 @@ import {
   Avatar
 } from 'antd';
 import { 
-  AudioOutlined, 
   SoundOutlined,
   StopOutlined,
   PlayCircleOutlined,
@@ -38,6 +37,72 @@ const VoiceChat = () => {
   const recognitionRef = useRef(null);
   const speechSynthesisRef = useRef(null);
   const volumeIntervalRef = useRef(null);
+
+  // 语音播报
+  const speakText = (text) => {
+    if (!speechSynthesisRef.current) {
+      message.warning('您的浏览器不支持语音播报功能');
+      return;
+    }
+
+    // 停止当前播报
+    speechSynthesisRef.current.cancel();
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'zh-CN';
+    utterance.rate = 0.9;
+    utterance.pitch = 1;
+    utterance.volume = 0.8;
+
+    utterance.onstart = () => setIsSpeaking(true);
+    utterance.onend = () => setIsSpeaking(false);
+    utterance.onerror = () => {
+      setIsSpeaking(false);
+      message.error('语音播报失败');
+    };
+
+    speechSynthesisRef.current.speak(utterance);
+  };
+
+  // 处理语音输入
+  const handleProcessVoice = useCallback(async (text) => {
+    setIsProcessing(true);
+    setLoading(true);
+    
+    // 添加用户消息到聊天记录
+    addUserMessage(text);
+    
+    try {
+      const result = await createTask(text);
+      
+      if (result.success && result.data) {
+        const responseText = result.data.result || result.message || '已经为您处理了这个请求。';
+        setResponse(responseText);
+        
+        // 添加机器人回复到聊天记录
+        addBotMessage(responseText, result.data);
+        
+        // 语音播报回复
+        speakText(responseText);
+      } else {
+        // 处理业务逻辑错误
+        const errorMsg = result.message || '处理失败';
+        const responseText = `抱歉，${errorMsg}。请尝试重新描述您的需求。`;
+        setResponse(responseText);
+        addBotMessage(responseText, { error: true, originalError: result.message });
+        speakText(responseText);
+      }
+    } catch (error) {
+      console.error('处理语音请求失败:', error);
+      const errorText = '抱歉，处理您的请求时出现了错误。';
+      setResponse(errorText);
+      addBotMessage(errorText);
+      speakText(errorText);
+    } finally {
+      setIsProcessing(false);
+      setLoading(false);
+    }
+  }, [addUserMessage, addBotMessage, setLoading, speakText]);
 
   // 初始化语音识别
   useEffect(() => {
@@ -84,7 +149,7 @@ const VoiceChat = () => {
         clearInterval(volumeIntervalRef.current);
       }
     };
-  }, [transcript]);
+  }, [transcript, handleProcessVoice]);
 
   // 开始语音识别
   const startListening = () => {
@@ -114,62 +179,6 @@ const VoiceChat = () => {
       clearInterval(volumeIntervalRef.current);
       setVolume(0);
     }
-  };
-
-  // 处理语音输入
-  const handleProcessVoice = async (text) => {
-    setIsProcessing(true);
-    setLoading(true);
-    
-    // 添加用户消息到聊天记录
-    addUserMessage(text);
-    
-    try {
-      const result = await createTask(text);
-      const responseText = result.message || '已经为您处理了这个请求。';
-      setResponse(responseText);
-      
-      // 添加机器人回复到聊天记录
-      addBotMessage(responseText, result);
-      
-      // 语音播报回复
-      speakText(responseText);
-    } catch (error) {
-      console.error('处理语音请求失败:', error);
-      const errorText = '抱歉，处理您的请求时出现了错误。';
-      setResponse(errorText);
-      addBotMessage(errorText);
-      speakText(errorText);
-    } finally {
-      setIsProcessing(false);
-      setLoading(false);
-    }
-  };
-
-  // 语音播报
-  const speakText = (text) => {
-    if (!speechSynthesisRef.current) {
-      message.warning('您的浏览器不支持语音播报功能');
-      return;
-    }
-
-    // 停止当前播报
-    speechSynthesisRef.current.cancel();
-
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'zh-CN';
-    utterance.rate = 0.9;
-    utterance.pitch = 1;
-    utterance.volume = 0.8;
-
-    utterance.onstart = () => setIsSpeaking(true);
-    utterance.onend = () => setIsSpeaking(false);
-    utterance.onerror = () => {
-      setIsSpeaking(false);
-      message.error('语音播报失败');
-    };
-
-    speechSynthesisRef.current.speak(utterance);
   };
 
   // 停止语音播报

@@ -1,16 +1,16 @@
 import api from './config';
 
-// 获取所有工具
+// Get all available tools
 export const getTools = async () => {
   return await api.get('/v1/mcp/tools');
 };
 
-// 获取工具详情
+// Get tool details
 export const getToolDetails = async (toolId) => {
   return await api.get(`/v1/mcp/tools/${toolId}`);
 };
 
-// 获取工具数量
+// Get tools statistics
 export const getToolsStatistics = async () => {
   return await api.get('/v1/mcp/tools/stats');  
-}
+};
