@@ -14,6 +14,7 @@ const enLocale = {
     thinking: 'AI is thinking...',
     processing: 'AI is thinking...',
     recognized: 'Recognized',
+    recording: '🎤 Recording',
     inputPlaceholder: 'Enter your message...',
     send: 'Send',
     selectModel: 'Select Model',
@@ -24,7 +25,9 @@ const enLocale = {
     taskId: 'Task ID',
     errorRetryMessage: 'Sorry, {error}. Please try to rephrase your request or check available functions.',
     processErrorMessage: 'Sorry, an error occurred while processing your request. Please try again later.',
-    defaultWelcome: 'Hello! I am your AI assistant. How can I help you today?'
+    defaultWelcome: 'Hello! I am your AI assistant. How can I help you today?',
+    voiceTip: 'Hold Space for 2s for voice input',
+    keyboardTips: 'Hold Space for 2s for voice • Shift+Enter for new line • Enter to send'
   },
   // Chat Context
   chatContext: {
@@ -348,6 +351,7 @@ const enLocale = {
     providerSwitchFailed: 'Failed to switch AI provider',
     noSpeechSupport: 'Your browser does not support speech features',
     speechRecognitionFailed: 'Speech recognition failed, please try again',
+    speechRecognitionNotSupported: 'Your browser does not support speech recognition',
     speechSynthesisFailed: 'Speech synthesis failed',
     networkError: 'Network connection error',
     serverError: 'Server error',

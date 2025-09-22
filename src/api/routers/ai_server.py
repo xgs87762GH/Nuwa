@@ -41,13 +41,11 @@ async def get_all_ai_server(ai_manager: AIManagerDep) -> AIServerListResponse:
 
 @router.post("/set_default/{provider_type}", summary="Set default AI provider", response_model=APIResponse)
 async def set_default_ai_provider(provider_type: str,
-                                  intelligent_plugin_router: IntelligentPluginRouterDep) -> APIResponse:
+                                  ai_manager_dep: AIManagerDep) -> APIResponse:
     """
     Set the default AI provider by type.
     """
-    intelligent_plugin_router.set_preferred_provider(provider_type)
-    LOGGER.info(f"Set default AI provider to {provider_type}")
-    LOGGER.info(f"preferred providers: {intelligent_plugin_router.ai_service.preferred_provider}")
+    ai_manager_dep.set_preferred_provider(provider_type)
     return APIResponse.ok(message="Default AI provider set successfully")
 
 

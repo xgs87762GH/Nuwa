@@ -14,6 +14,7 @@ const zhLocale = {
     thinking: 'AI正在思考中...',
     processing: 'AI正在思考中...',
     recognized: '识别到',
+    recording: '🎤 录音中',
     inputPlaceholder: '输入您的消息...',
     send: '发送',
     selectModel: '选择模型',
@@ -24,7 +25,9 @@ const zhLocale = {
     taskId: '任务ID',
     errorRetryMessage: '抱歉，{error}。请尝试重新描述您的需求或检查可用的功能。',
     processErrorMessage: '抱歉，处理您的请求时出现了错误。请稍后重试。',
-    defaultWelcome: '您好！我是您的AI助手，有什么可以帮您的吗？'
+    defaultWelcome: '您好！我是您的AI助手，有什么可以帮您的吗？',
+    voiceTip: '长按空格键2秒开启语音输入',
+    keyboardTips: '长按空格键2秒开启语音 • Shift+Enter换行 • Enter发送'
   },
   // Chat Context
   chatContext: {
@@ -339,6 +342,7 @@ const zhLocale = {
     providerSwitchFailed: 'AI提供商切换失败',
     noSpeechSupport: '您的浏览器不支持语音功能',
     speechRecognitionFailed: '语音识别失败，请重试',
+    speechRecognitionNotSupported: '您的浏览器不支持语音识别',
     speechSynthesisFailed: '语音播报失败',
     networkError: '网络连接错误',
     serverError: '服务器错误',

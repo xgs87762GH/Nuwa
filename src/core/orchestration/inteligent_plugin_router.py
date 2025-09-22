@@ -96,13 +96,3 @@ class IntelligentPluginRouter:
         except Exception as e:
             LOGGER.error(f"❌ 获取插件状态失败: {e}")
             return PluginStatusResult.error_result(str(e))
-
-    def set_preferred_provider(self, provider_type: str, fallback_providers: Optional[list] = None):
-        if not self.ai_manager.is_provider_available(provider_type):
-            LOGGER.error(f"The specified provider {provider_type} is not available.")
-            raise ValueError(f"Provider {provider_type} not found.")
-
-        self.preferred_provider = provider_type
-        self.fallback_providers = fallback_providers or []
-        LOGGER.info(f"Set the preferred AI provider as: {provider_type}")
-        LOGGER.info(f"List of alternative AI providers: {self.fallback_providers}")

@@ -23,10 +23,7 @@ class PlanService:
         prompt = self.prompt_templates.get_plugin_selection_prompt(plugins_basic_info, user_input)
         response = await self.ai_manager.call_with_fallback(
             system_prompt=prompt.system_prompt,
-            user_prompt=prompt.user_prompt,
-            primary_provider=self.primary_provider,
-            fallback_providers=self.fallback_providers,
-            model=self.choose_model
+            user_prompt=prompt.user_prompt
         )
         if not response or not response.success:
             return []

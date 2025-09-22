@@ -171,6 +171,15 @@ class AIManager:
         """Check if specific provider is available"""
         return provider_name in self._providers
 
+    def set_preferred_provider(self, provider_type: str, fallback_providers: Optional[list] = None):
+        if not self.is_provider_available(provider_type):
+            LOGGER.error(f"The specified provider {provider_type} is not available.")
+            raise ValueError(f"Provider {provider_type} not found.")
+
+        self.primary_provider = provider_type
+        self.fallback_providers = fallback_providers or []
+        LOGGER.info(f"Set the preferred AI provider as: {provider_type}")
+        LOGGER.info(f"List of alternative AI providers: {self.fallback_providers}")
     @property
     def first_provider_name(self) -> Optional[str]:
         """Get the first available provider."""
@@ -178,3 +187,4 @@ class AIManager:
             return None
         first_provider_name = next(iter(self._providers))
         return first_provider_name
+

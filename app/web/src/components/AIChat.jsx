@@ -9,10 +9,10 @@ import {
   Input,
   List,
   Spin,
-  Row,
-  Col,
   Select,
-  Tag
+  Tag,
+  Row,
+  Col
 } from 'antd';
 import { 
   StopOutlined,
@@ -244,12 +244,16 @@ const AIChat = () => {
       recognitionRef.current.continuous = true;
       recognitionRef.current.interimResults = true;
       recognitionRef.current.lang = currentLanguage === 'zh' ? 'zh-CN' : 'en-US';
+      recognitionRef.current.maxAlternatives = 1;
 
       recognitionRef.current.onresult = (event) => {
         let finalTranscript = '';
+        let interimTranscript = '';
         for (let i = event.resultIndex; i < event.results.length; i++) {
           if (event.results[i].isFinal) {
             finalTranscript += event.results[i][0].transcript;
+          } else {
+            interimTranscript += event.results[i][0].transcript;
           }
         }
         if (finalTranscript) {
@@ -260,7 +264,28 @@ const AIChat = () => {
       recognitionRef.current.onerror = (event) => {
         console.error('Speech recognition error:', event.error);
         setIsListening(false);
-        message.error('Speech recognition failed, please try again');
+        
+        let errorMsg = '';
+        switch (event.error) {
+          case 'no-speech':
+            errorMsg = t('voice.noSpeechDetected');
+            break;
+          case 'audio-capture':
+            errorMsg = t('voice.microphoneError');
+            break;
+          case 'not-allowed':
+            errorMsg = t('voice.permissionDenied');
+            break;
+          case 'network':
+            errorMsg = t('voice.networkError');
+            break;
+          case 'aborted':
+            errorMsg = t('voice.recognitionAborted');
+            break;
+          default:
+            errorMsg = t('voice.recognitionError');
+        }
+        message.error(errorMsg);
       };
 
       recognitionRef.current.onend = () => {
@@ -282,23 +307,39 @@ const AIChat = () => {
         clearInterval(volumeIntervalRef.current);
       }
     };
-  }, [transcript, handleSendMessage, currentLanguage]);
+  }, [transcript, handleSendMessage, currentLanguage, t]);
 
   // Start speech recognition
-  const startListening = () => {
+  const startListening = async () => {
     if (!recognitionRef.current) {
-      message.warning('Your browser does not support speech recognition');
+      message.warning(t('messages.speechRecognitionNotSupported'));
       return;
     }
 
-    setIsListening(true);
-    setTranscript('');
-    recognitionRef.current.start();
+    try {
+      // 检查麦克风权限
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      stream.getTracks().forEach(track => track.stop()); // 立即停止流
+      
+      setIsListening(true);
+      setTranscript('');
+      recognitionRef.current.start();
 
-    // 模拟音量检测
-    volumeIntervalRef.current = setInterval(() => {
-      setVolume(Math.random() * 100);
-    }, 100);
+      // 模拟音量检测
+      volumeIntervalRef.current = setInterval(() => {
+        setVolume(Math.random() * 100);
+      }, 100);
+    } catch (error) {
+      console.error('Error starting speech recognition:', error);
+      setIsListening(false);
+      if (error.name === 'NotAllowedError') {
+        message.error('麦克风权限被拒绝，请允许麦克风访问');
+      } else if (error.name === 'NotFoundError') {
+        message.error('未找到麦克风设备');
+      } else {
+        message.error(t('messages.speechRecognitionFailed'));
+      }
+    }
   };
 
   // Stop speech recognition
@@ -343,7 +384,7 @@ const AIChat = () => {
         }, 2000);
       }
     }
-  }, [isSpacePressed, isProcessing]);
+  }, [isSpacePressed, isProcessing, startListening]);
 
   const handleSpaceKeyUp = useCallback((e) => {
     if (e.code === 'Space' && isSpacePressed) {
@@ -380,7 +421,7 @@ const AIChat = () => {
         }, 100);
       }
     }
-  }, [isSpacePressed, isListening, transcript, handleSendMessage]);
+  }, [isSpacePressed, isListening, transcript, handleSendMessage, stopListening]);
 
   // Add keyboard event listeners
   useEffect(() => {
@@ -606,7 +647,7 @@ const AIChat = () => {
               fontWeight: '500'
             }}
           >
-            {isListening ? '🎤 Recording' : currentMode === 'voice' ? t('aiChat.voiceMode') : t('aiChat.textMode')}
+            {isListening ? t('aiChat.recording') : currentMode === 'voice' ? t('aiChat.voiceMode') : t('aiChat.textMode')}
           </Tag>
           {isSpacePressed && (
             <Tag color="blue" style={{ borderRadius: '12px', fontSize: '11px' }}>
@@ -652,6 +693,7 @@ const AIChat = () => {
         background: 'rgba(255, 255, 255, 0.03)',
         flexShrink: 0
       }}>
+        {}
         {/* Voice Status Display */}
         {isListening && (
           <div style={{ 
@@ -711,10 +753,14 @@ const AIChat = () => {
                 className="nuwa-model-select"
                 placeholder={t('aiChat.selectModel')}
                 notFoundContent={t('aiChat.noModelsAvailable')}
-                dropdownStyle={{
-                  background: 'rgba(30, 41, 59, 0.95)',
-                  backdropFilter: 'blur(20px)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)'
+                styles={{
+                  popup: {
+                    root: {
+                      background: 'rgba(30, 41, 59, 0.95)',
+                      backdropFilter: 'blur(20px)',
+                      border: '1px solid rgba(255, 255, 255, 0.1)'
+                    }
+                  }
                 }}
               >
                 {availableModels.length > 0 ? (
@@ -753,7 +799,7 @@ const AIChat = () => {
             <TextArea
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
-              placeholder={`${t('aiChat.inputPlaceholder')} • Hold Space for voice input`}
+              placeholder={`${t('aiChat.inputPlaceholder')} • ${t('aiChat.voiceTip')}`}
               autoSize={{ minRows: 2, maxRows: 4 }}
               style={{
                 background: 'rgba(255, 255, 255, 0.08)',
@@ -800,7 +846,7 @@ const AIChat = () => {
             color: 'rgba(255, 255, 255, 0.5)', 
             fontSize: '12px' 
           }}>
-            Hold Space for 2s for voice • Shift+Enter for new line • Enter to send
+            {t('aiChat.keyboardTips')}
           </Text>
         </div>
       </div>
