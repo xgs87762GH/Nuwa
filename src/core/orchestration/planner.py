@@ -2,7 +2,7 @@ from src.core.ai import AIManager
 from src.core.ai.providers.response import PluginsSelection, ExecutionPlan
 
 
-class PlanService:
+class Planner:
     def __init__(self, prompt_templates, ai_manager: AIManager):
         self.prompt_templates = prompt_templates
         self.ai_manager: AIManager = ai_manager
@@ -32,7 +32,7 @@ class PlanService:
             return []
         return data.selected_plugins
 
-    async def generate_execution_plan(self, user_input, plugin_functions) -> ExecutionPlan | None:
+    async def plan_execution(self, user_input, plugin_functions) -> ExecutionPlan | None:
         prompt = self.prompt_templates.get_function_matching_prompt(plugin_functions, user_input)
         response = await self.ai_manager.call_with_fallback(
             system_prompt=prompt.system_prompt,

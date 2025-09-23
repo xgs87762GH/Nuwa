@@ -9,7 +9,7 @@ from typing import Optional
 
 from src.core.config.config import ConfigManager
 from src.core.config.logger_handler import ColoredFormatter
-from src.core.config.models.models import LoggingConfig
+from src.core.config.models import LoggingConfig
 
 # 全局配置
 _logging_configured = False
@@ -86,6 +86,7 @@ def setup_logging():
         logging.getLogger("httpcore.http11").setLevel(logging.WARNING)
         logging.getLogger("httpx").setLevel(logging.WARNING)
         logging.getLogger("httpcore.proxy").setLevel(logging.WARNING)
+        logging.getLogger("aiosqlite").setLevel(logging.INFO)
 
 
         # Clear existing handlers
@@ -143,3 +144,7 @@ def get_logger(name: Optional[str] = None) -> logging.Logger:
         name = frame.f_globals.get('__name__', 'unknown')
 
     return logging.getLogger(name)
+
+__all__ = [
+    "get_logger"
+]

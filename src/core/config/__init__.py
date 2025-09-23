@@ -11,15 +11,14 @@ User: Gordon
 """
 
 import logging
-from typing import Optional, Dict, Any
+from typing import Optional
 
 from .config import ConfigManager
 from .database import DataBaseManager
-# from .logger_handler import LoggerManager
-from .models.models import (
+from .models import (
     AppConfig,
-    DatabaseConfig,
     LoggingConfig,
+    DatabaseConfig,
     PluginConfig
 )
 
@@ -105,20 +104,6 @@ def get_plugin_config() -> PluginConfig:
     return _plugin_config_instance
 
 
-def get_logging_config() -> LoggingConfig:
-    """
-    Get logging configuration (cached singleton).
-
-    Returns:
-        LoggingConfig: Logging configuration instance.
-    """
-    global _logging_config_instance
-    if _logging_config_instance is None:
-        cfg = create_config_manager()
-        _logging_config_instance = cfg.load_config_model(LoggingConfig, "logging")
-    return _logging_config_instance
-
-
 def reload_all_configs():
     """
     Reload all configurations by clearing the cache.
@@ -137,40 +122,6 @@ def reload_all_configs():
 
     print(f"✅ All configurations reloaded at 2025-08-19 11:59:09 by user Gordon")
 
-
-def get_config_status() -> Dict[str, Any]:
-    """
-    Get current configuration loading status.
-
-    Returns:
-        Dict containing the status of all configuration instances.
-    """
-    return {
-        "config_manager_loaded": _config_manager_instance is not None,
-        "logger_manager_loaded": _logger_manager_instance is not None,
-        "app_config_loaded": _app_config_instance is not None,
-        "database_config_loaded": _database_config_instance is not None,
-        "logging_config_loaded": _logging_config_instance is not None,
-        "timestamp": "2025-08-19 11:59:09",
-        "user": "Gordon",
-        "author": "Gordon"
-    }
-
-
-def debug_config_info():
-    """
-    Print configuration debug information.
-    """
-    status = get_config_status()
-    print("🔍 Configuration Status Debug Info:")
-    print(f"├── ConfigManager loaded: {status['config_manager_loaded']}")
-    # print(f"├── LoggerManager loaded: {status['logger_manager_loaded']}")
-    print(f"├── AppConfig loaded: {status['app_config_loaded']}")
-    print(f"├── DatabaseConfig loaded: {status['database_config_loaded']}")
-    print(f"├── LoggingConfig loaded: {status['logging_config_loaded']}")
-    print(f"├── Timestamp: {status['timestamp']}")
-    print(f"├── User: {status['user']}")
-    print(f"└── Author: {status['author']}")
 
 
 # 公共API
@@ -194,19 +145,8 @@ __all__ = [
     # 配置获取函数
     'get_app_config',
     'get_database_config',
-    'get_logging_config',
     'get_plugin_config',
 
     # 工具函数
-    'reload_all_configs',
-    'get_config_status',
-    'debug_config_info'
+    'reload_all_configs'
 ]
-
-# 模块元数据
-__version__ = "1.0.0"
-__author__ = "Gordon"
-__description__ = "Configuration management module - Global variable cache version"
-__created_date__ = "2025-08-19"
-__updated_date__ = "2025-08-19 11:59:09"
-__user__ = "Gordon"

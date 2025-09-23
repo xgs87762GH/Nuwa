@@ -81,6 +81,10 @@ class PluginManager:
             LOGGER.error(f"Error uninstalling plugin {plugin_id}, error: {str(e)}")
             return False
 
+    async def call_by_name(self, plugin_name: str, method_name: str, **kwargs):
+        """Call a plugin by name"""
+        return await self.call_by_id(self.registry.get_plugin_by_name(plugin_name).id, method_name, **kwargs)
+
     async def call(self, plugin_id: str, method_name: str, **kwargs):
         """调用插件方法并判断返回值"""
         try:

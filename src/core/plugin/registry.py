@@ -29,6 +29,12 @@ class PluginRegistry:
     def get_plugin(self, plugin_id: str) -> PluginRegistration:
         return self._registry.get(plugin_id)
 
+    def get_plugin_by_name(self, plugin_name: str) -> PluginRegistration:
+        for plugin in self._registry.values():
+            if plugin.name == plugin_name:
+                return plugin
+        return None
+
     async def list_plugins(self) -> list[str]:
         return list(self._registry.keys())
 

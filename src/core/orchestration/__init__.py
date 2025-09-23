@@ -1,10 +1,10 @@
 
-from .plan_service import PlanService
+from .planner import Planner
 from .plugin_service import PluginService
 from .inteligent_plugin_router import IntelligentPluginRouter
 
 __all__ = [
-    "PlanService",
+    "Planner",
     "PluginService",
     "IntelligentPluginRouter"
 ]

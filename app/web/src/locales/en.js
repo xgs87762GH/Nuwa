@@ -157,6 +157,26 @@ const enLocale = {
       view: 'View',
       edit: 'Edit'
     },
+    confirmDelete: 'Confirm Delete Task',
+    deleteTaskContent: 'Are you sure you want to delete this task? This action cannot be undone.',
+    deleteTaskSuccess: 'Task deleted successfully',
+    deleteTaskFailed: 'Failed to delete task',
+    // Add step-related translations
+    executionProgress: 'Execution Progress',
+    currentStep: 'Current Step',
+    executionSteps: 'Execution Steps',
+    executionDetails: 'Execution Details',
+    overview: 'Overview',
+    additionalInfo: 'Additional Info',
+    taskResult: 'Task Result',
+    taskError: 'Task Error',
+    step: 'Step',
+    stepParams: 'Parameters',
+    stepResult: 'Execution Result',
+    stepError: 'Execution Error',
+    duration: 'Duration',
+    retryInfo: 'Retry: {current}/{max}',
+    overallConfidence: 'Overall Confidence',
     validation: {
       taskDescriptionRequired: 'Please enter task description',
       taskDescriptionMinLength: 'Task description must be at least 5 characters'

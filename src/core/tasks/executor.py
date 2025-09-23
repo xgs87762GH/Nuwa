@@ -1,55 +1,68 @@
 import asyncio
+import time
+from typing import List
+
+from src.core.plugin import PluginManager
+from src.core.tasks.model.response import TaskStepResponse, TaskResponse, StepExecutionResult
 
 
 class TaskExecutor:
-    def __init__(self, plugin_manager):
+    def __init__(self, plugin_manager: PluginManager):
         self.plugin_manager = plugin_manager
 
-    async def execute(self, execution_plan):
+    async def execute(self, task: TaskResponse) -> List[StepExecutionResult]:
         """
         执行执行计划中的所有插件方法
-        execution_plan: ExecutionPlan 或 dict, 包含步骤列表
-        返回各步骤执行结果
+        返回每个步骤的结构化执行结果 StepExecutionResult 列表
         """
-        results = []
-        steps = getattr(execution_plan, "selected_functions", None) or execution_plan.get("selected_functions", [])
+        results: List[StepExecutionResult] = []
+        steps: List[TaskStepResponse] = task.steps
 
         for step in steps:
+            start_ts = time.time()
             try:
-                plugin_id = step.get("plugin_id")
-                function_name = step.get("function_name")
-                params = step.get("params", {})
+                function_name = step.function_name
+                plugin_id = step.plugin_id
+                params = step.params or {}
+                plugin_name = step.plugin_name
 
-                plugin = await self.plugin_manager.get_register_plugin(plugin_id)
-                func = getattr(plugin, function_name, None)
-                if not func:
-                    raise Exception(f"插件 {plugin_id} 未找到方法 {function_name}")
-
-                # 支持异步和同步
-                if hasattr(func, "__call__"):
-                    if asyncio.iscoroutinefunction(func):
-                        result = await func(**params)
+                # 通过 PluginManager 的统一入口调用，避免直接访问注册对象
+                if hasattr(self.plugin_manager, "call"):
+                    if asyncio.iscoroutinefunction(self.plugin_manager.call):
+                        result = await self.plugin_manager.call(plugin_id, function_name, **params)
                     else:
-                        result = func(**params)
+                        # 兼容同步实现
+                        result = self.plugin_manager.call(plugin_id, function_name, **params)
                 else:
-                    result = None
+                    raise AttributeError("PluginManager does not have a 'call' method")
 
-                results.append({
-                    "plugin_id": plugin_id,
-                    "function_name": function_name,
-                    "params": params,
-                    "result": result,
-                    "success": True
-                })
+                duration_ms = int((time.time() - start_ts) * 1000)
+                results.append(StepExecutionResult(
+                    step_id=step.step_id,
+                    plugin_id=plugin_id,
+                    plugin_name=plugin_name,
+                    function_name=function_name,
+                    params=params,
+                    result=result,
+                    success=True,
+                    started_at=None,
+                    finished_at=None,
+                    duration_ms=duration_ms
+                ))
 
             except Exception as e:
-                results.append({
-                    "plugin_id": step.get("plugin_id"),
-                    "function_name": step.get("function_name"),
-                    "params": step.get("params", {}),
-                    "result": str(e),
-                    "success": False
-                })
+                duration_ms = int((time.time() - start_ts) * 1000)
+                results.append(StepExecutionResult(
+                    step_id=getattr(step, 'step_id', None),
+                    plugin_id=getattr(step, 'plugin_id', ''),
+                    plugin_name=getattr(step, 'plugin_name', None),
+                    function_name=getattr(step, 'function_name', ''),
+                    params=getattr(step, 'params', {}) or {},
+                    result=None,
+                    success=False,
+                    error=str(e),
+                    started_at=None,
+                    finished_at=None,
+                    duration_ms=duration_ms
+                ))
         return results
-# Task Executor Module
-

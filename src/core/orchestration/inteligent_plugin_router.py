@@ -4,7 +4,7 @@ from typing import Any, Dict, Optional
 from src.core.ai import AIManager
 from src.core.ai.providers.response import ExecutionPlan
 from src.core.config.logger import get_logger
-from src.core.orchestration import PlanService, PluginService
+from src.core.orchestration import Planner, PluginService
 from src.core.orchestration.model import PlanResult, PluginStatusResult
 
 LOGGER = get_logger(__name__)
@@ -15,12 +15,12 @@ class IntelligentPluginRouter:
             self,
             plugin_service: PluginService,
             ai_manager: AIManager,
-            plan_service: PlanService,
+            planner: Planner,
             model=None
     ):
         self.plugin_service = plugin_service
         self.ai_manager = ai_manager
-        self.plan_service = plan_service
+        self.planner = planner
         self.model = model
 
     async def analyze_and_plan(self, user_input: str) -> PlanResult:
@@ -31,7 +31,7 @@ class IntelligentPluginRouter:
             available_plugins = await self.plugin_service.get_available_plugins()
             if not available_plugins:
                 return PlanResult.error_result("没有可用的插件", suggestion="请检查插件是否正确加载和启用")
-            selected_plugins = await self.plan_service.select_plugins(user_input, available_plugins)
+            selected_plugins = await self.planner.select_plugins(user_input, available_plugins)
             if not selected_plugins:
                 return PlanResult.error_result(
                     "未找到合适的插件",
@@ -46,8 +46,8 @@ class IntelligentPluginRouter:
                     user_input=user_input,
                     selected_plugins=selected_plugins
                 )
-            execution_plan: ExecutionPlan = await self.plan_service.generate_execution_plan(user_input,
-                                                                                            plugin_functions)
+            execution_plan: ExecutionPlan = await self.planner.plan_execution(user_input,
+                                                                              plugin_functions)
             if not execution_plan:
                 return PlanResult.error_result(
                     "执行计划生成失败",
@@ -63,36 +63,3 @@ class IntelligentPluginRouter:
         except Exception as e:
             LOGGER.exception(f"❌ 分析失败: {e}")
             return PlanResult.error_result(f"{str(e)}")
-
-    def _parse_ai_response(self, content: str) -> Optional[Dict[str, Any]]:
-        try:
-            if not content:
-                LOGGER.error("AI返回的内容为空")
-                return None
-            if isinstance(content, str):
-                result = json.loads(content)
-            elif isinstance(content, dict):
-                result = content
-            else:
-                LOGGER.error(f"不支持的响应类型: {type(content)}")
-                return None
-            return result
-        except json.JSONDecodeError as e:
-            LOGGER.error(f"❌ 解析AI返回的JSON失败: {e}")
-            return None
-        except Exception as e:
-            LOGGER.error(f"❌ 解析AI响应失败: {e}")
-            return None
-
-    async def get_plugin_status(self) -> PluginStatusResult:
-        try:
-            available_plugins = await self.plugin_service.get_available_plugins()
-            all_plugins = await self.plugin_service.plugin_manager.list_plugins()
-            return PluginStatusResult(
-                total_plugins=len(all_plugins),
-                available_plugins=len(available_plugins),
-                plugin_names=[p["plugin_name"] for p in available_plugins]
-            )
-        except Exception as e:
-            LOGGER.error(f"❌ 获取插件状态失败: {e}")
-            return PluginStatusResult.error_result(str(e))

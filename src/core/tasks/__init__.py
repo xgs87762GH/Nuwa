@@ -1,5 +1,5 @@
 # Task Execution Engine Package
-from .scheduler import TaskScheduler
-from .executor import TaskExecutor
+from src.core.tasks.executor import TaskExecutor
+from src.core.tasks.service import TaskService
 
-__all__ = ["TaskScheduler", "TaskExecutor"]
+__all__ = ["TaskExecutor", "TaskService"]

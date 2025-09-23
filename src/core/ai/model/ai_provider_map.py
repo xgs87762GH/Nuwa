@@ -1,9 +1,9 @@
 # AI Manager Module
 from typing import List, Optional, Type, Dict
 
+from src.core.config import get_logger
 from src.core.ai.providers import OpenAIProvider, DeepSeekProvider, AnthropicProvider, LocalProvider
 from src.core.ai.providers.interface import BaseAIProvider
-from src.core.config import get_logger
 from src.core.config.models import AIProviderEnum
 
 LOGGER = get_logger(__name__)

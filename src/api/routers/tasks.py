@@ -3,12 +3,12 @@ from typing import Optional
 from fastapi import APIRouter, Request
 from pydantic import BaseModel
 
-from src.api.dependencies import TaskServiceDep
+from src.api.dependencies import TaskServiceDep, IntelligentPluginRouterDep
 from src.api.models import TaskCreateAPIResponse, TaskResult, APIResponse
 from src.core.config import AppConfig
 from src.core.config.logger import get_logger
 from src.core.tasks.model.models import TaskStatus
-from src.core.tasks.model.response import TaskQuery, PaginatedTaskResponse
+from src.core.tasks.model.response import TaskQuery, PaginatedTaskResponse, TaskDetailResponse
 
 router = APIRouter(prefix="/tasks", tags=["Tasks"])
 LOGGER = get_logger(__name__)
@@ -28,13 +28,17 @@ class CreateTaskRequest(BaseModel):
 async def create_task_api(
         request: CreateTaskRequest,
         req: Request,
-        task_service: TaskServiceDep
+        task_service: TaskServiceDep,
+        intelligent_plugin_router: IntelligentPluginRouterDep
 ) -> TaskCreateAPIResponse:
     """Create task based on user input"""
     app_config: AppConfig = req.app.state.app_config
     LOGGER.info(f"Getting app configuration: {app_config.name}")
 
-    result = await task_service.create_task_from_input(request.user_input)
+    result = await task_service.create_task_from_input(
+        user_input=request.user_input,
+        router=intelligent_plugin_router
+    )
 
     if result.get("success") is False:
         return APIResponse.error(
@@ -75,3 +79,19 @@ async def list(
     )
     tasks = await task_service.query_tasks(query)
     return APIResponse.ok(data=tasks)
+
+
+@router.get('/{task_id}', response_model=APIResponse[TaskDetailResponse])
+async def detail(task_id: str, task_service: TaskServiceDep) -> APIResponse[TaskDetailResponse]:
+    """Get detailed information of a single task, including steps and plan/result fields."""
+    detail = await task_service.get_task_detail(task_id)
+    if detail is None:
+        return APIResponse.error(message="Task not found")
+    return APIResponse.ok(data=detail)
+
+
+@router.delete("/{task_id}", response_model=APIResponse)
+async def delete_task(task_id: str, task_service: TaskServiceDep) -> APIResponse[None]:
+    """Delete a task"""
+    await task_service.del_task(task_id)
+    return APIResponse.ok()

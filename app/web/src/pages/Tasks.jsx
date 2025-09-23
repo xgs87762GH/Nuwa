@@ -16,7 +16,9 @@ import {
   Badge,
   Tooltip,
   Empty,
-  Statistic
+  Statistic,
+  Modal,
+  Tabs
 } from 'antd';
 import { useLanguage } from '../contexts/LanguageContext';
 import {
@@ -34,18 +36,22 @@ import {
   TeamOutlined,
   TrophyOutlined,
   FireOutlined,
-  BugOutlined
+  BugOutlined,
+  InfoCircleOutlined,
+  ApiOutlined
 } from '@ant-design/icons';
-import { getTasksList } from '../api/tasks';
+import { getTasksList,deleteTask } from '../api/tasks';
 import {
   TASK_STATUS,
   TASK_STATUS_LABELS,
   TASK_STATUS_COLORS
 } from '../utils/constants';
+import TaskStepsVisualization from '../components/TaskStepsVisualization';
 import './Tasks.css';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
+const { TabPane } = Tabs;
 
 const Tasks = () => {
   const { t } = useLanguage();
@@ -117,7 +123,7 @@ const Tasks = () => {
     if (autoRefresh) {
       refreshTimerRef.current = setInterval(() => {
         loadTasks();
-      }, 5000);
+      }, 10000);
     }
     return clearRefreshTimer;
   }, [autoRefresh, loadTasks, clearRefreshTimer]);
@@ -125,6 +131,45 @@ const Tasks = () => {
   // Manual refresh
   const handleRefresh = () => {
     loadTasks();
+  };
+
+  // Delete task
+  const handleDeleteTask = async (taskId) => {
+    try {
+      const response = await deleteTask(taskId);
+      if (response?.success) {
+        message.success(t('tasks.deleteTaskSuccess'));
+        // Refresh the task list after successful deletion
+        loadTasks();
+      } else {
+        message.error(response?.message || t('tasks.deleteTaskFailed'));
+      }
+    } catch (error) {
+      console.error('Delete task error:', error);
+      message.error(t('tasks.deleteTaskFailed'));
+    }
+  };
+
+  // Confirm delete task
+  const handleConfirmDelete = (task) => {
+    // Use Ant Design's Modal.confirm for better UX
+    Modal.confirm({
+      title: t('tasks.confirmDelete'),
+      content: (
+        <div>
+          <p>{t('tasks.deleteTaskContent')}</p>
+          <p><strong>{t('tasks.taskId')}:</strong> {task.task_id}</p>
+          <p><strong>{t('tasks.taskDescription')}:</strong> {task.description}</p>
+        </div>
+      ),
+      okText: t('common.confirm'),
+      cancelText: t('common.cancel'),
+      okType: 'danger',
+      onOk: () => handleDeleteTask(task.task_id),
+      onCancel: () => {
+        console.log('Delete cancelled');
+      },
+    });
   };
 
   // Handle pagination change
@@ -449,6 +494,7 @@ const Tasks = () => {
               type="text"
               size="small"
               icon={<DeleteOutlined />}
+              onClick={() => handleConfirmDelete(record)}
               style={{
                 color: '#ff4d4f',
                 background: 'rgba(255, 77, 79, 0.1)'
@@ -603,91 +649,200 @@ const Tasks = () => {
 
       {/* Task Details Drawer */}
       <Drawer
-        title={t('tasks.taskDetails')}
+        title={
+          <Space>
+            <InfoCircleOutlined />
+            {t('tasks.taskDetails')}
+            {selectedTask && (
+              <Tag color={TASK_STATUS_COLORS[selectedTask.status]} style={{ marginLeft: 8 }}>
+                {t(TASK_STATUS_LABELS[selectedTask.status])}
+              </Tag>
+            )}
+          </Space>
+        }
         open={taskDetailVisible}
         onClose={() => setTaskDetailVisible(false)}
-        width={600}
+        width={800}
+        bodyStyle={{ padding: 0 }}
       >
         {selectedTask && (
-          <div>
-            <Card size="small" className="nuwa-glass-card" style={{ marginBottom: 16 }}>
-              <Row gutter={[16, 8]}>
-                <Col span={24}>
-                  <Space>
-                    <Text strong>{t('tasks.taskId')}:</Text>
-                    <Text code>{selectedTask.task_id}</Text>
-                  </Space>
-                </Col>
-                <Col span={12}>
-                  <Space>
-                    <Text strong>{t('tasks.status.title')}:</Text>
-                    <Tag 
-                      color={TASK_STATUS_COLORS[selectedTask.status]}
-                      icon={getStatusIcon(selectedTask.status)}
-                    >
-                      {t(TASK_STATUS_LABELS[selectedTask.status])}
-                    </Tag>
-                  </Space>
-                </Col>
-                <Col span={12}>
-                  <Space>
-                    <Text strong>{t('tasks.priority.title')}:</Text>
-                    {getPriorityTag(selectedTask.priority)}
-                  </Space>
-                </Col>
-                <Col span={24}>
-                  <Text strong>{t('tasks.taskDescription')}:</Text>
-                  <div style={{ margin: '8px 0' }}>
-                    {selectedTask.description}
-                  </div>
-                </Col>
-                <Col span={8}>
-                  <Space>
-                    <Text strong>{t('tasks.createdAt')}:</Text>
-                    <Text>{formatTime(selectedTask.created_at)}</Text>
-                  </Space>
-                </Col>
-                <Col span={8}>
-                  <Space>
-                    <Text strong>{t('tasks.startedAt')}:</Text>
-                    <Text>{formatTime(selectedTask.started_at)}</Text>
-                  </Space>
-                </Col>
-                <Col span={8}>
-                  <Space>
-                    <Text strong>{t('tasks.finishedAt')}:</Text>
-                    <Text>{formatTime(selectedTask.finished_at)}</Text>
-                  </Space>
-                </Col>
-              </Row>
-            </Card>
-
-            {selectedTask.execution_plan && (
-              <Card size="small" className="nuwa-glass-card" title={t('tasks.executionPlan')}>
-                <Row gutter={[16, 8]}>
-                  <Col span={24}>
-                    <Text strong>{t('tasks.analysis')}:</Text>
-                    <div style={{ margin: '8px 0' }}>
-                      {selectedTask.execution_plan.analysis}
-                    </div>
-                  </Col>
-                  
-                  {selectedTask.execution_plan.selected_functions && (
+          <Tabs defaultActiveKey="overview" style={{ height: '100%' }}>
+            <TabPane 
+              tab={
+                <Space>
+                  <InfoCircleOutlined />
+                  {t('tasks.overview')}
+                </Space>
+              } 
+              key="overview"
+            >
+              <div style={{ padding: 16 }}>
+                {/* Basic Information */}
+                <Card size="small" className="nuwa-glass-card" style={{ marginBottom: 16 }}>
+                  <Row gutter={[16, 12]}>
                     <Col span={24}>
-                      <Text strong>{t('tasks.selectedFunctions')}:</Text>
-                      <div style={{ marginTop: 8 }}>
-                        {selectedTask.execution_plan.selected_functions.map((func, index) => (
-                          <Tag key={index} style={{ marginRight: 8, marginBottom: 8 }}>
-                            {func.plugin_name}.{func.function_name}
-                          </Tag>
-                        ))}
+                      <Space>
+                        <Text strong>{t('tasks.taskId')}:</Text>
+                        <Text 
+                          code 
+                          copyable={{ text: selectedTask.task_id }}
+                          style={{ 
+                            fontSize: '12px',
+                            background: 'rgba(64, 169, 255, 0.1)',
+                            color: '#40a9ff',
+                            padding: '2px 6px',
+                            borderRadius: '4px'
+                          }}
+                        >
+                          {selectedTask.task_id}
+                        </Text>
+                      </Space>
+                    </Col>
+                    <Col span={12}>
+                      <Space>
+                        <Text strong>{t('tasks.status.title')}:</Text>
+                        <Tag 
+                          color={TASK_STATUS_COLORS[selectedTask.status]}
+                          icon={getStatusIcon(selectedTask.status)}
+                        >
+                          {t(TASK_STATUS_LABELS[selectedTask.status])}
+                        </Tag>
+                      </Space>
+                    </Col>
+                    <Col span={12}>
+                      <Space>
+                        <Text strong>{t('tasks.priority.title')}:</Text>
+                        {getPriorityTag(selectedTask.priority)}
+                      </Space>
+                    </Col>
+                    <Col span={24}>
+                      <Text strong>{t('tasks.taskDescription')}:</Text>
+                      <div style={{ 
+                        margin: '8px 0',
+                        padding: '8px 12px',
+                        background: 'rgba(255, 255, 255, 0.05)',
+                        borderRadius: '6px',
+                        border: '1px solid rgba(255, 255, 255, 0.1)'
+                      }}>
+                        {selectedTask.description}
                       </div>
                     </Col>
-                  )}
-                </Row>
-              </Card>
+                    <Col span={8}>
+                      <Text strong>{t('tasks.createdAt')}:</Text>
+                      <br />
+                      <Text style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.7)' }}>
+                        {formatTime(selectedTask.created_at)}
+                      </Text>
+                    </Col>
+                    <Col span={8}>
+                      <Text strong>{t('tasks.startedAt')}:</Text>
+                      <br />
+                      <Text style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.7)' }}>
+                        {formatTime(selectedTask.started_at)}
+                      </Text>
+                    </Col>
+                    <Col span={8}>
+                      <Text strong>{t('tasks.finishedAt')}:</Text>
+                      <br />
+                      <Text style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.7)' }}>
+                        {formatTime(selectedTask.finished_at)}
+                      </Text>
+                    </Col>
+                  </Row>
+                </Card>
+
+                {/* Task Result or Error */}
+                {selectedTask.result && (
+                  <Card size="small" className="nuwa-glass-card" style={{ marginBottom: 16 }}>
+                    <Row gutter={[16, 8]}>
+                      <Col span={24}>
+                        <Text strong>{t('tasks.taskResult')}:</Text>
+                        <div style={{ 
+                          marginTop: 8,
+                          padding: '12px',
+                          background: 'rgba(82, 196, 26, 0.1)',
+                          border: '1px solid rgba(82, 196, 26, 0.3)',
+                          borderRadius: '6px',
+                          fontFamily: 'Monaco, Consolas, monospace',
+                          fontSize: '12px',
+                          whiteSpace: 'pre-wrap'
+                        }}>
+                          {typeof selectedTask.result === 'object' 
+                            ? JSON.stringify(selectedTask.result, null, 2)
+                            : String(selectedTask.result)
+                          }
+                        </div>
+                      </Col>
+                    </Row>
+                  </Card>
+                )}
+
+                {selectedTask.error && (
+                  <Card size="small" className="nuwa-glass-card" style={{ marginBottom: 16 }}>
+                    <Row gutter={[16, 8]}>
+                      <Col span={24}>
+                        <Text strong style={{ color: '#ff4d4f' }}>{t('tasks.taskError')}:</Text>
+                        <div style={{ 
+                          marginTop: 8,
+                          padding: '12px',
+                          background: 'rgba(255, 77, 79, 0.1)',
+                          border: '1px solid rgba(255, 77, 79, 0.3)',
+                          borderRadius: '6px',
+                          fontFamily: 'Monaco, Consolas, monospace',
+                          fontSize: '12px',
+                          whiteSpace: 'pre-wrap'
+                        }}>
+                          {selectedTask.error}
+                        </div>
+                      </Col>
+                    </Row>
+                  </Card>
+                )}
+              </div>
+            </TabPane>
+
+            <TabPane 
+              tab={
+                <Space>
+                  <ApiOutlined />
+                  {t('tasks.executionDetails')}
+                </Space>
+              } 
+              key="execution"
+            >
+              <div style={{ padding: 16 }}>
+                <TaskStepsVisualization task={selectedTask} />
+              </div>
+            </TabPane>
+
+            {selectedTask.extra && (
+              <TabPane 
+                tab={
+                  <Space>
+                    <SettingOutlined />
+                    {t('tasks.additionalInfo')}
+                  </Space>
+                } 
+                key="extra"
+              >
+                <div style={{ padding: 16 }}>
+                  <Card size="small" className="nuwa-glass-card">
+                    <pre style={{ 
+                      fontSize: '12px',
+                      fontFamily: 'Monaco, Consolas, monospace',
+                      background: 'transparent',
+                      border: 'none',
+                      margin: 0,
+                      whiteSpace: 'pre-wrap',
+                      color: 'rgba(255, 255, 255, 0.8)'
+                    }}>
+                      {JSON.stringify(selectedTask.extra, null, 2)}
+                    </pre>
+                  </Card>
+                </div>
+              </TabPane>
             )}
-          </div>
+          </Tabs>
         )}
       </Drawer>
       </div>

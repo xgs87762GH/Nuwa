@@ -1,26 +1,26 @@
-import logging
 import uuid
 from datetime import datetime, timezone
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 
-from sqlalchemy import select, func
+from sqlalchemy import select, func, delete
 from sqlalchemy.orm import selectinload
 
 from src.core.ai.providers.response import ExecutionPlan
-from src.core.config import DataBaseManager
+from src.core.config import DataBaseManager, get_logger
 from src.core.orchestration import IntelligentPluginRouter
 from src.core.orchestration.model import PlanResult
 from src.core.tasks.model.models import Task, TaskStep, TaskStatus
-from src.core.tasks.model.response import TaskQuery, PaginatedTaskResponse, TaskResponse
+from src.core.tasks.model.response import TaskQuery, PaginatedTaskResponse, TaskResponse, TaskDetailResponse
+
+logger = get_logger(__name__)
 
 
 class TaskService:
-    def __init__(self, db: DataBaseManager, router: IntelligentPluginRouter):
+    def __init__(self, db: DataBaseManager):
         self.db = db
-        self.router = router
-        self.logger = logging.getLogger(__name__)
 
-    async def create_task_from_input(self, user_input: str, user_id: str = "1") -> Dict[str, Any]:
+    async def create_task_from_input(self, user_input: str, router: IntelligentPluginRouter, user_id: str = "1") -> \
+    Dict[str, Any]:
         """
         Create a task from user input
 
@@ -30,9 +30,9 @@ class TaskService:
         """
         try:
             # 1. Generate orchestration plan
-            plan_result: PlanResult = await self.router.analyze_and_plan(user_input)
+            plan_result: PlanResult = await router.analyze_and_plan(user_input)
             if not plan_result.success:
-                self.logger.warning(f"Plan generation failed: {plan_result.error}")
+                logger.warning(f"Plan generation failed: {plan_result.error}")
                 return {
                     "success": False,
                     "error": plan_result.error or "Plan generation failed",
@@ -79,12 +79,12 @@ class TaskService:
                 session.add(task)
                 await session.commit()
 
-            self.logger.info(f"Task {task_id} created successfully with {len(task.steps)} steps")
+            logger.info(f"Task {task_id} created successfully with {len(task.steps)} steps")
             return {"success": True, "task_id": task_id, "step_count": len(task.steps)}
 
         except Exception as e:
-            self.logger.error(f"Failed to create task from input '{user_input}': {e}")
-            self.logger.exception(e)
+            logger.error(f"Failed to create task from input '{user_input}': {e}")
+            logger.exception(e)
             return {
                 "success": False,
                 "error": f"Failed to create task: {str(e)}",
@@ -130,3 +130,38 @@ class TaskService:
                 size=query.size,
                 items=task_responses
             )
+
+    async def get_task_detail(self, task_id: str) -> Optional[TaskDetailResponse]:
+        """Get detailed information of a single task, including steps and plan/result fields."""
+        if not task_id:
+            raise ValueError("task_id cannot be empty")
+
+        async with self.db.get_session() as session:
+            stmt = (
+                select(Task)
+                .options(selectinload(Task.steps))
+                .where(Task.task_id == task_id)
+            )
+            result = await session.execute(stmt)
+            task: Optional[Task] = result.scalar_one_or_none()
+            if not task:
+                return None
+
+            # Pydantic v2 conversion from ORM object with relationships
+            detail = TaskDetailResponse.model_validate(task, from_attributes=True)
+            return detail
+
+    async def del_task(self, task_id: str):
+        """删除任务"""
+        if not task_id:
+            raise ValueError("task_id cannot be empty")
+
+        try:
+            async with self.db.get_session() as session:
+                result = await session.execute(
+                    delete(Task).where(Task.task_id == task_id)
+                )
+                await session.commit()
+        except Exception as e:
+            logger.error(f"Failed to delete task {task_id}: {str(e)}")
+            raise

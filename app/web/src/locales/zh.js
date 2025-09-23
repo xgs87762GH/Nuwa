@@ -157,6 +157,26 @@ const zhLocale = {
       view: '查看',
       edit: '编辑'
     },
+    confirmDelete: '确认删除任务',
+    deleteTaskContent: '确定要删除此任务吗？此操作不可撤销。',
+    deleteTaskSuccess: '任务删除成功',
+    deleteTaskFailed: '删除任务失败',
+    // 新增步骤相关翻译
+    executionProgress: '执行进度',
+    currentStep: '当前步骤',
+    executionSteps: '执行步骤',
+    executionDetails: '执行详情',
+    overview: '概览',
+    additionalInfo: '附加信息',
+    taskResult: '任务结果',
+    taskError: '任务错误',
+    step: '步骤',
+    stepParams: '参数',
+    stepResult: '执行结果',
+    stepError: '执行错误',
+    duration: '耗时',
+    retryInfo: '重试次数: {current}/{max}',
+    overallConfidence: '整体置信度',
     validation: {
       taskDescriptionRequired: '请输入任务描述',
       taskDescriptionMinLength: '任务描述至少5个字符'

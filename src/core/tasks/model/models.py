@@ -7,7 +7,7 @@ from enum import Enum
 from datetime import datetime, timezone
 from typing import Any, List, Optional
 
-Base = declarative_base()
+from src.core.config.models import DbBase
 
 
 class TaskStatus(Enum):
@@ -21,7 +21,7 @@ class TaskStatus(Enum):
     TIMEOUT = "timeout"
 
 
-class Task(Base):
+class Task(DbBase):
     __tablename__ = "tasks"
 
     task_id = Column(String(64), primary_key=True)
@@ -85,7 +85,7 @@ class Task(Base):
         self.error = error
 
 
-class TaskStep(Base):
+class TaskStep(DbBase):
     __tablename__ = "task_steps"
 
     step_id = Column(String(64), primary_key=True)
