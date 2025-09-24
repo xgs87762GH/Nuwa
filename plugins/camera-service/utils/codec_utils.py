@@ -4,7 +4,7 @@ import logging
 import cv2
 from typing import List, Tuple, Optional, Dict, Any
 from pathlib import Path
-from core.constants import getCodecs
+from core import getCodecs
 
 logger = logging.getLogger(__name__)
 

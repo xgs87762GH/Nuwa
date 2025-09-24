@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Dict, Any, Optional, Union, Tuple
 import cv2
 
-from core.exceptions import ValidationError
+from core import ValidationError
 from utils.camera_param_mapper import ParameterMapper, OpenCVPropertyMapper
 
 logger = logging.getLogger(__name__)

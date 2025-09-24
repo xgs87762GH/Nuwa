@@ -4,7 +4,7 @@ from typing import Annotated
 from src.core.di.container import container
 from src.core.orchestration import IntelligentPluginRouter
 from src.core.plugin.manager import PluginManager
-from src.core.tasks.service import TaskService
+from src.core.tasks import TaskService
 from src.core.config import DataBaseManager
 from src.core.ai import AIManager
 

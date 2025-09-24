@@ -23,7 +23,7 @@ class PluginService:
         for selected_plugin in selected_plugins:
             plugin_id = selected_plugin.plugin_id
             full_plugin = next((p for p in available_plugins if p['plugin_id'] == plugin_id), None)
-            plugin_obj = await self.plugin_manager.get_register_plugin(plugin_id)
+            plugin_obj = await self.plugin_manager.get_plugin_by_id(plugin_id)
             if not plugin_obj or not full_plugin:
                 continue
             functions = await self.extract_plugin_functions(plugin_obj, full_plugin['plugin_name'])

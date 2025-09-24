@@ -5,22 +5,23 @@ from typing import Dict, Any, Optional
 from sqlalchemy import select, func, delete
 from sqlalchemy.orm import selectinload
 
-from src.core.ai.providers.response import ExecutionPlan
 from src.core.config import DataBaseManager, get_logger
 from src.core.orchestration import IntelligentPluginRouter
 from src.core.orchestration.model import PlanResult
-from src.core.tasks.model.models import Task, TaskStep, TaskStatus
+from src.core.tasks.model.models import Task, TaskStatus
 from src.core.tasks.model.response import TaskQuery, PaginatedTaskResponse, TaskResponse, TaskDetailResponse
+from src.core.tasks.service_step import TaskStepService
 
 logger = get_logger(__name__)
 
 
 class TaskService:
-    def __init__(self, db: DataBaseManager):
+    def __init__(self, db: DataBaseManager, step_service: TaskStepService):
         self.db = db
+        self.step_service = step_service
 
     async def create_task_from_input(self, user_input: str, router: IntelligentPluginRouter, user_id: str = "1") -> \
-    Dict[str, Any]:
+            Dict[str, Any]:
         """
         Create a task from user input
 
@@ -56,31 +57,15 @@ class TaskService:
                 scheduled_at=current_time
             )
 
-            # 3. Create task steps
-            execution_plan: ExecutionPlan = plan_result.execution_plan
-            if execution_plan:
-                execution_functions = execution_plan.get_ordered_functions()
-                if execution_functions:
-                    for idx, function_selection in enumerate(execution_functions):
-                        step_id = f"{task_id}_{idx + 1}"
-                        task_step = TaskStep(
-                            step_id=step_id,
-                            task_id=task_id,  # Explicitly set task_id
-                            plugin_id=function_selection.plugin_id,
-                            plugin_name=function_selection.plugin_name,
-                            function_name=function_selection.function_name,
-                            params=function_selection.suggested_params or {},
-                            status=TaskStatus.PENDING
-                        )
-                        task.add_step(task_step)
-
-            # 4. Save to database
+            # 3. Save to database
             async with self.db.get_session() as session:
                 session.add(task)
+                # Create steps using TaskStepService
+                step_count = await self.step_service.create_steps_for_task(session, task_id, plan_result.execution_plan)
                 await session.commit()
 
-            logger.info(f"Task {task_id} created successfully with {len(task.steps)} steps")
-            return {"success": True, "task_id": task_id, "step_count": len(task.steps)}
+            logger.info(f"Task {task_id} created successfully with {step_count} steps")
+            return {"success": True, "task_id": task_id, "step_count": step_count}
 
         except Exception as e:
             logger.error(f"Failed to create task from input '{user_input}': {e}")
@@ -165,3 +150,31 @@ class TaskService:
         except Exception as e:
             logger.error(f"Failed to delete task {task_id}: {str(e)}")
             raise
+
+    async def update_task_fields(self, task_id: str, **kwargs) -> Optional[Task]:
+        """Update specific fields of a task"""
+        if not task_id:
+            raise ValueError("task_id cannot be empty")
+
+        async with self.db.get_session() as session:
+            try:
+                stmt = select(Task).where(
+                    Task.task_id == task_id
+                )
+                result = await session.execute(stmt)
+                task = result.scalar_one_or_none()
+
+                if not task:
+                    raise ValueError(f"Task {task_id} not found")
+
+                for key, value in kwargs.items():
+                    if hasattr(task, key):
+                        setattr(task, key, value)
+
+                await session.commit()
+                await session.refresh(task)
+                logger.info(f"Task {task_id} updated successfully")
+                return task
+            except Exception as e:
+                logger.error(f"Failed to update task {task_id}: {str(e)}")
+                raise

@@ -3,12 +3,14 @@ Plugin Manager
 Responsible for the overall lifecycle management of plugins, including discovery, loading, starting, stopping, etc.
 """
 import asyncio
+from asyncio import iscoroutinefunction
 from pathlib import Path
 from typing import Dict, List, Optional
 
 from src.core.config import get_plugin_config, PluginConfig, get_logger
 from src.core.plugin import PluginDiscovery, PluginLoader, PluginRegistry
 from src.core.plugin.model import PluginRegistration, PluginServiceDefinition
+from src.core.utils.Result import Result
 
 LOGGER = get_logger("PluginManager")
 
@@ -81,43 +83,42 @@ class PluginManager:
             LOGGER.error(f"Error uninstalling plugin {plugin_id}, error: {str(e)}")
             return False
 
-    async def call_by_name(self, plugin_name: str, method_name: str, **kwargs):
-        """Call a plugin by name"""
-        return await self.call_by_id(self.registry.get_plugin_by_name(plugin_name).id, method_name, **kwargs)
-
-    async def call(self, plugin_id: str, method_name: str, **kwargs):
-        """调用插件方法并判断返回值"""
+    # ===== New: Result-wrapped variants (non-breaking) =====
+    async def call(self, plugin_id: str, method_name: str, **kwargs) -> Result:
+        """Call a plugin by id and wrap the outcome into Result. Does not modify original call()."""
         try:
-            plugin: PluginRegistration = self.registry.get_plugin(plugin_id)
+            plugin: PluginRegistration = await self.get_plugin_by_id(plugin_id)
             if not plugin:
-                LOGGER.warning(f"Plugin {plugin_id} not found")
-                return None
+                err = Exception(f"Plugin '{plugin_id}' not found")
+                LOGGER.warning(str(err))
+                return Result.fail(err)
+
             services: List[PluginServiceDefinition] = plugin.plugin_services
             for service in services:
-                if method_name in service.functions:
-                    try:
-                        result = await service.instance.call(method_name, **kwargs)
+                functions = service.functions() if callable(service.functions) else service.functions
+                for fun in functions:
+                    if method_name == (fun.get('name') if isinstance(fun, dict) else getattr(fun, 'name', None)):
+                        try:
+                            # Whether await is needed depends on whether the method itself is a coroutine function or not
+                            instance = service.instance()
 
-                        # 判断返回值类型
-                        if result is None:
-                            LOGGER.debug(f"Method {method_name} returned None")
-                            return None
-                        elif result == "":  # 空字符串
-                            LOGGER.debug(f"Method {method_name} returned empty string")
-                            return result
-                        else:
-                            LOGGER.debug(f"Method {method_name} returned: {type(result).__name__}")
-                            return result
+                            if iscoroutinefunction(getattr(instance, method_name)):
+                                result = await getattr(instance, method_name)(**kwargs)
+                            else:
+                                result = getattr(instance, method_name)(**kwargs)
+                            return Result.ok(result)
+                        except Exception as method_error:
+                            LOGGER.error(f"Error calling method {method_name}: {str(method_error)}")
+                            return Result.fail(method_error)
 
-                    except Exception as method_error:
-                        LOGGER.error(f"Error calling method {method_name}: {str(method_error)}")
-                        raise method_error
-            # 如果没找到对应的方法
-            LOGGER.warning(f"Method {method_name} not found in plugin {plugin_id}")
-            return None
+            # 未找到方法
+            err = Exception(f"Method '{method_name}' not found in plugin '{plugin_id}'")
+            LOGGER.warning(str(err))
+            return Result.fail(err)
+
         except Exception as e:
             LOGGER.error(f"Error calling plugin {plugin_id} method {method_name}: {str(e)}")
-            raise e
+            return Result.fail(e)
 
     async def get_plugin_info(self, plugin_id: str) -> Optional[Dict]:
         """Get plugin information"""
@@ -136,9 +137,13 @@ class PluginManager:
             }
         return None
 
-    async def get_register_plugin(self, plugin_id: str) -> Optional[PluginRegistration]:
-        """Get the full plugin registration object"""
+    async def get_plugin_by_id(self, plugin_id: str) -> Optional[PluginRegistration]:
+        """根据插件ID获取完整的插件注册对象"""
         return self.registry.get_plugin(plugin_id)
+
+    async def get_plugin_by_name(self, plugin_name: str) -> Optional[PluginRegistration]:
+        """根据插件名称获取完整的插件注册对象"""
+        return self.registry.get_plugin_by_name(plugin_name)
 
     async def list_plugins(self) -> List[Dict]:
         """List all registered plugins with their status"""

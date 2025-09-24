@@ -134,11 +134,29 @@ class CameraService(ICameraService, ABC):
         else:
             return CameraParameterBase.from_dict(merged_data)
 
-    def _get_effective_params(self, temp_params: Optional[CameraParameterBase]) -> CameraParameterBase:
-        """Get effective parameters by merging temp params with current model."""
-        if temp_params and hasattr(self, 'camera_model'):
+    def _get_effective_params(self, temp_params: Optional[CameraParameterBase],
+                              param_type: type = CameraParameterBase) -> CameraParameterBase:
+        """
+        Get effective parameters by merging temp params with the current model.
+        Handles dictionary inputs by converting them to the specified param_type.
+        """
+        if not temp_params:
+            return self.camera_model
+
+        # If temp_params is a dict, convert it to a model instance
+        if isinstance(temp_params, dict):
+            # Use the provided type hint to create the correct model
+            if param_type is PhotoParameters:
+                temp_params = PhotoParameters.from_dict(temp_params)
+            elif param_type is VideoParameters:
+                temp_params = VideoParameters.from_dict(temp_params)
+            else:
+                temp_params = CameraParameterBase.from_dict(temp_params)
+
+        if hasattr(self, 'camera_model'):
             return self._merge_camera_params(self.camera_model, temp_params)
-        return temp_params or self.camera_model
+
+        return temp_params
 
     def take_photo(self, filename: Optional[str] = None, quality: int = 95,
                    photo_params: Optional[PhotoParameters] = None) -> Dict[str, Any]:
@@ -147,7 +165,7 @@ class CameraService(ICameraService, ABC):
             return {"status": "error", "message": "Quality must be 1-100"}
 
         try:
-            effective_params = self._get_effective_params(photo_params)
+            effective_params = self._get_effective_params(photo_params, param_type=PhotoParameters)
 
             with self._get_camera(effective_params) as camera:
                 frame = self._capture_frame(camera)
@@ -235,7 +253,7 @@ class CameraService(ICameraService, ABC):
         recording_fps = (isinstance(self.camera_model, VideoParameters) and self.camera_model.fps) or 25.0
 
         try:
-            effective_params = self._get_effective_params(video_params)
+            effective_params = self._get_effective_params(video_params, param_type=VideoParameters)
             if isinstance(effective_params, VideoParameters):
                 effective_params.fps = recording_fps
 
@@ -296,6 +314,7 @@ class CameraService(ICameraService, ABC):
                 }
 
         except Exception as e:
+            logger.exception(e)
             logger.error(f"Video recording failed: {e}")
             return {"status": "error", "message": str(e)}
 

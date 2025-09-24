@@ -36,53 +36,11 @@ class Task(DbBase):
     result = Column(JSON, nullable=True)  # Changed from Text to JSON
     error = Column(Text, nullable=True)
     priority = Column(Integer, default=0)
-    timeout = Column(Integer, nullable=True)  # Timeout in seconds
+    # timeout = Column(Integer, nullable=True)  # Timeout in seconds
     extra = Column(JSON, default=dict)  # Changed from Text to JSON
 
     # Relationship mapping
     steps = relationship("TaskStep", back_populates="task", cascade="all, delete-orphan")
-
-    def add_step(self, step: "TaskStep") -> None:
-        """Add a step to the task"""
-        self.steps.append(step)
-
-    def get_step(self, step_id: str) -> Optional["TaskStep"]:
-        """Get a specific step by ID"""
-        return next((step for step in self.steps if step.step_id == step_id), None)
-
-    def get_steps_by_status(self, status: TaskStatus) -> List["TaskStep"]:
-        """Get all steps with a specific status"""
-        return [step for step in self.steps if step.status == status]
-
-    def update_status(self) -> None:
-        """Update task status based on step statuses"""
-        if not self.steps:
-            return
-
-        if any(step.status == TaskStatus.FAILED for step in self.steps):
-            self.status = TaskStatus.FAILED
-        elif all(step.status == TaskStatus.SUCCESS for step in self.steps):
-            self.status = TaskStatus.SUCCESS
-        elif any(step.status == TaskStatus.RUNNING for step in self.steps):
-            self.status = TaskStatus.RUNNING
-        elif any(step.status == TaskStatus.CANCELLED for step in self.steps):
-            self.status = TaskStatus.CANCELLED
-        elif any(step.status == TaskStatus.TIMEOUT for step in self.steps):
-            self.status = TaskStatus.TIMEOUT
-        else:
-            self.status = TaskStatus.SCHEDULED
-
-    def set_started(self) -> None:
-        """Mark task as started"""
-        self.started_at = datetime.now(timezone.utc)
-        self.status = TaskStatus.RUNNING
-
-    def set_finished(self, success: bool, result: Any = None, error: str = None) -> None:
-        """Mark task as finished"""
-        self.finished_at = datetime.now(timezone.utc)
-        self.status = TaskStatus.SUCCESS if success else TaskStatus.FAILED
-        self.result = result
-        self.error = error
 
 
 class TaskStep(DbBase):

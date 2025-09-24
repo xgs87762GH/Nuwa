@@ -6,7 +6,7 @@ from src.core.di.container import container
 from src.core.orchestration import IntelligentPluginRouter, PluginService, Planner
 from src.core.plugin import PluginManager
 from src.core.scheduler import SchedulerRegister
-from src.core.tasks.service import TaskService
+from src.core.tasks import TaskStepService, TaskService
 from src.core.utils.global_tools import project_root
 from src.core.utils.template import EnhancedPromptTemplates
 
@@ -67,8 +67,13 @@ class ServiceBootstrap:
         container.register_singleton(IntelligentPluginRouter, router)
 
         # 任务服务 - 使用工厂注册，支持依赖注入
-        container.register_factory(TaskService, lambda: TaskService(
+        container.register_factory(TaskStepService, lambda: TaskStepService(
             db=container.get(DataBaseManager)
+        ))
+
+        container.register_factory(TaskService, lambda: TaskService(
+            db=container.get(DataBaseManager),
+            step_service=container.get(TaskStepService)
         ))
 
         self.scheduler_register = SchedulerRegister()

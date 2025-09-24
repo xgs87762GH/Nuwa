@@ -4,6 +4,7 @@ from pydantic import Field, BaseModel
 from typing import List, Optional, Any, Dict
 
 from src.core.tasks.model.models import TaskStatus
+from src.core.utils.Result import Result
 
 
 # 用于 API 响应的纯 Pydantic 模型
@@ -64,7 +65,6 @@ class TaskDetailResponse(TaskResponse):
     error: Optional[str] = None
     priority: int = 0
     timeout: Optional[int] = None
-    extra: dict = Field(default_factory=dict)
 
 # 分页响应模型
 class PaginatedTaskResponse(BaseModel):
