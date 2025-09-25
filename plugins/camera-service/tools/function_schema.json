@@ -11,7 +11,7 @@
           "description": "照片保存文件名（不含扩展名）。"
         },
         "quality": {
-          "type": "integer",
+          "type": "number",
           "minimum": 1,
           "maximum": 100,
           "default": 95,
@@ -23,19 +23,19 @@
           "description": "照片拍摄参数配置，如果未指定参数分两种情况：1）非必填参数，则不传入该参数；2）必填参数，则使用默认参数。",
           "properties": {
             "camera_id": {
-              "type": "integer",
+              "type": "number",
               "default": 0,
               "description": "相机设备ID (0为默认相机)"
             },
             "width": {
-              "type": "integer",
+              "type": "number",
               "minimum": 320,
               "maximum": 4096,
               "default": null,
               "description": "画面宽度像素 (320-4096)"
             },
             "height": {
-              "type": "integer",
+              "type": "number",
               "minimum": 240,
               "maximum": 4096,
               "default": null,
@@ -108,7 +108,7 @@
       "required": ["duration"],
       "properties": {
         "duration": {
-          "type": "integer",
+          "type": "number",
           "minimum": 1,
           "maximum": 3600,
           "description": "录制时长（秒），范围 1-3600 秒（1小时）。"
@@ -130,19 +130,19 @@
           "description": "视频录制参数配置",
           "properties": {
             "camera_id": {
-              "type": "integer",
+              "type": "number",
               "default": 0,
               "description": "相机设备ID (0为默认相机)"
             },
             "width": {
-              "type": "integer",
+              "type": "number",
               "minimum": 320,
               "maximum": 4096,
               "default": null,
               "description": "画面宽度像素 (320-4096)"
             },
             "height": {
-              "type": "integer",
+              "type": "number",
               "minimum": 240,
               "maximum": 4096,
               "default": null,
@@ -227,7 +227,7 @@
       "required": ["count"],
       "properties": {
         "count": {
-          "type": "integer",
+          "type": "number",
           "minimum": 1,
           "maximum": 100,
           "description": "拍摄照片数量 (1-100 张)。"
@@ -240,7 +240,7 @@
           "description": "拍摄间隔时间（秒，0.0-60.0）。0.0=连续快拍，1.0-5.0=常规间隔，10.0+=延时摄影。"
         },
         "quality": {
-          "type": "integer",
+          "type": "number",
           "minimum": 1,
           "maximum": 100,
           "default": 95,
@@ -257,19 +257,19 @@
           "description": "批量拍摄参数配置",
           "properties": {
             "camera_id": {
-              "type": "integer",
+              "type": "number",
               "default": 0,
               "description": "相机设备ID (0为默认相机)"
             },
             "width": {
-              "type": "integer",
+              "type": "number",
               "minimum": 320,
               "maximum": 4096,
               "default": null,
               "description": "画面宽度像素 (320-4096)"
             },
             "height": {
-              "type": "integer",
+              "type": "number",
               "minimum": 240,
               "maximum": 4096,
               "default": null,
@@ -346,7 +346,7 @@
       "type": "object",
       "properties": {
         "camera_id": {
-          "type": "integer",
+          "type": "number",
           "default": null,
           "description": "相机设备ID (0为默认相机)"
         },
@@ -356,14 +356,14 @@
           "description": "输出目录路径"
         },
         "width": {
-          "type": "integer",
+          "type": "number",
           "minimum": 320,
           "maximum": 4096,
           "default": null,
           "description": "全局画面宽度像素 (320-4096)。与高度共同决定分辨率。常用：640、1280、1920。"
         },
         "height": {
-          "type": "integer",
+          "type": "number",
           "minimum": 240,
           "maximum": 4096,
           "default": null,
