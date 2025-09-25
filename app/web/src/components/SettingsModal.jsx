@@ -40,7 +40,7 @@ const SettingsModal = ({ visible, onClose }) => {
   
   // 使用useMemo避免主题数组在每次渲染时重新创建
   const themes = useMemo(() => [
-    { key: 'default', name: t('settings.themes.default'), gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' },
+    { key: 'default', name: t('settings.themes.default'), gradient: 'var(--theme-gradient, linear-gradient(135deg, #667eea 0%, #764ba2 100%))' },
     { key: 'ocean', name: t('settings.themes.ocean'), gradient: 'linear-gradient(135deg, #2196F3 0%, #00BCD4 100%)' },
     { key: 'sunset', name: t('settings.themes.sunset'), gradient: 'linear-gradient(135deg, #FF5722 0%, #FF9800 100%)' },
     { key: 'forest', name: t('settings.themes.forest'), gradient: 'linear-gradient(135deg, #4CAF50 0%, #8BC34A 100%)' },
@@ -87,10 +87,25 @@ const SettingsModal = ({ visible, onClose }) => {
   }, [visible, fetchAIProviders]);
 
   // Load current theme from localStorage
-  const loadCurrentTheme = () => {
+  const loadCurrentTheme = useCallback(() => {
     const savedTheme = localStorage.getItem('nuwa-theme') || 'default';
     setCurrentTheme(savedTheme);
-  };
+    
+    // Apply theme on load
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    
+    // 为了兼容性，设置对应的 CSS 变量 - 使用硬编码的映射避免依赖问题
+    const themeGradients = {
+      'default': 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      'ocean': 'linear-gradient(135deg, #2196F3 0%, #00BCD4 100%)',
+      'sunset': 'linear-gradient(135deg, #FF5722 0%, #FF9800 100%)',
+      'forest': 'linear-gradient(135deg, #4CAF50 0%, #8BC34A 100%)',
+      'purple': 'linear-gradient(135deg, #9C27B0 0%, #E91E63 100%)'
+    };
+    
+    const gradient = themeGradients[savedTheme] || themeGradients['default'];
+    document.documentElement.style.setProperty('--primary-gradient', gradient);
+  }, []);
 
   // Handle provider change
   const handleProviderChange = useCallback(async (providerType) => {
@@ -113,7 +128,10 @@ const SettingsModal = ({ visible, onClose }) => {
     setCurrentTheme(themeKey);
     localStorage.setItem('nuwa-theme', themeKey);
     
-    // Apply theme to CSS variables
+    // Apply theme by setting data-theme attribute
+    document.documentElement.setAttribute('data-theme', themeKey);
+    
+    // 为了兼容性，仍然设置 CSS 变量
     const selectedTheme = themes.find(theme => theme.key === themeKey);
     if (selectedTheme) {
       document.documentElement.style.setProperty('--primary-gradient', selectedTheme.gradient);
@@ -131,58 +149,76 @@ const SettingsModal = ({ visible, onClose }) => {
         </Space>
       ),
       children: (
-        <Card>
-          <Space direction="vertical" style={{ width: '100%' }}>
-            <div>
-              <Title level={5}>{t('system.currentProvider')}:</Title>
-              {currentProvider ? (
-                <Tag color="blue" style={{ fontSize: '14px', padding: '4px 8px' }}>
-                  {currentProvider.provider_type?.toUpperCase() || 
-                   currentProvider.type?.toUpperCase() || 
-                   currentProvider.name?.toUpperCase() || 
-                   'N/A'}
-                </Tag>
-              ) : (
-                <Tag color="red">{t('settings.notSet')}</Tag>
-              )}
+        <div className="settings-ai-section">
+          <div className="settings-card">
+            <div className="current-provider-section">
+              <div className="section-header">
+                <ThunderboltOutlined className="section-icon" />
+                <Text className="section-title">{t('system.currentProvider')}</Text>
+              </div>
+              <div className="provider-badge">
+                {currentProvider ? (
+                  <div className="provider-active">
+                    <div className="provider-status-indicator active"></div>
+                    <span className="provider-name">
+                      {currentProvider.provider_type?.toUpperCase() || 
+                       currentProvider.type?.toUpperCase() || 
+                       currentProvider.name?.toUpperCase() || 
+                       'N/A'}
+                    </span>
+                  </div>
+                ) : (
+                  <div className="provider-inactive">
+                    <div className="provider-status-indicator inactive"></div>
+                    <span className="provider-name">{t('settings.notSet')}</span>
+                  </div>
+                )}
+              </div>
             </div>
             
-            <Divider />
-            
-            <div>
-              <Title level={5}>{t('system.selectProvider')}:</Title>
+            <div className="provider-select-section">
+              <div className="section-header">
+                <SettingOutlined className="section-icon" />
+                <Text className="section-title">{t('system.selectProvider')}</Text>
+              </div>
               <Select
-                style={{ width: '100%' }}
+                className="provider-selector"
                 placeholder={t('settings.selectProvider')}
                 value={currentProvider?.provider_type || currentProvider?.type || currentProvider?.name}
                 onChange={handleProviderChange}
                 loading={loadingProviders}
+                size="large"
+                dropdownClassName="provider-dropdown"
               >
                 {aiProviders.map(provider => (
                   <Option key={provider.type} value={provider.type}>
-                    <Space>
-                      <Tag 
-                        size="small" 
-                        color={provider.status === 'active' ? 'green' : 'orange'}
-                      >
+                    <div className="provider-option">
+                      <div className={`provider-status-dot ${provider.status === 'active' ? 'active' : 'inactive'}`}></div>
+                      <span className="provider-type">{provider.type.toUpperCase()}</span>
+                      <span className={`provider-status-text ${provider.status}`}>
                         {provider.status === 'active' ? t('settings.available') : t('settings.unavailable')}
-                      </Tag>
-                      {provider.type.toUpperCase()}
-                    </Space>
+                      </span>
+                    </div>
                   </Option>
                 ))}
               </Select>
             </div>
 
-            <Button 
-              icon={<ReloadOutlined />} 
-              onClick={fetchAIProviders}
-              loading={loadingProviders}
-            >
-              {t('settings.refresh')}
-            </Button>
-          </Space>
-        </Card>
+            <div className="refresh-section">
+              <Button 
+                className="refresh-button"
+                icon={<ReloadOutlined />} 
+                onClick={fetchAIProviders}
+                loading={loadingProviders}
+                size="large"
+                type="primary"
+                ghost
+              >
+                {t('settings.refresh')}
+              </Button>
+            </div>
+          </div>
+        </div>
       )
     },
     {
@@ -194,78 +230,80 @@ const SettingsModal = ({ visible, onClose }) => {
         </Space>
       ),
       children: (
-        <Space direction="vertical" style={{ width: '100%' }} size="large">
+        <div className="settings-system-section">
           {/* Language Settings */}
-          <Card title={
-            <Space>
-              <GlobalOutlined />
-              {t('system.language')}
-            </Space>
-          }>
-            <Row gutter={16}>
-              <Col span={8}>
-                <Text strong>{t('settings.currentLanguage')}:</Text>
-              </Col>
-              <Col span={16}>
-                <Select
-                  value={currentLanguage}
-                  onChange={switchLanguage}
-                  style={{ width: '100%' }}
-                >
-                  {availableLanguages.map(lang => (
-                    <Option key={lang.code} value={lang.code}>
-                      <Space>
-                        <span>{lang.nativeName}</span>
-                        <span style={{ color: '#666' }}>({lang.name})</span>
-                      </Space>
-                    </Option>
-                  ))}
-                </Select>
-              </Col>
-            </Row>
-          </Card>
-
-          {/* Theme Settings */}
-          <Card title={
-            <Space>
-              <BgColorsOutlined />
-              {t('settings.themeSettings')}
-            </Space>
-          }>
-            <Space direction="vertical" style={{ width: '100%' }}>
-              <div>
-                <Text strong>{t('settings.currentTheme')}:</Text>
-                <div style={{ marginTop: 8 }}>
-                  <Radio.Group 
-                    value={currentTheme} 
-                    onChange={(e) => handleThemeChange(e.target.value)}
-                  >
-                    {themes.map(theme => (
-                      <Radio.Button 
-                        key={theme.key} 
-                        value={theme.key}
-                        style={{ marginBottom: 8, marginRight: 8 }}
-                      >
-                        <Space>
-                          <div 
-                            style={{
-                              width: 16,
-                              height: 16,
-                              borderRadius: '50%',
-                              background: theme.gradient,
-                              border: '1px solid #d9d9d9'
-                            }}
-                          />
-                          {theme.name}
-                        </Space>
-                      </Radio.Button>
-                    ))}
-                  </Radio.Group>
+          <div className="settings-card">
+            <div className="card-header">
+              <GlobalOutlined className="header-icon" />
+              <Text className="header-title">{t('system.language')}</Text>
+            </div>
+            <div className="language-content">
+              <div className="current-language">
+                <Text className="label-text">{t('settings.currentLanguage')}</Text>
+                <div className="language-display">
+                  {availableLanguages.find(lang => lang.code === currentLanguage)?.nativeName || currentLanguage}
                 </div>
               </div>
-            </Space>
-          </Card>
-        </Space>
+              <Select
+                className="language-selector"
+                value={currentLanguage}
+                onChange={switchLanguage}
+                size="large"
+                dropdownClassName="language-dropdown"
+              >
+                {availableLanguages.map(lang => (
+                  <Option key={lang.code} value={lang.code}>
+                    <div className="language-option">
+                      <span className="native-name">{lang.nativeName}</span>
+                      <span className="english-name">({lang.name})</span>
+                    </div>
+                  </Option>
+                ))}
+              </Select>
+            </div>
+          </div>
+
+          {/* Theme Settings */}
+          <div className="settings-card">
+            <div className="card-header">
+              <BgColorsOutlined className="header-icon" />
+              <Text className="header-title">{t('settings.themeSettings')}</Text>
+            </div>
+            <div className="theme-content">
+              <div className="current-theme">
+                <Text className="label-text">{t('settings.currentTheme')}</Text>
+                <div className="theme-display">
+                  {themes.find(theme => theme.key === currentTheme)?.name || 'Default'}
+                </div>
+              </div>
+              <div className="theme-selector">
+                <Radio.Group 
+                  value={currentTheme} 
+                  onChange={(e) => handleThemeChange(e.target.value)}
+                  className="theme-radio-group"
+                >
+                  {themes.map(theme => (
+                    <Radio.Button 
+                      key={theme.key} 
+                      value={theme.key}
+                      className="theme-radio-button"
+                    >
+                      <div className="theme-option">
+                        <div 
+                          className="theme-preview"
+                          style={{
+                            background: theme.gradient,
+                          }}
+                        />
+                        <span className="theme-name">{theme.name}</span>
+                      </div>
+                    </Radio.Button>
+                  ))}
+                </Radio.Group>
+              </div>
+            </div>
+          </div>
+        </div>
       )
     }
   ];

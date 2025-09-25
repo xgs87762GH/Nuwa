@@ -133,6 +133,96 @@ const TaskStepsVisualization = ({ task }) => {
     }
   };
 
+  // Format step result for better display - more generic approach
+  const formatStepResult = (step) => {
+    if (!step.result) return null;
+    
+    const result = step.result;
+    
+    // Try to extract key information from result object
+    if (typeof result === 'object' && result !== null) {
+      const keyFields = [];
+      
+      // Common fields that might be interesting to highlight
+      if (result.status) keyFields.push(`📊 Status: ${result.status}`);
+      if (result.file_path) keyFields.push(`📁 File: ${result.file_path}`);
+      if (result.filename) keyFields.push(`📄 Name: ${result.filename}`);
+      if (result.file_size) {
+        const size = result.file_size;
+        const formatted = size > 1024 * 1024 
+          ? `${(size / 1024 / 1024).toFixed(1)}MB`
+          : `${(size / 1024).toFixed(1)}KB`;
+        keyFields.push(`📦 Size: ${formatted}`);
+      }
+      if (result.duration) keyFields.push(`⏱️ Duration: ${result.duration.toFixed ? result.duration.toFixed(1) : result.duration}s`);
+      if (result.resolution) keyFields.push(`📏 Resolution: ${result.resolution[0]}×${result.resolution[1]}`);
+      
+      // If we found key fields, show them in a nice format, otherwise show JSON
+      if (keyFields.length > 0) {
+        return (
+          <div style={{ lineHeight: '1.5' }}>
+            <div style={{ marginBottom: '8px', fontWeight: 'bold', color: 'var(--text-primary, #fff)' }}>
+              {t('tasks.keyInfo')}:
+            </div>
+            {keyFields.map((field, index) => (
+              <div key={index} style={{ 
+                marginBottom: '4px', 
+                fontSize: '12px',
+                color: 'var(--text-secondary, rgba(255, 255, 255, 0.8))'
+              }}>
+                {field}
+              </div>
+            ))}
+            <details style={{ marginTop: '8px' }}>
+              <summary style={{ 
+                cursor: 'pointer', 
+                fontSize: '11px',
+                color: 'var(--text-tertiary, rgba(255, 255, 255, 0.6))'
+              }}>
+                {t('tasks.showFullResult')}
+              </summary>
+              <pre style={{
+                marginTop: '8px',
+                fontSize: '10px',
+                fontFamily: 'Monaco, Consolas, monospace',
+                whiteSpace: 'pre-wrap',
+                background: 'rgba(0, 0, 0, 0.2)',
+                padding: '8px',
+                borderRadius: '4px',
+                color: 'var(--text-secondary, rgba(255, 255, 255, 0.8))',
+                maxHeight: '150px',
+                overflow: 'auto'
+              }}>
+                {JSON.stringify(result, null, 2)}
+              </pre>
+            </details>
+          </div>
+        );
+      }
+    }
+    
+    // Fallback to JSON display for non-object or unrecognized results
+    return (
+      <pre style={{
+        fontSize: '11px',
+        fontFamily: 'Monaco, Consolas, monospace',
+        whiteSpace: 'pre-wrap',
+        background: 'rgba(0, 0, 0, 0.2)',
+        padding: '8px',
+        borderRadius: '4px',
+        color: 'var(--text-secondary, rgba(255, 255, 255, 0.8))',
+        maxHeight: '150px',
+        overflow: 'auto',
+        margin: 0
+      }}>
+        {typeof result === 'object' 
+          ? JSON.stringify(result, null, 2)
+          : String(result)
+        }
+      </pre>
+    );
+  };
+
   const progress = calculateProgress();
   const currentStep = getCurrentStepIndex();
 
@@ -257,17 +347,59 @@ const TaskStepsVisualization = ({ task }) => {
                 <Card 
                   size="small" 
                   style={{ 
-                    background: 'rgba(255, 255, 255, 0.05)',
-                    border: `1px solid ${TASK_STATUS_COLORS[step.status] === 'processing' ? '#1890ff' : 'rgba(255, 255, 255, 0.1)'}`
+                    background: 'var(--card-bg, rgba(255, 255, 255, 0.03))',
+                    border: `1px solid var(--border-color, rgba(255, 255, 255, 0.1))`,
+                    borderRadius: '8px',
+                    backdropFilter: 'blur(8px)',
+                    ...(step.status === 'running' && {
+                      borderColor: 'var(--primary-color, #1890ff)',
+                      boxShadow: '0 0 8px rgba(24, 144, 255, 0.3)'
+                    }),
+                    ...(step.status === 'success' && {
+                      borderColor: 'var(--success-color, #52c41a)',
+                      boxShadow: '0 0 8px rgba(82, 196, 26, 0.2)'
+                    }),
+                    ...(step.status === 'failed' && {
+                      borderColor: 'var(--error-color, #ff4d4f)',
+                      boxShadow: '0 0 8px rgba(255, 77, 79, 0.2)'
+                    })
                   }}
                 >
                   <Row gutter={[16, 8]}>
                     <Col span={24}>
-                      <Space>
-                        <Text strong>{t('tasks.step')} {index + 1}:</Text>
-                        <Tag color="blue">{step.plugin_name}</Tag>
-                        <Tag>{step.function_name}</Tag>
-                        <Tag color={TASK_STATUS_COLORS[step.status]}>
+                      <Space wrap>
+                        <Text 
+                          strong 
+                          style={{ 
+                            color: 'var(--text-primary, #fff)',
+                            fontSize: '13px' 
+                          }}
+                        >
+                          {t('tasks.step')} {index + 1}:
+                        </Text>
+                        <Tag 
+                          color="blue" 
+                          style={{ 
+                            background: 'rgba(24, 144, 255, 0.15)',
+                            borderColor: 'rgba(24, 144, 255, 0.4)',
+                            color: 'var(--primary-color, #40a9ff)'
+                          }}
+                        >
+                          {step.plugin_name}
+                        </Tag>
+                        <Tag style={{
+                          background: 'rgba(255, 255, 255, 0.1)',
+                          borderColor: 'rgba(255, 255, 255, 0.2)',
+                          color: 'var(--text-secondary, rgba(255, 255, 255, 0.8))'
+                        }}>
+                          {step.function_name}
+                        </Tag>
+                        <Tag 
+                          color={TASK_STATUS_COLORS[step.status]}
+                          style={{
+                            fontWeight: 'bold'
+                          }}
+                        >
                           {t(`tasks.status.${step.status}`)}
                         </Tag>
                       </Space>
@@ -276,10 +408,27 @@ const TaskStepsVisualization = ({ task }) => {
                     {/* Step Parameters */}
                     {step.params && Object.keys(step.params).length > 0 && (
                       <Col span={24}>
-                        <Text strong>{t('tasks.stepParams')}:</Text>
-                        <div style={{ marginTop: 4 }}>
+                        <Text 
+                          strong 
+                          style={{ 
+                            color: 'var(--text-primary, #fff)',
+                            fontSize: '12px' 
+                          }}
+                        >
+                          {t('tasks.stepParams')}:
+                        </Text>
+                        <div style={{ marginTop: 6 }}>
                           {Object.entries(step.params).map(([key, value]) => (
-                            <Tag key={key} style={{ margin: '2px 4px 2px 0' }}>
+                            <Tag 
+                              key={key} 
+                              style={{ 
+                                margin: '2px 4px 4px 0',
+                                background: 'rgba(255, 255, 255, 0.08)',
+                                borderColor: 'rgba(255, 255, 255, 0.15)',
+                                color: 'var(--text-secondary, rgba(255, 255, 255, 0.8))',
+                                fontSize: '11px'
+                              }}
+                            >
                               {key}: {String(value)}
                             </Tag>
                           ))}
@@ -291,18 +440,57 @@ const TaskStepsVisualization = ({ task }) => {
                     <Col span={24}>
                       <Row gutter={16}>
                         <Col span={8}>
-                          <Text type="secondary" style={{ fontSize: '12px' }}>
-                            {t('tasks.startedAt')}: {formatTime(step.started_at)}
+                          <Text 
+                            type="secondary" 
+                            style={{ 
+                              fontSize: '12px',
+                              color: 'var(--text-tertiary, rgba(255, 255, 255, 0.6))',
+                              display: 'block'
+                            }}
+                          >
+                            {t('tasks.startedAt')}: 
+                          </Text>
+                          <Text style={{ 
+                            fontSize: '11px',
+                            color: 'var(--text-secondary, rgba(255, 255, 255, 0.8))'
+                          }}>
+                            {formatTime(step.started_at)}
                           </Text>
                         </Col>
                         <Col span={8}>
-                          <Text type="secondary" style={{ fontSize: '12px' }}>
-                            {t('tasks.finishedAt')}: {formatTime(step.finished_at)}
+                          <Text 
+                            type="secondary" 
+                            style={{ 
+                              fontSize: '12px',
+                              color: 'var(--text-tertiary, rgba(255, 255, 255, 0.6))',
+                              display: 'block'
+                            }}
+                          >
+                            {t('tasks.finishedAt')}:
+                          </Text>
+                          <Text style={{ 
+                            fontSize: '11px',
+                            color: 'var(--text-secondary, rgba(255, 255, 255, 0.8))'
+                          }}>
+                            {formatTime(step.finished_at)}
                           </Text>
                         </Col>
                         <Col span={8}>
-                          <Text type="secondary" style={{ fontSize: '12px' }}>
-                            {t('tasks.duration')}: {formatDuration(step.started_at, step.finished_at)}
+                          <Text 
+                            type="secondary" 
+                            style={{ 
+                              fontSize: '12px',
+                              color: 'var(--text-tertiary, rgba(255, 255, 255, 0.6))',
+                              display: 'block'
+                            }}
+                          >
+                            {t('tasks.duration')}:
+                          </Text>
+                          <Text style={{ 
+                            fontSize: '11px',
+                            color: 'var(--text-secondary, rgba(255, 255, 255, 0.8))'
+                          }}>
+                            {formatDuration(step.started_at, step.finished_at)}
                           </Text>
                         </Col>
                       </Row>
@@ -312,13 +500,28 @@ const TaskStepsVisualization = ({ task }) => {
                     {step.retry_count > 0 && (
                       <Col span={24}>
                         <Alert
-                          message={t('tasks.retryInfo', { 
-                            current: step.retry_count, 
-                            max: step.max_retries 
-                          })}
+                          message={
+                            <Text 
+                              strong
+                              style={{ 
+                                color: 'var(--warning-color, #faad14)',
+                                fontSize: '12px'
+                              }}
+                            >
+                              {t('tasks.retryInfo', { 
+                                current: step.retry_count, 
+                                max: step.max_retries 
+                              })}
+                            </Text>
+                          }
                           type="warning"
                           size="small"
                           showIcon
+                          style={{
+                            background: 'var(--warning-bg, rgba(250, 173, 20, 0.08))',
+                            border: '1px solid var(--warning-border, rgba(250, 173, 20, 0.3))',
+                            borderRadius: '6px'
+                          }}
                         />
                       </Col>
                     )}
@@ -327,11 +530,36 @@ const TaskStepsVisualization = ({ task }) => {
                     {step.error && (
                       <Col span={24}>
                         <Alert
-                          message={t('tasks.stepError')}
-                          description={step.error}
+                          message={
+                            <Text 
+                              strong
+                              style={{ 
+                                color: 'var(--error-color, #ff4d4f)',
+                                fontSize: '12px'
+                              }}
+                            >
+                              {t('tasks.stepError')}
+                            </Text>
+                          }
+                          description={
+                            <div style={{
+                              fontSize: '11px',
+                              fontFamily: 'Monaco, Consolas, monospace',
+                              whiteSpace: 'pre-wrap',
+                              color: 'var(--error-color, #ff4d4f)',
+                              opacity: 0.8
+                            }}>
+                              {step.error}
+                            </div>
+                          }
                           type="error"
                           size="small"
                           showIcon
+                          style={{
+                            background: 'var(--error-bg, rgba(255, 77, 79, 0.08))',
+                            border: '1px solid var(--error-border, rgba(255, 77, 79, 0.3))',
+                            borderRadius: '6px'
+                          }}
                         />
                       </Col>
                     )}
@@ -340,15 +568,34 @@ const TaskStepsVisualization = ({ task }) => {
                     {step.result && (
                       <Col span={24}>
                         <Alert
-                          message={t('tasks.stepResult')}
+                          message={
+                            <Text 
+                              strong
+                              style={{ 
+                                color: 'var(--success-color, #52c41a)',
+                                fontSize: '12px'
+                              }}
+                            >
+                              {t('tasks.stepResult')}
+                            </Text>
+                          }
                           description={
-                            typeof step.result === 'object' 
-                              ? JSON.stringify(step.result, null, 2)
-                              : String(step.result)
+                            <div style={{ 
+                              maxHeight: '200px', 
+                              overflow: 'auto',
+                              paddingRight: '4px'
+                            }}>
+                              {formatStepResult(step)}
+                            </div>
                           }
                           type="success"
                           size="small"
                           showIcon
+                          style={{
+                            background: 'var(--success-bg, rgba(82, 196, 26, 0.08))',
+                            border: '1px solid var(--success-border, rgba(82, 196, 26, 0.3))',
+                            borderRadius: '6px'
+                          }}
                         />
                       </Col>
                     )}

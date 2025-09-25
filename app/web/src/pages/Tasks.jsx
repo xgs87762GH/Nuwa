@@ -40,14 +40,14 @@ import {
   InfoCircleOutlined,
   ApiOutlined
 } from '@ant-design/icons';
-import { getTasksList,deleteTask } from '../api/tasks';
+import { getTasksList,deleteTask,getTaskDetails } from '../api/tasks';
 import {
   TASK_STATUS,
   TASK_STATUS_LABELS,
   TASK_STATUS_COLORS
 } from '../utils/constants';
 import TaskStepsVisualization from '../components/TaskStepsVisualization';
-import './Tasks.css';
+import '../styles/Tasks.css';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -70,6 +70,7 @@ const Tasks = () => {
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [taskDetailVisible, setTaskDetailVisible] = useState(false);
   const [selectedTask, setSelectedTask] = useState(null);
+  const [taskDetailLoading, setTaskDetailLoading] = useState(false);
   const refreshTimerRef = useRef(null);
 
   // Load task list
@@ -194,10 +195,38 @@ const Tasks = () => {
     setAutoRefresh(checked);
   };
 
+  // Load detailed task information
+  const loadTaskDetails = async (taskId) => {
+    setTaskDetailLoading(true);
+    try {
+      const response = await getTaskDetails(taskId);
+      if (response?.success) {
+        return response.data;
+      } else {
+        message.error(response?.message || t('tasks.loadTaskDetailsFailed'));
+        return null;
+      }
+    } catch (error) {
+      console.error('Load task details error:', error);
+      message.error(t('tasks.loadTaskDetailsFailed'));
+      return null;
+    } finally {
+      setTaskDetailLoading(false);
+    }
+  };
+
   // View task details
-  const handleViewTask = (task) => {
+  const handleViewTask = async (task) => {
+    // First set the basic task info and show the drawer
     setSelectedTask(task);
     setTaskDetailVisible(true);
+    
+    // Then load detailed information with API call
+    const detailedTask = await loadTaskDetails(task.task_id);
+    if (detailedTask) {
+      // Update with detailed information
+      setSelectedTask(detailedTask);
+    }
   };
 
   // Calculate statistics
@@ -244,7 +273,7 @@ const Tasks = () => {
             title={t('tasks.totalTasks')}
             value={taskStats.total}
             prefix={<TeamOutlined className="stat-icon total" />}
-            valueStyle={{ color: '#3f8bff', fontSize: '20px', fontWeight: 'bold' }}
+            valueStyle={{ color: 'var(--color-info)', fontSize: '20px', fontWeight: 'bold' }}
           />
         </Card>
       </Col>
@@ -254,7 +283,7 @@ const Tasks = () => {
             title={t('tasks.activeTasks')}
             value={taskStats.running}
             prefix={<FireOutlined className="stat-icon running" />}
-            valueStyle={{ color: '#ff9500', fontSize: '20px', fontWeight: 'bold' }}
+            valueStyle={{ color: 'var(--color-warning)', fontSize: '20px', fontWeight: 'bold' }}
           />
         </Card>
       </Col>
@@ -264,7 +293,7 @@ const Tasks = () => {
             title={t('tasks.completedTasks')}
             value={taskStats.completed}
             prefix={<TrophyOutlined className="stat-icon completed" />}
-            valueStyle={{ color: '#52c41a', fontSize: '20px', fontWeight: 'bold' }}
+            valueStyle={{ color: 'var(--color-success)', fontSize: '20px', fontWeight: 'bold' }}
           />
         </Card>
       </Col>
@@ -274,7 +303,7 @@ const Tasks = () => {
             title={t('tasks.failedTasks')}
             value={taskStats.failed + taskStats.waiting}
             prefix={<BugOutlined className="stat-icon failed" />}
-            valueStyle={{ color: '#ff4d4f', fontSize: '20px', fontWeight: 'bold' }}
+            valueStyle={{ color: 'var(--color-error)', fontSize: '20px', fontWeight: 'bold' }}
           />
         </Card>
       </Col>
@@ -300,16 +329,16 @@ const Tasks = () => {
     switch (status) {
       case 'pending':
       case 'waiting':
-        return <ClockCircleOutlined style={{ color: '#faad14' }} />;
+        return <ClockCircleOutlined style={{ color: 'var(--color-warning)' }} />;
       case 'running':
-        return <SyncOutlined spin style={{ color: '#1890ff' }} />;
+        return <SyncOutlined spin style={{ color: 'var(--color-info)' }} />;
       case 'success':
       case 'completed':
-        return <CheckCircleOutlined style={{ color: '#52c41a' }} />;
+        return <CheckCircleOutlined style={{ color: 'var(--color-success)' }} />;
       case 'failed':
-        return <ExclamationCircleOutlined style={{ color: '#ff4d4f' }} />;
+        return <ExclamationCircleOutlined style={{ color: 'var(--color-error)' }} />;
       default:
-        return <ClockCircleOutlined style={{ color: '#d9d9d9' }} />;
+        return <ClockCircleOutlined style={{ color: 'var(--text-muted)' }} />;
     }
   };
 
@@ -345,10 +374,10 @@ const Tasks = () => {
             style={{ 
               fontSize: '11px', 
               fontFamily: 'Consolas, Monaco, monospace',
-              background: 'rgba(255, 255, 255, 0.1)',
+              background: 'var(--glass-bg)',
               padding: '2px 6px',
               borderRadius: '4px',
-              color: '#40a9ff'
+              color: 'var(--color-info)'
             }}
           >
             {text ? text.substring(0, 8) + '...' : '-'}
@@ -413,7 +442,7 @@ const Tasks = () => {
       width: 150,
       align: 'center',
       render: (text) => (
-        <Text style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.7)' }}>
+        <Text style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
           {formatTime(text)}
         </Text>
       )
@@ -425,7 +454,7 @@ const Tasks = () => {
       width: 150,
       align: 'center',
       render: (text) => (
-        <Text style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.7)' }}>
+        <Text style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
           {formatTime(text)}
         </Text>
       )
@@ -437,7 +466,7 @@ const Tasks = () => {
       width: 150,
       align: 'center',
       render: (text) => (
-        <Text style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.7)' }}>
+        <Text style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
           {formatTime(text)}
         </Text>
       )
@@ -456,11 +485,7 @@ const Tasks = () => {
               size="small"
               icon={<EyeOutlined />}
               onClick={() => handleViewTask(record)}
-              style={{
-                color: '#40a9ff',
-                background: 'rgba(64, 169, 255, 0.1)',
-                border: 'none'
-              }}
+              className="action-btn view-btn"
             />
           </Tooltip>
           {record.status === 'pending' && (
@@ -469,10 +494,7 @@ const Tasks = () => {
                 type="text"
                 size="small"
                 icon={<PlayCircleOutlined />}
-                style={{ 
-                  color: '#52c41a',
-                  background: 'rgba(82, 196, 26, 0.1)'
-                }}
+                className="action-btn start-btn"
               />
             </Tooltip>
           )}
@@ -482,10 +504,7 @@ const Tasks = () => {
                 type="text"
                 size="small"
                 icon={<PauseCircleOutlined />}
-                style={{ 
-                  color: '#faad14',
-                  background: 'rgba(250, 173, 20, 0.1)'
-                }}
+                className="action-btn pause-btn"
               />
             </Tooltip>
           )}
@@ -495,10 +514,7 @@ const Tasks = () => {
               size="small"
               icon={<DeleteOutlined />}
               onClick={() => handleConfirmDelete(record)}
-              style={{
-                color: '#ff4d4f',
-                background: 'rgba(255, 77, 79, 0.1)'
-              }}
+              className="action-btn delete-btn"
             />
           </Tooltip>
         </Space>
@@ -629,7 +645,7 @@ const Tasks = () => {
                 <Empty
                   image={Empty.PRESENTED_IMAGE_SIMPLE}
                   description={
-                    <span style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
+                    <span style={{ color: 'var(--text-muted)' }}>
                       {t('tasks.noTasksData')}
                     </span>
                   }
@@ -658,12 +674,23 @@ const Tasks = () => {
                 {t(TASK_STATUS_LABELS[selectedTask.status])}
               </Tag>
             )}
+            {taskDetailLoading && (
+              <SyncOutlined spin style={{ marginLeft: 8, color: 'var(--color-info)' }} />
+            )}
           </Space>
         }
         open={taskDetailVisible}
-        onClose={() => setTaskDetailVisible(false)}
+        onClose={() => {
+          setTaskDetailVisible(false);
+          setSelectedTask(null);
+          setTaskDetailLoading(false);
+        }}
         width={800}
         bodyStyle={{ padding: 0 }}
+        className="nuwa-drawer"
+        headerStyle={{ 
+          borderBottom: '1px solid var(--border-color, rgba(255, 255, 255, 0.1))'
+        }}
       >
         {selectedTask && (
           <Tabs defaultActiveKey="overview" style={{ height: '100%' }}>
@@ -688,8 +715,8 @@ const Tasks = () => {
                           copyable={{ text: selectedTask.task_id }}
                           style={{ 
                             fontSize: '12px',
-                            background: 'rgba(64, 169, 255, 0.1)',
-                            color: '#40a9ff',
+                            background: 'var(--glass-bg)',
+                            color: 'var(--color-info)',
                             padding: '2px 6px',
                             borderRadius: '4px'
                           }}
@@ -720,9 +747,9 @@ const Tasks = () => {
                       <div style={{ 
                         margin: '8px 0',
                         padding: '8px 12px',
-                        background: 'rgba(255, 255, 255, 0.05)',
+                        background: 'var(--glass-bg)',
                         borderRadius: '6px',
-                        border: '1px solid rgba(255, 255, 255, 0.1)'
+                        border: '1px solid var(--glass-border)'
                       }}>
                         {selectedTask.description}
                       </div>
@@ -730,21 +757,21 @@ const Tasks = () => {
                     <Col span={8}>
                       <Text strong>{t('tasks.createdAt')}:</Text>
                       <br />
-                      <Text style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.7)' }}>
+                      <Text style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
                         {formatTime(selectedTask.created_at)}
                       </Text>
                     </Col>
                     <Col span={8}>
                       <Text strong>{t('tasks.startedAt')}:</Text>
                       <br />
-                      <Text style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.7)' }}>
+                      <Text style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
                         {formatTime(selectedTask.started_at)}
                       </Text>
                     </Col>
                     <Col span={8}>
                       <Text strong>{t('tasks.finishedAt')}:</Text>
                       <br />
-                      <Text style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.7)' }}>
+                      <Text style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
                         {formatTime(selectedTask.finished_at)}
                       </Text>
                     </Col>
@@ -765,7 +792,9 @@ const Tasks = () => {
                           borderRadius: '6px',
                           fontFamily: 'Monaco, Consolas, monospace',
                           fontSize: '12px',
-                          whiteSpace: 'pre-wrap'
+                          whiteSpace: 'pre-wrap',
+                          maxHeight: '300px',
+                          overflow: 'auto'
                         }}>
                           {typeof selectedTask.result === 'object' 
                             ? JSON.stringify(selectedTask.result, null, 2)
@@ -834,7 +863,7 @@ const Tasks = () => {
                       border: 'none',
                       margin: 0,
                       whiteSpace: 'pre-wrap',
-                      color: 'rgba(255, 255, 255, 0.8)'
+                      color: 'var(--text-secondary)'
                     }}>
                       {JSON.stringify(selectedTask.extra, null, 2)}
                     </pre>

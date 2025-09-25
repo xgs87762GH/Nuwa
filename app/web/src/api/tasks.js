@@ -21,6 +21,17 @@ export const getTasksList = async (params = {}) => {
   }
 };
 
+// Get task details by ID
+export const getTaskDetails = async (taskId) => {
+  try {
+    const response = await api.get(`/v1/tasks/${taskId}`);
+    return response;
+  } catch (error) {
+    console.error('Get task details error:', error);
+    throw error;
+  }
+};
+
 // Delete task
 export const deleteTask = async (taskId) => {
   try {
