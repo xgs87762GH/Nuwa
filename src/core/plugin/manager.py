@@ -84,41 +84,62 @@ class PluginManager:
             return False
 
     # ===== New: Result-wrapped variants (non-breaking) =====
-    async def call(self, plugin_id: str, method_name: str, **kwargs) -> Result:
+    async def call(self, plugin: PluginRegistration, method_name: str, **kwargs) -> Result:
         """Call a plugin by id and wrap the outcome into Result. Does not modify original call()."""
         try:
-            plugin: PluginRegistration = await self.get_plugin_by_id(plugin_id)
-            if not plugin:
-                err = Exception(f"Plugin '{plugin_id}' not found")
-                LOGGER.warning(str(err))
-                return Result.fail(err)
-
             services: List[PluginServiceDefinition] = plugin.plugin_services
             for service in services:
                 functions = service.functions() if callable(service.functions) else service.functions
                 for fun in functions:
                     if method_name == (fun.get('name') if isinstance(fun, dict) else getattr(fun, 'name', None)):
-                        try:
-                            # Whether await is needed depends on whether the method itself is a coroutine function or not
-                            instance = service.instance()
+                        # Whether await is needed depends on whether the method itself is a coroutine function or not
+                        instance = service.instance()
+                        if iscoroutinefunction(getattr(instance, method_name)):
+                            result = await getattr(instance, method_name)(**kwargs)
+                        else:
+                            result = getattr(instance, method_name)(**kwargs)
+                        return Result.ok(result)
 
-                            if iscoroutinefunction(getattr(instance, method_name)):
-                                result = await getattr(instance, method_name)(**kwargs)
-                            else:
-                                result = getattr(instance, method_name)(**kwargs)
-                            return Result.ok(result)
-                        except Exception as method_error:
-                            LOGGER.error(f"Error calling method {method_name}: {str(method_error)}")
-                            return Result.fail(method_error)
-
-            # 未找到方法
-            err = Exception(f"Method '{method_name}' not found in plugin '{plugin_id}'")
-            LOGGER.warning(str(err))
-            return Result.fail(err)
-
+            raise Exception(f"Method '{method_name}' not found in plugin '{plugin.id}'")
         except Exception as e:
-            LOGGER.error(f"Error calling plugin {plugin_id} method {method_name}: {str(e)}")
-            return Result.fail(e)
+            LOGGER.error(f"Error calling plugin {plugin.id} method {method_name}: {str(e)}")
+            raise e
+
+    # async def call(self, plugin_id: str, method_name: str, **kwargs) -> Result:
+    #     """Call a plugin by id and wrap the outcome into Result. Does not modify original call()."""
+    #     try:
+    #         plugin: PluginRegistration = await self.get_plugin_by_id(plugin_id)
+    #         if not plugin:
+    #             err = Exception(f"Plugin '{plugin_id}' not found")
+    #             LOGGER.warning(str(err))
+    #             return Result.fail(err)
+    #
+    #         services: List[PluginServiceDefinition] = plugin.plugin_services
+    #         for service in services:
+    #             functions = service.functions() if callable(service.functions) else service.functions
+    #             for fun in functions:
+    #                 if method_name == (fun.get('name') if isinstance(fun, dict) else getattr(fun, 'name', None)):
+    #                     try:
+    #                         # Whether await is needed depends on whether the method itself is a coroutine function or not
+    #                         instance = service.instance()
+    #
+    #                         if iscoroutinefunction(getattr(instance, method_name)):
+    #                             result = await getattr(instance, method_name)(**kwargs)
+    #                         else:
+    #                             result = getattr(instance, method_name)(**kwargs)
+    #                         return Result.ok(result)
+    #                     except Exception as method_error:
+    #                         LOGGER.error(f"Error calling method {method_name}: {str(method_error)}")
+    #                         return Result.fail(method_error)
+    #
+    #         # 未找到方法
+    #         err = Exception(f"Method '{method_name}' not found in plugin '{plugin_id}'")
+    #         LOGGER.warning(str(err))
+    #         return Result.fail(err)
+    #
+    #     except Exception as e:
+    #         LOGGER.error(f"Error calling plugin {plugin_id} method {method_name}: {str(e)}")
+    #         raise e
 
     async def get_plugin_info(self, plugin_id: str) -> Optional[Dict]:
         """Get plugin information"""

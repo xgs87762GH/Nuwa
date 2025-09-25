@@ -1,13 +1,11 @@
 from datetime import datetime
+from typing import List, Optional, Any, Dict, Literal
 
 from pydantic import Field, BaseModel
-from typing import List, Optional, Any, Dict
 
 from src.core.tasks.model.models import TaskStatus
-from src.core.utils.Result import Result
 
 
-# 用于 API 响应的纯 Pydantic 模型
 class TaskStepResponse(BaseModel):
     step_id: str
     plugin_id: str
@@ -17,7 +15,6 @@ class TaskStepResponse(BaseModel):
     status: TaskStatus
     result: Optional[Any] = None
     error: Optional[str] = None
-    # 详情视图中常用的字段（向后兼容，作为可选项提供）
     started_at: Optional[datetime] = None
     finished_at: Optional[datetime] = None
     retry_count: int = 0
@@ -26,7 +23,7 @@ class TaskStepResponse(BaseModel):
     class Config:
         orm_mode = True
 
-# 新增：步骤执行结果响应模型
+
 class StepExecutionResult(BaseModel):
     step_id: Optional[str] = None
     plugin_id: str
@@ -43,6 +40,7 @@ class StepExecutionResult(BaseModel):
     class Config:
         orm_mode = True
 
+
 class TaskResponse(BaseModel):
     task_id: str
     user_id: str
@@ -57,7 +55,7 @@ class TaskResponse(BaseModel):
     class Config:
         orm_mode = True
 
-# 任务详情响应模型
+
 class TaskDetailResponse(TaskResponse):
     scheduled_at: Optional[datetime] = None
     execution_plan: Optional[Any] = None
@@ -66,17 +64,32 @@ class TaskDetailResponse(TaskResponse):
     priority: int = 0
     timeout: Optional[int] = None
 
-# 分页响应模型
+
 class PaginatedTaskResponse(BaseModel):
     total: int
     page: int
     size: int
     items: List[TaskResponse]
 
-# 查询参数模型
+
+class SortField(BaseModel):
+    """Single sorting field"""
+    field: Literal[
+        "created_at", "updated_at", "priority", "task_id", "description"
+    ] = Field(..., description="Column name for sorting")
+    order: Literal["asc", "desc"] = Field("desc", description="asc or desc")
+
+
 class TaskQuery(BaseModel):
-    page: int = Field(1, ge=1, description="页码")
-    size: int = Field(10, ge=1, le=100, description="每页数量")
-    task_id: Optional[str] = Field(None, description="任务ID")
-    description: Optional[str] = Field(None, description="任务描述（模糊查询）")
-    status: Optional[TaskStatus] = Field(None, description="任务状态")
+    page: int = Field(1, ge=1, description="Page number")
+    size: int = Field(10, ge=1, le=100, description="Page size")
+    task_id: Optional[str] = Field(None, description="Task ID")
+    description: Optional[str] = Field(None, description="Task description (fuzzy search)")
+    status: Optional[TaskStatus] = Field(None, description="Task status")
+    sorts: List[SortField] = Field(
+        default_factory=lambda: [
+            SortField(field="created_at", order="desc"),
+            SortField(field="priority", order="desc"),
+        ],
+        description="Custom sorting, multi-field supported",
+    )

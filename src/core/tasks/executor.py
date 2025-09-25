@@ -38,7 +38,7 @@ class TaskExecutor:
                     plugin_id = plugin.id if plugin else plugin_id
 
                 # 通过 PluginManager 的统一入口调用，避免直接访问注册对象
-                result: Result = await self.plugin_manager.call(plugin_id, function_name, **params)
+                result: Result = await self.plugin_manager.call(plugin, function_name, **params)
 
                 duration_ms = int((TimeUtils.get_current_time().timestamp() - start_time.timestamp()) * 1000)
                 step_result = StepExecutionResult(

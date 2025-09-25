@@ -576,6 +576,7 @@ const Tasks = () => {
                   value={filters.task_id}
                   onChange={(e) => handleFiltersChange({ ...filters, task_id: e.target.value })}
                   prefix={<SearchOutlined />}
+                  className="nuwa-input"
                 />
               </Space>
             </Col>
@@ -589,6 +590,7 @@ const Tasks = () => {
                   value={filters.description}
                   onChange={(e) => handleFiltersChange({ ...filters, description: e.target.value })}
                   prefix={<SearchOutlined />}
+                  className="nuwa-input"
                 />
               </Space>
             </Col>

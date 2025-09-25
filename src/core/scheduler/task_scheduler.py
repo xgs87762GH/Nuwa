@@ -8,7 +8,7 @@ from src.core.di import container
 from src.core.plugin import PluginManager
 from src.core.tasks import TaskService, TaskExecutor, TaskStepService
 from src.core.tasks.model.models import TaskStatus
-from src.core.tasks.model.response import TaskQuery, TaskResponse, PaginatedTaskResponse, StepExecutionResult
+from src.core.tasks.model.response import TaskQuery, TaskResponse, PaginatedTaskResponse, StepExecutionResult, SortField
 from src.core.utils.time_utils import TimeUtils
 
 LOGGER = get_logger(__name__)
@@ -25,7 +25,11 @@ class TaskIterator(BaseIterator):
         query_param = TaskQuery(
             status=TaskStatus.PENDING,
             page=self.page,
-            size=self.size
+            size=self.size,
+            sorts=[
+                SortField(field="priority", order="desc"),
+                SortField(field="created_at", order="asc")
+            ]
         )
         tasks: PaginatedTaskResponse = await self.task_service.query_tasks(query_param)
         return tasks.items if tasks else []

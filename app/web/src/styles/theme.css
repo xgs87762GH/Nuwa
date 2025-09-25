@@ -246,23 +246,30 @@ body {
   color: white;
 }
 
-/* 输入框样式 */
-.nuwa-input {
+/* 输入框样式 - 增强优先级 */
+.nuwa-input,
+.nuwa-input.ant-input,
+.nuwa-input.ant-select-selector {
   background: var(--glass-bg) !important;
   border: 1px solid var(--glass-border) !important;
   color: var(--text-primary) !important;
   border-radius: var(--radius-medium) !important;
 }
 
-.nuwa-input::placeholder {
+.nuwa-input::placeholder,
+.nuwa-input.ant-input::placeholder {
   color: var(--text-muted) !important;
 }
 
 .nuwa-input:focus,
-.nuwa-input:hover {
+.nuwa-input:hover,
+.nuwa-input.ant-input:focus,
+.nuwa-input.ant-input:hover,
+.nuwa-input.ant-select-focused .ant-select-selector,
+.nuwa-input .ant-select-selector:hover {
   background: var(--glass-bg-hover) !important;
-  border-color: var(--glass-border) !important;
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1) !important;
+  border-color: var(--primary-color) !important;
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2) !important;
 }
 
 /* 动画效果 */
