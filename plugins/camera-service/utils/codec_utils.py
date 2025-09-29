@@ -4,7 +4,7 @@ import logging
 import cv2
 from typing import List, Tuple, Optional, Dict, Any
 from pathlib import Path
-from core import getCodecs
+from core import getCodecs, CameraServiceError
 
 logger = logging.getLogger(__name__)
 
@@ -87,8 +87,6 @@ class VideoCodecManager:
         Raises:
             CameraServiceError: If no working codec found
         """
-        from core.exceptions import CameraServiceError
-
         # 确定编码器优先级
         codec_priority = self._get_codec_priority(preferred_codec)
 

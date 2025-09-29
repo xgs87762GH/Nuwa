@@ -108,6 +108,7 @@ const zhLocale = {
     createTaskSuccess: '任务创建成功',
     createTaskFailed: '创建任务失败',
     loadTasksFailed: '加载任务列表失败',
+    loadTaskDetailsFailed: '加载任务详情失败',
     selectStatus: '选择状态',
     status: {
       title: '状态',
@@ -177,6 +178,16 @@ const zhLocale = {
     duration: '耗时',
     retryInfo: '重试次数: {current}/{max}',
     overallConfidence: '整体置信度',
+    resultPhoto: '拍照结果',
+    resultVideo: '录像结果',
+    filePath: '文件路径',
+    resolution: '分辨率',
+    fileSize: '文件大小',
+    quality: '质量',
+    videoDuration: '视频时长',
+    totalFrames: '总帧数',
+    keyInfo: '关键信息',
+    showFullResult: '显示完整结果',
     validation: {
       taskDescriptionRequired: '请输入任务描述',
       taskDescriptionMinLength: '任务描述至少5个字符'

@@ -15,26 +15,6 @@ class CameraPlugin:
                 "required": False
             }
         }
-
-    # @classmethod
-    # def METADATA(self):
-    #     return {
-    #         "name": "Camera Plugin",
-    #         "description": "Plugin for camera operations and configurations",
-    #         "version": "1.0.0",
-    #         "author": "Gordon",
-    #         "email": "Gordon@gmail.com",
-    #         "license": "MIT",
-    #         "link": [{
-    #             "name": "GitHub",
-    #             "url": ""
-    #         }],
-    #         "tags": ["camera", "recording", "photo", "video"],
-    #         "created_at": "2025-08-22 00:00:00",
-    #         "updated_at": "2025-08-22 00:00:00",
-    #         "category": "camera"
-    #     }
-
     @classmethod
     def FUNCTIONS(cls):
         json_path = os.path.join(os.path.dirname(__file__), "tools/function_schema.json")

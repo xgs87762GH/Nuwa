@@ -108,6 +108,7 @@ const enLocale = {
     createTaskSuccess: 'Task created successfully',
     createTaskFailed: 'Failed to create task',
     loadTasksFailed: 'Failed to load task list',
+    loadTaskDetailsFailed: 'Failed to load task details',
     selectStatus: 'Select Status',
     status: {
       title: 'Status',
@@ -177,6 +178,16 @@ const enLocale = {
     duration: 'Duration',
     retryInfo: 'Retry: {current}/{max}',
     overallConfidence: 'Overall Confidence',
+    resultPhoto: 'Photo Result',
+    resultVideo: 'Video Result',
+    filePath: 'File Path',
+    resolution: 'Resolution',
+    fileSize: 'File Size',
+    quality: 'Quality',
+    videoDuration: 'Video Duration',
+    totalFrames: 'Total Frames',
+    keyInfo: 'Key Information',
+    showFullResult: 'Show Full Result',
     validation: {
       taskDescriptionRequired: 'Please enter task description',
       taskDescriptionMinLength: 'Task description must be at least 5 characters'
