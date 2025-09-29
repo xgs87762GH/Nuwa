@@ -27,6 +27,28 @@ const AppContent = () => {
   const { t, currentLanguage } = useLanguage();
   const [settingsVisible, setSettingsVisible] = React.useState(false);
 
+  // 初始化主题
+  React.useEffect(() => {
+    const initializeTheme = () => {
+      const savedTheme = localStorage.getItem('nuwa-theme') || 'default';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+      
+      // 为了兼容性，设置对应的 CSS 变量
+      const themeGradients = {
+        'default': 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        'ocean': 'linear-gradient(135deg, #2196F3 0%, #00BCD4 100%)',
+        'sunset': 'linear-gradient(135deg, #FF5722 0%, #FF9800 100%)',
+        'forest': 'linear-gradient(135deg, #4CAF50 0%, #8BC34A 100%)',
+        'purple': 'linear-gradient(135deg, #9C27B0 0%, #E91E63 100%)'
+      };
+      
+      const gradient = themeGradients[savedTheme] || themeGradients['default'];
+      document.documentElement.style.setProperty('--primary-gradient', gradient);
+    };
+    
+    initializeTheme();
+  }, []);
+
   // Show settings modal
   const showSettings = () => {
     setSettingsVisible(true);

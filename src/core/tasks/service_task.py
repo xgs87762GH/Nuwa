@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import Dict, Any, Optional
 
-from sqlalchemy import select, func, delete
+from sqlalchemy import select, func, delete, desc, asc
 from sqlalchemy.orm import selectinload
 
 from src.core.config import DataBaseManager, get_logger
@@ -77,14 +77,11 @@ class TaskService:
             }
 
     async def query_tasks(self, query: TaskQuery) -> PaginatedTaskResponse:
-        """
-        Paginated query for tasks based on criteria.
-        """
         async with self.db.get_session() as session:
-            # 基础查询，并预加载 steps 关系以避免 N+1 问题
+            # 1. Base statement
             stmt = select(Task).options(selectinload(Task.steps))
 
-            # 根据查询参数动态添加过滤条件
+            # 2. Dynamic filters
             if query.task_id:
                 stmt = stmt.where(Task.task_id == query.task_id)
             if query.description:
@@ -92,28 +89,27 @@ class TaskService:
             if query.status:
                 stmt = stmt.where(Task.status == query.status)
 
-            # 获取总数
+            # 3. Dynamic ordering
+            order_columns = []
+            for sf in query.sorts:
+                col = getattr(Task, sf.field)  # Get column
+                order_columns.append(
+                    desc(col) if sf.order == "desc" else asc(col)
+                )
+            stmt = stmt.order_by(*order_columns)
+
+            # 4. Total count
             count_stmt = select(func.count()).select_from(stmt.subquery())
             total = (await session.execute(count_stmt)).scalar_one()
 
-            # 添加排序、分页
-            stmt = stmt.order_by(Task.created_at.desc()) \
-                .offset((query.page - 1) * query.size) \
-                .limit(query.size)
+            # 5. Pagination
+            stmt = stmt.offset((query.page - 1) * query.size).limit(query.size)
+            tasks = (await session.execute(stmt)).scalars().all()
 
-            # 执行查询
-            result = await session.execute(stmt)
-            tasks = result.scalars().all()
-
-            # 将 SQLAlchemy 模型转换为 Pydantic 模型
-            task_responses = [TaskResponse.model_validate(task, from_attributes=True) for task in tasks]
-
-            # 封装并返回 Pydantic 模型
+            # 6. Serialize and return
+            items = [TaskResponse.model_validate(t, from_attributes=True) for t in tasks]
             return PaginatedTaskResponse(
-                total=total,
-                page=query.page,
-                size=query.size,
-                items=task_responses
+                total=total, page=query.page, size=query.size, items=items
             )
 
     async def get_task_detail(self, task_id: str) -> Optional[TaskDetailResponse]:
