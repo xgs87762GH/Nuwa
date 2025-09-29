@@ -6,7 +6,7 @@ from src.core.ai.providers.base import BaseIterator
 from src.core.config import get_logger
 from src.core.di import container
 from src.core.plugin import PluginManager
-from src.core.tasks import TaskService, TaskExecutor, TaskStepService
+from src.core.tasks import TaskHandler, TaskExecutor, StepHandler
 from src.core.tasks.model.models import TaskStatus
 from src.core.tasks.model.response import TaskQuery, TaskResponse, PaginatedTaskResponse, StepExecutionResult, SortField
 from src.core.utils.time_utils import TimeUtils
@@ -18,7 +18,7 @@ class TaskIterator(BaseIterator):
 
     def __init__(self):
         super().__init__()
-        self.task_service = container.get(TaskService)
+        self.task_service = container.get(TaskHandler)
 
     async def query(self) -> List[TaskResponse]:
         """Query the task list"""
@@ -38,8 +38,8 @@ class TaskIterator(BaseIterator):
 class TaskScheduler:
     def __init__(self):
         self.plugin_manager = container.get(PluginManager)
-        self.task_service = container.get(TaskService)
-        self.step_service = container.get(TaskStepService)
+        self.task_service = container.get(TaskHandler)
+        self.step_service = container.get(StepHandler)
 
     async def execute(self):
         iterator = TaskIterator()

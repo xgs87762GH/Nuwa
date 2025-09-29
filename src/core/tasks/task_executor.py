@@ -6,7 +6,7 @@ from src.core.config import get_logger
 from src.core.plugin import PluginManager
 from src.core.plugin.model import PluginRegistration
 from src.core.tasks.model.response import TaskStepResponse, TaskResponse, StepExecutionResult
-from src.core.utils.Result import Result
+from src.core.utils.result import Result
 from src.core.utils.time_utils import TimeUtils
 
 LOGGER = get_logger(__name__)

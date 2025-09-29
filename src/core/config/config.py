@@ -10,7 +10,7 @@ try:
 except ImportError:
     import tomli as tomllib
 
-from src.core.utils.global_tools import project_root
+from src.core.utils.common_utils import project_root
 
 # from src.core.config import get_logger
 

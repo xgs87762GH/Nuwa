@@ -1,9 +1,9 @@
 # API Models Package
 
-from .responses import APIResponse, AIProvidersResponse, SystemInfo, HealthStatus, MCPToolsResponse, MCPStatsResponse, \
+from .response_models import APIResponse, AIProvidersResponse, SystemInfo, HealthStatus, MCPToolsResponse, MCPStatsResponse, \
     MCPTool, TaskResult
 
-from .system_resp import SystemInfoResponse, CPUInfoResponse, DiskInfoResponse, MemoryInfoResponse, NetworkInfoResponse, \
+from .system_responses import SystemInfoResponse, CPUInfoResponse, DiskInfoResponse, MemoryInfoResponse, NetworkInfoResponse, \
     ProcessInfoResponse, DiskInfoListResponse, NetworkInfoListResponse, ProcessInfoListResponse, SystemHealthResponse
 
 # Type aliases for specific API responses

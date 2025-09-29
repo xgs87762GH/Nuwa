@@ -10,7 +10,7 @@ from pydantic import BaseModel, Field, field_validator
 
 from src.core.config import get_logger
 from src.core.plugin.model import PluginMetadata, BuildSystem, Project, Author, License, ProjectUrls, \
-    PluginDiscoveryResult, PluginRegistration, PluginServiceDefinition
+    PluginDiscoveryResult, PluginRegistration, PluginInfoProviderDefinition
 from src.core.utils.plugin_loader import ProjectMetadataReader
 from src.core.plugin import PluginValidator
 
@@ -53,14 +53,14 @@ class PluginLoader:
             entry_file: Path = plugin.entry_file
             metadata = self._load_plugin_metadata(plugin.path)
 
-            services: List[PluginServiceDefinition] = []
+            services: List[PluginInfoProviderDefinition] = []
             for service_class in plugin.plugin_classes:
                 config: Dict[str, Any] = self._load_config(service_class)
                 functions = self._load_functions(service_class)
                 instance = self._load_instance(service_class)
 
                 if functions and instance:
-                    plugin_service = PluginServiceDefinition()
+                    plugin_service = PluginInfoProviderDefinition()
                     plugin_service.instance = instance
                     plugin_service.functions = functions
                     plugin_service.config = config

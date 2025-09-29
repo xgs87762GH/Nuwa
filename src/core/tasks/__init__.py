@@ -1,6 +1,6 @@
 # Task Execution Engine Package
-from src.core.tasks.executor import TaskExecutor
-from src.core.tasks.service_task import TaskService
-from src.core.tasks.service_step import TaskStepService
+from src.core.tasks.task_executor import TaskExecutor
+from src.core.tasks.task_handler import TaskHandler
+from src.core.tasks.step_handler import StepHandler
 
-__all__ = ["TaskExecutor", "TaskService", "TaskStepService"]
+__all__ = ["TaskExecutor", "TaskHandler", "StepHandler"]

@@ -20,7 +20,7 @@ from src.api.models import (
     DiskInfoListResponse, NetworkInfoListResponse, ProcessInfoListResponse,
     APIResponse
 )
-from src.api.models.system_resp import SystemHealthMetrics
+from src.api.models.system_responses import SystemHealthMetrics
 from src.core.config import AppConfig
 from src.core.config.logger import get_logger
 

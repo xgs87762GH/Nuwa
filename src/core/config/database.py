@@ -10,7 +10,7 @@ import logging
 from src.core.config.config import ConfigManager
 from src.core.config.models import DbBase
 from src.core.config.models import DatabaseConfig
-from src.core.utils.global_tools import project_root
+from src.core.utils.common_utils import project_root
 
 
 class DataBaseManager:

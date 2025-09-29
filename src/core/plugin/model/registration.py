@@ -6,7 +6,7 @@ import uuid
 from dataclasses import dataclass, field
 from typing import List, Optional
 
-from .service import PluginServiceDefinition
+from .service import PluginInfoProviderDefinition
 
 
 @dataclass
@@ -64,7 +64,7 @@ class PluginRegistration:
     """Complete plugin registration information"""
     path: str  # Plugin directory absolute path
     entry_file: str  # Plugin main entry file (e.g., __init__.py or main.py)
-    plugin_services: List[PluginServiceDefinition]  # Plugin service definitions
+    plugin_services: List[PluginInfoProviderDefinition]  # Plugin service definitions
     id: str = field(default_factory=lambda: str(uuid.uuid4()))  # Plugin unique identifier (UUID)
     metadata: PluginMetadata = field(default_factory=PluginMetadata)  # Plugin metadata
     load_status: Optional[str] = "pending"  # Load status (pending/loaded/failed)

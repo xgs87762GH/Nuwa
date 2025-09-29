@@ -3,11 +3,11 @@ from typing import Optional
 from src.core.ai import AIManager
 from src.core.config import create_database_manager, DataBaseManager
 from src.core.di.container import container
-from src.core.orchestration import IntelligentPluginRouter, PluginService, Planner
+from src.core.orchestration import IntelligentRouter, TaskPlanner
 from src.core.plugin import PluginManager
 from src.core.scheduler import SchedulerRegister
-from src.core.tasks import TaskStepService, TaskService
-from src.core.utils.global_tools import project_root
+from src.core.tasks import StepHandler, TaskHandler
+from src.core.utils.common_utils import project_root
 from src.core.utils.template import EnhancedPromptTemplates
 
 
@@ -51,29 +51,25 @@ class ServiceBootstrap:
 
     async def _register_services(self):
         """注册业务服务"""
-        # 创建并注册 PluginService 单例
-        plugin_service = PluginService(self._plugin_manager)
-        container.register_singleton(PluginService, plugin_service)
-
         # 计划生成服务 - 使用已注册的 AIService 单例
         self.prompt_templates = EnhancedPromptTemplates(str(project_root() / "templates" / "prompts"))
 
         # 智能插件路由器 - 使用已注册的服务单例
-        router = IntelligentPluginRouter(
-            plugin_service=plugin_service,
+        router = IntelligentRouter(
+            plugin_manager=self._plugin_manager,
             ai_manager=self._ai_manager,
-            planner=Planner(ai_manager=self._ai_manager, prompt_templates=self.prompt_templates)
+            TaskPlanner=TaskPlanner(ai_manager=self._ai_manager, prompt_templates=self.prompt_templates)
         )
-        container.register_singleton(IntelligentPluginRouter, router)
+        container.register_singleton(IntelligentRouter, router)
 
         # 任务服务 - 使用工厂注册，支持依赖注入
-        container.register_factory(TaskStepService, lambda: TaskStepService(
+        container.register_factory(StepHandler, lambda: StepHandler(
             db=container.get(DataBaseManager)
         ))
 
-        container.register_factory(TaskService, lambda: TaskService(
+        container.register_factory(TaskHandler, lambda: TaskHandler(
             db=container.get(DataBaseManager),
-            step_service=container.get(TaskStepService)
+            step_service=container.get(StepHandler)
         ))
 
         self.scheduler_register = SchedulerRegister()

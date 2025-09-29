@@ -7,7 +7,7 @@ from src.core.ai.providers.response import SelectionResponse
 from src.core.config import get_logger
 from src.core.config.models import AIConfig
 from src.core.utils import JsonValidator
-from src.core.utils.global_tools import project_root
+from src.core.utils.common_utils import project_root
 from src.core.utils.template import EnhancedPromptTemplates, PromptResponse
 
 LOGGER = get_logger(__name__)

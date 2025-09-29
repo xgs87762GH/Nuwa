@@ -11,7 +11,7 @@ from src.core.tasks.model.models import TaskStep, TaskStatus
 logger = get_logger(__name__)
 
 
-class TaskStepService:
+class StepHandler:
     def __init__(self, db: DataBaseManager):
         self.db = db
 

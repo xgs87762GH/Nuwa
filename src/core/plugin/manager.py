@@ -9,8 +9,8 @@ from typing import Dict, List, Optional
 
 from src.core.config import get_plugin_config, PluginConfig, get_logger
 from src.core.plugin import PluginDiscovery, PluginLoader, PluginRegistry
-from src.core.plugin.model import PluginRegistration, PluginServiceDefinition
-from src.core.utils.Result import Result
+from src.core.plugin.model import PluginRegistration, PluginInfoProviderDefinition
+from src.core.utils.result import Result
 
 LOGGER = get_logger("PluginManager")
 
@@ -87,7 +87,7 @@ class PluginManager:
     async def call(self, plugin: PluginRegistration, method_name: str, **kwargs) -> Result:
         """Call a plugin by id and wrap the outcome into Result. Does not modify original call()."""
         try:
-            services: List[PluginServiceDefinition] = plugin.plugin_services
+            services: List[PluginInfoProviderDefinition] = plugin.plugin_services
             for service in services:
                 functions = service.functions() if callable(service.functions) else service.functions
                 for fun in functions:
@@ -105,58 +105,10 @@ class PluginManager:
             LOGGER.error(f"Error calling plugin {plugin.id} method {method_name}: {str(e)}")
             raise e
 
-    # async def call(self, plugin_id: str, method_name: str, **kwargs) -> Result:
-    #     """Call a plugin by id and wrap the outcome into Result. Does not modify original call()."""
-    #     try:
-    #         plugin: PluginRegistration = await self.get_plugin_by_id(plugin_id)
-    #         if not plugin:
-    #             err = Exception(f"Plugin '{plugin_id}' not found")
-    #             LOGGER.warning(str(err))
-    #             return Result.fail(err)
-    #
-    #         services: List[PluginServiceDefinition] = plugin.plugin_services
-    #         for service in services:
-    #             functions = service.functions() if callable(service.functions) else service.functions
-    #             for fun in functions:
-    #                 if method_name == (fun.get('name') if isinstance(fun, dict) else getattr(fun, 'name', None)):
-    #                     try:
-    #                         # Whether await is needed depends on whether the method itself is a coroutine function or not
-    #                         instance = service.instance()
-    #
-    #                         if iscoroutinefunction(getattr(instance, method_name)):
-    #                             result = await getattr(instance, method_name)(**kwargs)
-    #                         else:
-    #                             result = getattr(instance, method_name)(**kwargs)
-    #                         return Result.ok(result)
-    #                     except Exception as method_error:
-    #                         LOGGER.error(f"Error calling method {method_name}: {str(method_error)}")
-    #                         return Result.fail(method_error)
-    #
-    #         # 未找到方法
-    #         err = Exception(f"Method '{method_name}' not found in plugin '{plugin_id}'")
-    #         LOGGER.warning(str(err))
-    #         return Result.fail(err)
-    #
-    #     except Exception as e:
-    #         LOGGER.error(f"Error calling plugin {plugin_id} method {method_name}: {str(e)}")
-    #         raise e
-
-    async def get_plugin_info(self, plugin_id: str) -> Optional[Dict]:
+    async def get_plugin_info(self, plugin_id: str) -> Optional[PluginRegistration]:
         """Get plugin information"""
-        plugin = self.registry.get_plugin(plugin_id)
-        if plugin:
-            return {
-                "id": plugin.id,
-                "name": plugin.name,
-                "version": plugin.version,
-                "status": plugin.load_status,
-                "description": plugin.description,
-                "registered_at": plugin.registered_at,
-                "is_enabled": plugin.is_enabled,
-                "tags": plugin.tags,
-                "metadata": plugin.metadata
-            }
-        return None
+        plugin: PluginRegistration = self.registry.get_plugin(plugin_id)
+        return plugin
 
     async def get_plugin_by_id(self, plugin_id: str) -> Optional[PluginRegistration]:
         """根据插件ID获取完整的插件注册对象"""
@@ -166,13 +118,23 @@ class PluginManager:
         """根据插件名称获取完整的插件注册对象"""
         return self.registry.get_plugin_by_name(plugin_name)
 
-    async def list_plugins(self) -> List[Dict]:
+    async def list_plugins(self) -> List[PluginRegistration]:
         """List all registered plugins with their status"""
         keys: List[str] = await self.registry.list_plugins()
         return [await self.get_plugin_info(id) for id in keys]
 
+    async def list_available_plugins(self) -> List[PluginRegistration]:
+        """List all available plugins (enabled and loaded)"""
+        all_plugins = await self.list_plugins()
+        available_plugins = []
+        for plugin in all_plugins:
+            if (plugin.load_status == "loaded" and plugin.is_enabled):
+                available_plugins.append(plugin)
+        return available_plugins
+
     async def _health_check_loop(self):
         """Periodic health check for all plugins"""
+        pass
 
 
 async def main():

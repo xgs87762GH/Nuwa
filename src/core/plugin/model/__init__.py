@@ -7,7 +7,7 @@ Provides unified access to all plugin-related models
 from .discovery import PluginDiscoveryResult
 
 # Import service models
-from .service import PluginServiceDefinition
+from .service import PluginInfoProviderDefinition
 
 # Import registration models
 from .registration import PluginMetadata, PluginRegistration, Author, License, ProjectUrls, BuildSystem, Project
@@ -15,7 +15,7 @@ from .registration import PluginMetadata, PluginRegistration, Author, License, P
 # Export all models for easy importing
 __all__ = [
     'PluginDiscoveryResult',
-    'PluginServiceDefinition',
+    'PluginInfoProviderDefinition',
     'PluginMetadata',
     'PluginRegistration',
 

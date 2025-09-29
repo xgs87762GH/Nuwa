@@ -2,9 +2,9 @@ from typing import List
 
 from fastapi import APIRouter
 
-from src.api.dependencies import AIManagerDep, IntelligentPluginRouterDep
+from src.api.dependencies import AIManagerDep,IntelligentRouterDep
 from src.api.models import AIServerListResponse, AIProvidersResponse, APIResponse
-from src.api.models.responses import AIProviderInfo
+from src.api.models.response_models import AIProviderInfo
 from src.core.config import get_logger
 
 router = APIRouter(prefix="/ai", tags=["AI Management"])

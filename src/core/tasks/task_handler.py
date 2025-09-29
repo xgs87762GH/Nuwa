@@ -6,26 +6,26 @@ from sqlalchemy import select, func, delete, desc, asc
 from sqlalchemy.orm import selectinload
 
 from src.core.config import DataBaseManager, get_logger
-from src.core.orchestration import IntelligentPluginRouter
+from src.core.orchestration import IntelligentRouter
 from src.core.orchestration.model import PlanResult
 from src.core.tasks.model.models import Task, TaskStatus
 from src.core.tasks.model.response import TaskQuery, PaginatedTaskResponse, TaskResponse, TaskDetailResponse
-from src.core.tasks.service_step import TaskStepService
+from src.core.tasks.step_handler import StepHandler
 
 logger = get_logger(__name__)
 
 
-class TaskService:
-    def __init__(self, db: DataBaseManager, step_service: TaskStepService):
+class TaskHandler:
+    def __init__(self, db: DataBaseManager, step_service: StepHandler):
         self.db = db
         self.step_service = step_service
 
-    async def create_task_from_input(self, user_input: str, router: IntelligentPluginRouter, user_id: str = "1") -> \
+    async def create_task_from_input(self, user_input: str, router: IntelligentRouter, user_id: str = "1") -> \
             Dict[str, Any]:
         """
         Create a task from user input
 
-        1. Call IntelligentPluginRouter to get the orchestration plan
+        1. Call IntelligentRouter to get the orchestration plan
         2. Save Task to the database
         3. Return the task information
         """
@@ -60,7 +60,7 @@ class TaskService:
             # 3. Save to database
             async with self.db.get_session() as session:
                 session.add(task)
-                # Create steps using TaskStepService
+                # Create steps using StepHandler
                 step_count = await self.step_service.create_steps_for_task(session, task_id, plan_result.execution_plan)
                 await session.commit()
 

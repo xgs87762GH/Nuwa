@@ -7,7 +7,7 @@ from typing import Any, Dict, Optional
 
 
 @dataclass
-class PluginServiceDefinition:
+class PluginInfoProviderDefinition:
     """Definition of a plugin service with its configuration and functions"""
     instance: Any = None  # Plugin instance
     config: Dict[str, Any] = field(default_factory=dict)  # Plugin configuration (e.g., PLUGIN_CONFIG)

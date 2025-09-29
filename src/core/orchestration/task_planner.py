@@ -1,8 +1,10 @@
+from typing import List, Dict, Any
+
 from src.core.ai import AIManager
 from src.core.ai.providers.response import PluginsSelection, ExecutionPlan
 
 
-class Planner:
+class TaskPlanner:
     def __init__(self, prompt_templates, ai_manager: AIManager):
         self.prompt_templates = prompt_templates
         self.ai_manager: AIManager = ai_manager
@@ -10,16 +12,7 @@ class Planner:
         self.fallback_providers = None
         self.choose_model = None
 
-    async def select_plugins(self, user_input, available_plugins):
-        plugins_basic_info = [
-            {
-                'plugin_name': p['plugin_name'],
-                'plugin_id': p['plugin_id'],
-                'description': p['description'],
-                'tags': p['tags']
-            }
-            for p in available_plugins
-        ]
+    async def select_plugins(self, user_input, plugins_basic_info: List[Dict[str, Any]]):
         prompt = self.prompt_templates.get_plugin_selection_prompt(plugins_basic_info, user_input)
         response = await self.ai_manager.call_with_fallback(
             system_prompt=prompt.system_prompt,

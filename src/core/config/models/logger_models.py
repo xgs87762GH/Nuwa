@@ -4,7 +4,7 @@ from typing import Dict, Any
 from pydantic import BaseModel, Field
 from pydantic import field_validator
 
-from src.core.utils.global_tools import project_root
+from src.core.utils.common_utils import project_root
 
 
 class LoggingConfig(BaseModel):
