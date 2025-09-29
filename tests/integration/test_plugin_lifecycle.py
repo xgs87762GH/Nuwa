@@ -1,2 +1,0 @@
-# Plugin Lifecycle Integration Tests
-

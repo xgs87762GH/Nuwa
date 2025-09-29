@@ -1,8 +1,0 @@
-service:
-  name: "{{plugin_name}}"
-  port: 8080
-  timeout: 30
-
-settings:
-  debug: true
-  log_level: "INFO"

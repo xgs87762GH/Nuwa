@@ -93,3 +93,4 @@ build/
 .nuxt.config.ts
 .nuxt.config.mjs
 .nuxt.config.cjs
+package-lock.json
