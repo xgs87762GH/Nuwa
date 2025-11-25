@@ -224,3 +224,150 @@ code {
     transform: translateY(-10px);
   }
 }
+
+/* Modal 全局样式 - 主题集成 */
+.ant-modal-mask {
+  background-color: rgba(0, 0, 0, 0.45) !important;
+  animation: modalMaskFadeIn 0.3s ease-out;
+}
+
+.ant-modal-content {
+  background: white !important;
+  box-shadow: 0 3px 6px -4px rgba(0, 0, 0, 0.12), 
+              0 6px 16px 0 rgba(0, 0, 0, 0.08), 
+              0 9px 28px 8px rgba(0, 0, 0, 0.05) !important;
+  animation: modalFadeIn 0.3s ease-out;
+}
+
+.ant-modal-header {
+  border-bottom: 1px solid #f0f0f0 !important;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.04) 0%, rgba(118, 75, 162, 0.04) 100%);
+}
+
+.ant-modal-title {
+  color: #333 !important;
+  font-weight: 600;
+}
+
+.ant-modal-close-x {
+  color: rgba(0, 0, 0, 0.45) !important;
+}
+
+.ant-modal-close-x:hover {
+  color: rgba(0, 0, 0, 0.75) !important;
+}
+
+.ant-modal-footer {
+  border-top: 1px solid #f0f0f0 !important;
+  background: #fafafa;
+}
+
+/* Modal 动画 */
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes modalMaskFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Modal 按钮样式 */
+.ant-modal-footer .ant-btn {
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+.ant-modal-footer .ant-btn-primary {
+  background: var(--theme-primary, #667eea) !important;
+  border-color: var(--theme-primary, #667eea) !important;
+}
+
+.ant-modal-footer .ant-btn-primary:hover {
+  background: var(--theme-secondary, #764ba2) !important;
+  border-color: var(--theme-secondary, #764ba2) !important;
+}
+
+/* ==================== Descriptions 全局主题样式 ==================== */
+/* 统一应用主题到所有描述列表 */
+
+/* 标题 */
+.ant-descriptions-title {
+  color: #333 !important;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+/* 标签 - 主题背景 */
+.ant-descriptions-item-label {
+  color: #666 !important;
+  font-weight: 500 !important;
+  background: rgba(102, 126, 234, 0.08) !important;
+  border-color: rgba(102, 126, 234, 0.1) !important;
+}
+
+/* 内容 - 主题文字 */
+.ant-descriptions-item-content {
+  color: #333 !important;
+}
+
+/* 内容中的链接 - 主题色 */
+.ant-descriptions-item-content a {
+  color: var(--theme-primary, #667eea) !important;
+  text-decoration: none;
+}
+
+.ant-descriptions-item-content a:hover {
+  color: var(--theme-secondary, #764ba2) !important;
+  text-decoration: underline;
+}
+
+/* 带边框的描述 - 边框颜色 */
+.ant-descriptions-bordered .ant-descriptions-item {
+  border-color: rgba(102, 126, 234, 0.1) !important;
+}
+
+/* 行悬停效果 */
+.ant-descriptions-row:hover {
+  background-color: rgba(102, 126, 234, 0.03) !important;
+}
+
+/* 标签容器中的Tags */
+.ant-descriptions-item-content .ant-tag {
+  background: rgba(102, 126, 234, 0.1) !important;
+  border-color: rgba(102, 126, 234, 0.3) !important;
+  color: var(--theme-primary, #667eea) !important;
+}
+
+/* Badge - 主题色状态点 */
+.ant-descriptions-item-content .ant-badge-status-dot {
+  background-color: var(--theme-primary, #667eea) !important;
+}
+
+/* ==================== 其他组件全局主题 ==================== */
+
+/* 标签全局样式 */
+.ant-tag {
+  transition: all var(--transition-fast);
+}
+
+/* 按钮默认样式 */
+.ant-btn {
+  transition: all var(--transition-fast);
+}
+
+/* Alert 主题 */
+.ant-alert {
+  border-radius: 4px;
+}
