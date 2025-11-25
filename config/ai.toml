@@ -26,3 +26,4 @@ user = "Nuwa"
 max_tokens = 2048
 #base_url = "https://api.deepseek.com"
 base_url = "https://api.chatanywhere.org"
+
